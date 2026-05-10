@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Citation chips</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 22px; font-family: var(--font-body); color: var(--ink); }
+  .bubble { background: var(--paper-card); border: 1px solid var(--ink-12); border-radius: 14px; padding: 14px 16px; max-width: 540px; }
+  .bubble p { margin: 0 0 10px; line-height: 1.5; font-size: 15px; }
+  .citations { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cite { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--paper-sunk); border: 1px solid var(--ink-12); font-family: var(--font-mono); font-size: 11px; color: var(--ink-80); cursor: pointer; }
+  .cite::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--track-war); }
+  .arrow { color: var(--ink-60); margin-left: 2px; }
+</style>
+</head>
+<body>
+  <div class="bubble">
+    <p>Vinh Moc tunnels were built between 1965 and 1966 across three levels, sheltering roughly 600 villagers from American bombing.</p>
+    <div class="citations">
+      <span class="cite">Bảo tàng Quảng Trị · 2019<span class="arrow">↗</span></span>
+      <span class="cite">DMZ History Project<span class="arrow">↗</span></span>
+    </div>
+  </div>
+</body>
+</html>

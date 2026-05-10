@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Radii & shadow</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 20px; }
+  .row { display: flex; gap: 18px; align-items: flex-end; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 72px; height: 72px; background: var(--paper-card); border: 1px solid var(--ink-12); }
+  .name { font-family: var(--font-mono); font-size: 11px; color: var(--ink-60); }
+  .group { font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-60); margin: 0 0 10px; }
+  .group + .group { margin-top: 18px; }
+  .shadow { width: 110px; height: 72px; background: var(--paper-card); border-radius: 10px; }
+  .shadow.soft { box-shadow: 0 8px 24px -8px rgba(31,36,40,.06), 0 1px 0 rgba(31,36,40,.04); }
+  .shadow.lift { box-shadow: 0 16px 40px -12px rgba(31,36,40,.12), 0 2px 0 rgba(31,36,40,.04); }
+  .shadow.pin { box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.18); background: var(--teal-700); width: 28px; height: 28px; border-radius: 999px; }
+</style>
+</head>
+<body>
+  <p class="group">Radius</p>
+  <div class="row">
+    <div class="item"><div class="box" style="border-radius:2px"></div><span class="name">2 · xs</span></div>
+    <div class="item"><div class="box" style="border-radius:6px"></div><span class="name">6 · sm</span></div>
+    <div class="item"><div class="box" style="border-radius:10px"></div><span class="name">10 · md ★</span></div>
+    <div class="item"><div class="box" style="border-radius:16px"></div><span class="name">16 · lg</span></div>
+    <div class="item"><div class="box" style="border-radius:24px"></div><span class="name">24 · xl</span></div>
+    <div class="item"><div class="box" style="border-radius:999px"></div><span class="name">pill</span></div>
+  </div>
+  <p class="group">Shadow</p>
+  <div class="row" style="align-items:center; gap:32px;">
+    <div class="item"><div class="shadow soft"></div><span class="name">soft · cards</span></div>
+    <div class="item"><div class="shadow lift"></div><span class="name">lift · sheets &amp; FAB</span></div>
+    <div class="item" style="padding:14px"><div class="shadow pin"></div><span class="name">pin · map markers</span></div>
+  </div>
+</body>
+</html>

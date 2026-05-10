@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Chat bubbles</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .b { padding: 11px 14px; border-radius: 16px; max-width: 78%; font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+  .b.user { background: var(--teal-700); color: #F7F4EE; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .b.assistant { background: var(--paper-card); color: var(--ink); border: 1px solid var(--ink-12); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .b.tool { background: var(--paper-sunk); color: var(--ink-60); align-self: flex-start; font-family: var(--font-mono); font-size: 12px; padding: 6px 10px; border-radius: 6px; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--ink-12); background: var(--paper); font-family: var(--font-body); font-size: 13px; color: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="b tool">→ search_curated · vinh-moc · history · en</div>
+  <div class="b user">What happened here in 1966?</div>
+  <div class="b assistant">In 1966 the tunnels at Vinh Moc were extended to a third level — about 23 metres below the surface — to shelter villagers from sustained bombing of the coastal strip.</div>
+  <div class="pills">
+    <span class="pill">Plan tomorrow</span>
+    <span class="pill">Find food nearby</span>
+    <span class="pill">Tell me about the war here</span>
+  </div>
+</body>
+</html>

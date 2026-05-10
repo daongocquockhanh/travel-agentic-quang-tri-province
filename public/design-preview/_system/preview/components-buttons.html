@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 22px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .btn { font-family: var(--font-body); font-size: 15px; font-weight: 500; line-height: 1; padding: 12px 20px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: background var(--dur-micro) var(--ease), transform var(--dur-micro) var(--ease); }
+  .btn.primary { background: var(--teal-700); color: #fff; }
+  .btn.primary:hover { background: #0c4151; }
+  .btn.secondary { background: var(--paper-card); color: var(--ink); border-color: var(--ink-12); border-radius: 10px; }
+  .btn.ghost { background: transparent; color: var(--teal-700); }
+  .btn.accent { background: var(--yellow-500); color: var(--ink); }
+  .btn[disabled] { opacity: .4; pointer-events: none; }
+  .btn.sm { padding: 8px 14px; font-size: 13px; }
+  .group { font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-60); margin: 0 0 6px; }
+</style>
+</head>
+<body>
+  <p class="group">Sizes &amp; styles</p>
+  <div class="row">
+    <button class="btn primary">Begin</button>
+    <button class="btn secondary">Skip</button>
+    <button class="btn ghost">Read more</button>
+    <button class="btn accent">Play story</button>
+    <button class="btn primary" disabled>Disabled</button>
+  </div>
+  <p class="group">Small</p>
+  <div class="row">
+    <button class="btn primary sm">Add to plan</button>
+    <button class="btn secondary sm">View</button>
+    <button class="btn ghost sm">Cancel</button>
+  </div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Quick fact row</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 22px; }
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 600px; }
+  .fact { background: var(--paper-card); border: 1px solid var(--ink-12); border-radius: 10px; padding: 12px 14px; }
+  .lbl { font-family: var(--font-body); font-size: 11px; color: var(--ink-60); letter-spacing: 0.06em; text-transform: uppercase; }
+  .val { font-family: var(--font-display); font-size: 20px; line-height: 1.15; margin-top: 4px; color: var(--ink); }
+  .sub { font-family: var(--font-body); font-size: 12px; color: var(--ink-60); margin-top: 2px; }
+</style>
+</head>
+<body>
+  <div class="facts">
+    <div class="fact"><div class="lbl">Hours</div><div class="val">7:00–16:30</div><div class="sub">Daily</div></div>
+    <div class="fact"><div class="lbl">Ticket</div><div class="val">50.000₫</div><div class="sub">~$2 USD</div></div>
+    <div class="fact"><div class="lbl">From Đông Hà</div><div class="val">27 km</div><div class="sub">~45 min drive</div></div>
+    <div class="fact"><div class="lbl">Built</div><div class="val">1965–66</div><div class="sub">3 levels</div></div>
+  </div>
+</body>
+</html>

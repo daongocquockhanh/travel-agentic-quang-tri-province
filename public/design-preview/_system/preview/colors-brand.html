@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Colors · Brand</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 20px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .swatch { border-radius: 10px; padding: 12px; height: 110px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--ink-12); }
+  .name { font-family: var(--font-body); font-size: 12px; font-weight: 600; }
+  .hex { font-family: var(--font-mono); font-size: 11px; opacity: .7; }
+  .label { display:flex; justify-content: space-between; align-items: baseline; }
+  .group { font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-60); margin: 0 0 8px; }
+  .row + .group { margin-top: 16px; }
+</style>
+</head>
+<body>
+  <p class="group">Teal · primary</p>
+  <div class="row">
+    <div class="swatch" style="background:#0A3641;color:#F7F4EE"><div class="label"><span class="name">teal-900</span></div><div class="hex">#0A3641</div></div>
+    <div class="swatch" style="background:#0F4C5C;color:#F7F4EE"><div class="label"><span class="name">teal-700 ★</span></div><div class="hex">#0F4C5C</div></div>
+    <div class="swatch" style="background:#2A7388;color:#F7F4EE"><div class="label"><span class="name">teal-500</span></div><div class="hex">#2A7388</div></div>
+    <div class="swatch" style="background:#6FA0AE;color:#1F2428"><div class="label"><span class="name">teal-300</span></div><div class="hex">#6FA0AE</div></div>
+    <div class="swatch" style="background:#C9DDE3;color:#1F2428"><div class="label"><span class="name">teal-100</span></div><div class="hex">#C9DDE3</div></div>
+  </div>
+  <p class="group">Sand · secondary</p>
+  <div class="row">
+    <div class="swatch" style="background:#B89A6E;color:#F7F4EE"><div class="label"><span class="name">sand-700</span></div><div class="hex">#B89A6E</div></div>
+    <div class="swatch" style="background:#D6BD90;color:#1F2428"><div class="label"><span class="name">sand-500</span></div><div class="hex">#D6BD90</div></div>
+    <div class="swatch" style="background:#E5D5B7;color:#1F2428"><div class="label"><span class="name">sand-300 ★</span></div><div class="hex">#E5D5B7</div></div>
+    <div class="swatch" style="background:#F2EAD5;color:#1F2428"><div class="label"><span class="name">sand-100</span></div><div class="hex">#F2EAD5</div></div>
+    <div class="swatch" style="background:#F2A73A;color:#1F2428"><div class="label"><span class="name">yellow-500 ★</span></div><div class="hex">#F2A73A</div></div>
+  </div>
+</body>
+</html>

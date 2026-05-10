@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=920"/>
+<title>Quang Tri Travel · UI kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<style>
+  body { margin: 0; background: var(--paper-sunk); padding: 24px; min-height: 100vh; }
+  .stage { display: flex; justify-content: center; }
+  .toolbar { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar button { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--ink-12); background: var(--paper); cursor: pointer; font-family: var(--font-body); font-size: 13px; color: var(--ink); }
+  .toolbar button.active { background: var(--teal-700); color: #F7F4EE; border-color: var(--teal-700); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+const App = () => {
+  const [screen, setScreen] = useState("onboarding");
+  const [track, setTrack] = useState("foreign");
+  const [lang, setLang] = useState("en");
+  const [site, setSite] = useState(null);
+  const [sheet, setSheet] = useState("half");
+  const [banner, setBanner] = useState(true);
+
+  const tracks = ["war","foreign","domestic"];
+  const langs = ["en","vi"];
+
+  const cycleTrack = () => setTrack(t => tracks[(tracks.indexOf(t)+1) % 3]);
+  const cycleLang = () => setLang(l => langs[(langs.indexOf(l)+1) % 2]);
+
+  const screens = {
+    onboarding: <TrackPicker onPick={t => { setTrack(t); setScreen("map"); }}/>,
+    map: <MapHome
+      track={track} lang={lang}
+      onTrackChange={cycleTrack} onLangChange={cycleLang}
+      onSitePick={s => { setSite(s); setScreen("site"); }}
+      onChat={() => setScreen("chat")}
+      sheetState={sheet} setSheetState={setSheet}
+      showBanner={banner}
+      onBannerPlay={() => { setSite(SITES[0]); setScreen("site"); setBanner(false); }}
+      onBannerDismiss={() => setBanner(false)}
+    />,
+    site: site && <SiteDetail site={site} onBack={() => setScreen("map")} onChat={() => setScreen("chat")}/>,
+    chat: <Chat track={track} lang={lang} onBack={() => setScreen("map")}/>,
+  };
+
+  return (
+    <div>
+      <div className="toolbar">
+        <button className={screen==="onboarding"?"active":""} onClick={() => setScreen("onboarding")}>Onboarding</button>
+        <button className={screen==="map"?"active":""} onClick={() => setScreen("map")}>Map home</button>
+        <button className={screen==="site"?"active":""} onClick={() => { setSite(SITES[0]); setScreen("site"); }}>Site detail</button>
+        <button className={screen==="chat"?"active":""} onClick={() => setScreen("chat")}>Chat</button>
+      </div>
+      <div className="stage">
+        <IOSDevice width={390} height={844}>
+          <div style={{ height: "100%", background: "var(--paper)" }}>
+            {screens[screen]}
+          </div>
+        </IOSDevice>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

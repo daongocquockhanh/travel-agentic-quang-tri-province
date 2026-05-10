@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quang Tri Travel Agent — Design Preview</title>
+    <style>
+      :root {
+        --teal: #0F4C5C;
+        --sand: #E5D5B7;
+        --yellow: #F2A73A;
+        --charcoal: #1F2428;
+        --cream: #F7F4EE;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--cream);
+        color: var(--charcoal);
+        line-height: 1.5;
+      }
+      header {
+        background: var(--teal);
+        color: white;
+        padding: 24px 28px;
+      }
+      header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+      header p  { margin: 0; opacity: 0.85; font-size: 14px; }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+      h2 { margin: 32px 0 12px; font-size: 18px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: border-color 0.15s, transform 0.15s;
+      }
+      .card:hover {
+        border-color: var(--teal);
+        transform: translateY(-1px);
+      }
+      .card .num {
+        display: inline-block;
+        background: var(--sand);
+        color: var(--charcoal);
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .card .title { font-weight: 600; margin-bottom: 4px; }
+      .card .desc  { font-size: 13px; color: #6b7280; }
+      .card .empty { font-size: 12px; color: #9ca3af; font-style: italic; margin-top: 6px; }
+      .legend {
+        background: white;
+        border: 1px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 13px;
+        color: #4b5563;
+      }
+      code { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Quang Tri Travel Agent — Design Preview</h1>
+      <p>Drop Claude Design exports into the folders below. Refresh to view.</p>
+    </header>
+    <main>
+      <div class="legend">
+        <strong>How to add a screen:</strong>
+        export from <code>claude.ai/design</code> → drop HTML/CSS/PNG into the matching numbered folder
+        → click the card to open. Folders without an <code>index.html</code> show as "empty".
+      </div>
+
+      <h2>Imported design system (Claude Design)</h2>
+      <div class="grid">
+        <a class="card" href="_system/ui_kits/pwa/index.html">
+          <span class="num">KIT</span>
+          <div class="title">UI kit — clickable prototype</div>
+          <div class="desc">Onboarding · Map home · Site detail · Chat (in iOS frame)</div>
+        </a>
+        <a class="card" href="_system/preview/colors-brand.html">
+          <span class="num">TOKENS</span>
+          <div class="title">Brand colors</div>
+          <div class="desc">Teal · Sand · Yellow scales</div>
+        </a>
+        <a class="card" href="_system/preview/colors-track-tints.html">
+          <span class="num">TOKENS</span>
+          <div class="title">Track tints</div>
+          <div class="desc">War ochre · Foreign teal · Domestic leaf</div>
+        </a>
+        <a class="card" href="_system/preview/type-display.html">
+          <span class="num">TOKENS</span>
+          <div class="title">Type — display</div>
+          <div class="desc">Newsreader serif scale</div>
+        </a>
+        <a class="card" href="_system/preview/type-vietnamese.html">
+          <span class="num">TOKENS</span>
+          <div class="title">Type — Vietnamese</div>
+          <div class="desc">Diacritic stress test</div>
+        </a>
+        <a class="card" href="_system/preview/components-track-chips.html">
+          <span class="num">CMP</span>
+          <div class="title">Track chips</div>
+          <div class="desc">War / Foreign / Domestic</div>
+        </a>
+        <a class="card" href="_system/preview/components-voice-button.html">
+          <span class="num">CMP</span>
+          <div class="title">Voice button</div>
+          <div class="desc">Idle · recording · transcribing · speaking · error</div>
+        </a>
+        <a class="card" href="_system/preview/components-site-card.html">
+          <span class="num">CMP</span>
+          <div class="title">Site card</div>
+          <div class="desc">Used in nearby + itinerary</div>
+        </a>
+        <a class="card" href="_system/preview/components-chat.html">
+          <span class="num">CMP</span>
+          <div class="title">Chat bubbles</div>
+          <div class="desc">User · assistant · citation</div>
+        </a>
+        <a class="card" href="_system/preview/components-geofence-banner.html">
+          <span class="num">CMP</span>
+          <div class="title">Geofence banner</div>
+          <div class="desc">"You're at X — Play / Read"</div>
+        </a>
+        <a class="card" href="_system/preview/iconography.html">
+          <span class="num">ICONS</span>
+          <div class="title">Iconography</div>
+          <div class="desc">Lucide system + 3 custom track glyphs</div>
+        </a>
+        <a class="card" href="_system/README.md">
+          <span class="num">DOC</span>
+          <div class="title">System README</div>
+          <div class="desc">Voice, tone, layout, motion rules</div>
+        </a>
+      </div>
+
+      <h2>Notes</h2>
+      <p style="font-size: 13px; color: #4b5563;">
+        This hub is plain static HTML/CSS — no build step.
+        Real app implementations live in <code>app/</code> and <code>components/</code>
+        (Tailwind v4 utilities bridge to the same tokens).
+      </p>
+      <p style="font-size: 13px; color: #4b5563;">
+        To drop in additional per-screen exports, create a folder here
+        (e.g. <code>map-home/</code>) with an <code>index.html</code>, then add a card above.
+      </p>
+    </main>
+  </body>
+</html>

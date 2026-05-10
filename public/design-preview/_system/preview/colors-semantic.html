@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Colors · Semantic</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 20px; }
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .swatch { border-radius: 10px; padding: 12px; height: 96px; color: #F7F4EE; display:flex; flex-direction:column; justify-content:space-between; }
+  .name { font-family: var(--font-body); font-size: 12px; font-weight: 600; }
+  .role { font-family: var(--font-mono); font-size: 11px; opacity: .85; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="swatch" style="background:#0F4C5C"><span class="name">primary</span><span class="role">CTAs · links · brand</span></div>
+    <div class="swatch" style="background:#F2A73A;color:#1F2428"><span class="name">accent</span><span class="role">focus · key emphasis</span></div>
+    <div class="swatch" style="background:#3F6B3A"><span class="name">success</span><span class="role">confirms · "saved"</span></div>
+    <div class="swatch" style="background:#C5841C"><span class="name">warning</span><span class="role">low signal · offline</span></div>
+    <div class="swatch" style="background:#8B3A2C"><span class="name">danger</span><span class="role">errors only</span></div>
+    <div class="swatch" style="background:#2A7388"><span class="name">info</span><span class="role">neutral system msgs</span></div>
+    <div class="swatch" style="background:#F7F4EE;color:#1F2428;border:1px solid #1F24281F"><span class="name">bg</span><span class="role">app background</span></div>
+    <div class="swatch" style="background:#FBF9F4;color:#1F2428;border:1px solid #1F24281F"><span class="name">bg-card</span><span class="role">card surface</span></div>
+  </div>
+</body>
+</html>

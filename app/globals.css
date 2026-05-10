@@ -1,16 +1,64 @@
 @import "tailwindcss";
+@import "./design-tokens.css";
 
-@theme {
-  --color-brand-teal: #0F4C5C;
-  --color-brand-sand: #E5D5B7;
-  --color-brand-yellow: #F2A73A;
-  --color-brand-charcoal: #1F2428;
-  --color-brand-cream: #F7F4EE;
+/* Bridge design-tokens (CSS vars) to Tailwind v4 utility names. */
+@theme inline {
+  /* colors */
+  --color-teal-900: var(--teal-900);
+  --color-teal-700: var(--teal-700);
+  --color-teal-500: var(--teal-500);
+  --color-teal-300: var(--teal-300);
+  --color-teal-100: var(--teal-100);
+  --color-sand-700: var(--sand-700);
+  --color-sand-500: var(--sand-500);
+  --color-sand-300: var(--sand-300);
+  --color-sand-100: var(--sand-100);
+  --color-yellow-700: var(--yellow-700);
+  --color-yellow-500: var(--yellow-500);
+  --color-yellow-300: var(--yellow-300);
 
-  --font-serif: "Source Serif", "Newsreader", ui-serif, Georgia, serif;
-  --font-sans: "Inter", "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-}
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-card: var(--paper-card);
+  --color-paper-sunk: var(--paper-sunk);
 
-html, body {
-  height: 100%;
+  --color-track-war: var(--track-war);
+  --color-track-foreign: var(--track-foreign);
+  --color-track-domestic: var(--track-domestic);
+
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-bg: var(--bg);
+  --color-bg-card: var(--bg-card);
+  --color-bg-sunk: var(--bg-sunk);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  /* fonts */
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* radius */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill);
+
+  /* shadow */
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+  --shadow-pin: var(--shadow-pin);
+
+  /* motion */
+  --ease-brand: var(--ease);
 }

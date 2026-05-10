@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Site card</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 20px; }
+  .card { display: flex; gap: 14px; padding: 12px; background: var(--paper-card); border: 1px solid var(--ink-12); border-radius: 10px; max-width: 600px; }
+  .hero { width: 96px; height: 96px; border-radius: 6px; background: linear-gradient(135deg, #6FA0AE, #0F4C5C); position: relative; overflow: hidden; flex-shrink: 0; }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(31,36,40,.4), transparent 60%); }
+  .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .name { font-family: var(--font-display); font-size: 20px; line-height: 1.15; color: var(--ink); letter-spacing: -0.005em; }
+  .en { font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--ink-60); }
+  .meta-row { display: flex; gap: 14px; margin-top: 6px; font-family: var(--font-body); font-size: 13px; color: var(--ink-60); }
+  .meta-row span { display: inline-flex; align-items: center; gap: 6px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; border: 1.5px solid var(--track-war); color: var(--track-war); font-family: var(--font-body); font-size: 11px; font-weight: 500; align-self: flex-start; margin-top: 6px; }
+  .tag .dot { width:6px; height:6px; border-radius:999px; background: currentColor; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="hero"></div>
+    <div class="body">
+      <div class="name">Địa đạo Vĩnh Mốc</div>
+      <div class="en">Vinh Moc Tunnels</div>
+      <div class="meta-row">
+        <span>○ 27 km</span>
+        <span>◷ 7:00 — 16:30</span>
+        <span>₫ 50.000</span>
+      </div>
+      <span class="tag"><span class="dot"></span>War track</span>
+    </div>
+  </div>
+</body>
+</html>

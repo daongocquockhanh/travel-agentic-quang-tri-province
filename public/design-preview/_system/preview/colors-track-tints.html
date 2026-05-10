@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Colors · Track tints</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 24px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .track { border-radius: 12px; padding: 16px; background: var(--paper-card); border: 1px solid var(--ink-12); }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 14px; height: 14px; border-radius: 999px; }
+  .name { font-family: var(--font-display); font-size: 18px; }
+  .hex { font-family: var(--font-mono); font-size: 11px; color: var(--ink-60); margin-top: 2px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; border: 2px solid currentColor; background: color-mix(in oklch, currentColor 8%, var(--paper)); font-family: var(--font-body); font-size: 13px; font-weight: 500; margin-top: 12px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="track" style="color:#B07A2A">
+      <div class="head"><div class="dot" style="background:#B07A2A"></div><div><div class="name" style="color:#1F2428">War</div><div class="hex">#B07A2A · ochre</div></div></div>
+      <div class="chip"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;display:inline-block"></span>War track</div>
+    </div>
+    <div class="track" style="color:#0F4C5C">
+      <div class="head"><div class="dot" style="background:#0F4C5C"></div><div><div class="name" style="color:#1F2428">Foreign</div><div class="hex">#0F4C5C · teal</div></div></div>
+      <div class="chip"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;display:inline-block"></span>Foreign track</div>
+    </div>
+    <div class="track" style="color:#3F6B3A">
+      <div class="head"><div class="dot" style="background:#3F6B3A"></div><div><div class="name" style="color:#1F2428">Domestic</div><div class="hex">#3F6B3A · leaf</div></div></div>
+      <div class="chip"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;display:inline-block"></span>Domestic track</div>
+    </div>
+  </div>
+</body>
+</html>

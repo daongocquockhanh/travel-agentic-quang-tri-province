@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Iconography · Lucide set</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+  .ic { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 4px; background: var(--paper-card); border: 1px solid var(--ink-12); border-radius: 10px; color: var(--ink); }
+  .ic span { font-family: var(--font-mono); font-size: 10px; color: var(--ink-60); }
+  svg.icon { width: 22px; height: 22px; }
+  .group { font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-60); margin: 0 0 8px; }
+  .tracks { display: flex; gap: 14px; margin-top: 14px; }
+  .tk { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 18px; background: var(--paper-card); border: 1px solid var(--ink-12); border-radius: 10px; }
+  .tk svg { width: 26px; height: 26px; }
+  .tk.war { color: var(--track-war); }
+  .tk.foreign { color: var(--track-foreign); }
+  .tk.domestic { color: var(--track-domestic); }
+  .tk span { font-family: var(--font-mono); font-size: 11px; color: var(--ink-60); }
+</style>
+</head>
+<body>
+  <p class="group">Lucide · 1.75 stroke</p>
+  <div class="grid">
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg><span>mic</span></div>
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg><span>send</span></div>
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span>map-pin</span></div>
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>clock</span></div>
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>globe</span></div>
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span>search</span></div>
+    <div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg><span>arrow-right</span></div>
+  </div>
+  <p class="group" style="margin-top:16px">Track glyphs · custom</p>
+  <div class="tracks">
+    <div class="tk war"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="3" y1="13" x2="21" y2="13"/><line x1="12" y1="5" x2="12" y2="21"/></svg><span>war · 17th parallel</span></div>
+    <div class="tk foreign"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="5.6" y2="18.4"/></svg><span>foreign · compass</span></div>
+    <div class="tk domestic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L12 5 L21 12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>domestic · roof &amp; road</span></div>
+  </div>
+</body>
+</html>

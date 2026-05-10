@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Track chips</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 22px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 2px solid currentColor; background: color-mix(in oklch, currentColor 8%, var(--paper)); font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink); }
+  .chip .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+  .chip.war { color: var(--track-war); }
+  .chip.foreign { color: var(--track-foreign); }
+  .chip.domestic { color: var(--track-domestic); }
+  .chip .label { color: var(--ink); }
+  .chip.solid { background: currentColor; }
+  .chip.solid .label { color: #F7F4EE; }
+  .group { font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-60); margin: 0 0 6px; }
+  .group + .group { margin-top: 14px; }
+</style>
+</head>
+<body>
+  <p class="group">Selected · outlined</p>
+  <div class="row">
+    <span class="chip war"><span class="dot"></span><span class="label">War history</span></span>
+    <span class="chip foreign"><span class="dot"></span><span class="label">Foreign tourist</span></span>
+    <span class="chip domestic"><span class="dot"></span><span class="label">Khách trong nước</span></span>
+  </div>
+  <p class="group">Active · solid</p>
+  <div class="row">
+    <span class="chip war solid"><span class="label">War history</span></span>
+    <span class="chip foreign solid"><span class="label">Foreign tourist</span></span>
+    <span class="chip domestic solid"><span class="label">Khách trong nước</span></span>
+  </div>
+</body>
+</html>

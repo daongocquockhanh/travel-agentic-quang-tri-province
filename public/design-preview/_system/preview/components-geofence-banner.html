@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=700"/>
+<title>Components · Geofence banner</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body { padding: 18px; background: linear-gradient(135deg, #2A7388, #0F4C5C); }
+  .banner { background: rgba(247, 244, 238, 0.86); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(31,36,40,.08); border-left: 3px solid var(--track-war); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-lift); max-width: 600px; }
+  .icon { width: 40px; height: 40px; border-radius: 999px; background: var(--track-war); color: #F7F4EE; display: grid; place-items: center; flex-shrink: 0; }
+  .text { flex: 1; min-width: 0; }
+  .lead { font-family: var(--font-body); font-size: 12px; color: var(--ink-60); letter-spacing: 0.04em; text-transform: uppercase; }
+  .name { font-family: var(--font-display); font-size: 18px; color: var(--ink); line-height: 1.2; margin-top: 2px; }
+  .actions { display: flex; gap: 8px; }
+  .btn { font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 999px; border: none; cursor: pointer; }
+  .play { background: var(--track-war); color: #F7F4EE; }
+  .read { background: transparent; color: var(--ink); border: 1px solid var(--ink-20); }
+</style>
+</head>
+<body>
+  <div class="banner">
+    <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+    <div class="text">
+      <div class="lead">You are here</div>
+      <div class="name">Địa đạo Vĩnh Mốc · Vinh Moc Tunnels</div>
+    </div>
+    <div class="actions">
+      <button class="btn play">Play</button>
+      <button class="btn read">Read</button>
+    </div>
+  </div>
+</body>
+</html>
