@@ -1,0 +1,13 @@
+{
+  "home": {
+    "title": "Quang Tri Travel Agent",
+    "subtitle": "Stories of the land you stand on. Three tracks. One province.",
+    "cta": "Open the map",
+    "milestone": "Milestone 1 — scaffold seeded with Vinh Moc"
+  },
+  "tracks": {
+    "war": "War-history pilgrim",
+    "foreign": "Foreign tourist",
+    "domestic": "Domestic Vietnamese tourist"
+  }
+}

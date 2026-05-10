@@ -1,0 +1,21 @@
+slug: vinh-moc
+name_vi: Địa đạo Vịnh Mốc
+name_en: Vinh Moc Tunnels
+type: war
+tracks:
+  - war
+  - foreign
+  - domestic
+geom:
+  lat: 17.0033
+  lng: 107.0117
+hero_image: https://images.unsplash.com/photo-1528127269322-539801943592
+opening_hours:
+  mon: "07:00-17:00"
+  tue: "07:00-17:00"
+  wed: "07:00-17:00"
+  thu: "07:00-17:00"
+  fri: "07:00-17:00"
+  sat: "07:00-17:00"
+  sun: "07:00-17:00"
+ticket_price_vnd: 50000

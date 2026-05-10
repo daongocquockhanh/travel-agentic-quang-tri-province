@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-teal: #0F4C5C;
+  --color-brand-sand: #E5D5B7;
+  --color-brand-yellow: #F2A73A;
+  --color-brand-charcoal: #1F2428;
+  --color-brand-cream: #F7F4EE;
+
+  --font-serif: "Source Serif", "Newsreader", ui-serif, Georgia, serif;
+  --font-sans: "Inter", "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+}
+
+html, body {
+  height: 100%;
+}
