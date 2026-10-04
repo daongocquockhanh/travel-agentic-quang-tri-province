@@ -17,6 +17,7 @@ import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import matter from "gray-matter";
 import YAML from "yaml";
+import { chunk } from "../lib/chunk";
 
 const CONTENT_DIR = join(process.cwd(), "content/sites");
 const REQUIRES_CITATION = new Set(["war", "religious"]);
@@ -51,40 +52,6 @@ const supabase = createClient(
 
 const openai = new OpenAI({ apiKey: env("OPENAI_API_KEY") });
 const EMBEDDING_MODEL = env("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small");
-
-/** Split body into ~500-token chunks. Approx 4 chars per token => ~2000 chars per chunk. */
-function chunk(text: string, maxChars = 2000): string[] {
-  const paragraphs = text
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  const chunks: string[] = [];
-  let buf = "";
-  for (const p of paragraphs) {
-    if (p.length > maxChars) {
-      // split long paragraph by sentence
-      const sentences = p.split(/(?<=[.!?…])\s+/);
-      for (const s of sentences) {
-        if ((buf + " " + s).length > maxChars) {
-          if (buf) chunks.push(buf.trim());
-          buf = s;
-        } else {
-          buf = buf ? `${buf} ${s}` : s;
-        }
-      }
-      continue;
-    }
-    if ((buf + "\n\n" + p).length > maxChars) {
-      if (buf) chunks.push(buf.trim());
-      buf = p;
-    } else {
-      buf = buf ? `${buf}\n\n${p}` : p;
-    }
-  }
-  if (buf) chunks.push(buf.trim());
-  return chunks.length ? chunks : [text.trim()];
-}
 
 async function embed(input: string): Promise<number[]> {
   const res = await openai.embeddings.create({ model: EMBEDDING_MODEL, input });

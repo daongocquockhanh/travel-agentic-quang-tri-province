@@ -96,8 +96,8 @@ export default async function SiteDetailPage({ params }: Props) {
             </p>
             <p className="mt-1 text-sm">
               {locale === "vi"
-                ? "Hiện chỉ có Địa đạo Vĩnh Mốc đã được biên soạn đầy đủ."
-                : "Only Vinh Moc Tunnels has full curated content for now."}
+                ? "Địa điểm này chưa có nội dung biên soạn."
+                : "This site doesn't have curated content yet."}
             </p>
           </div>
         ) : (
@@ -121,13 +121,13 @@ export default async function SiteDetailPage({ params }: Props) {
 
       {/* floating CTA */}
       <div className="pointer-events-none sticky bottom-0 left-0 right-0 z-20 px-4 pb-5">
-        <button
-          type="button"
+        <Link
+          href={`/chat?site=${site.slug}`}
           className="pointer-events-auto flex w-full items-center justify-center gap-2.5 rounded-full bg-primary px-4 py-3 font-sans text-[15px] font-medium text-paper shadow-lift"
         >
-          <Icon name="mic" size={18} />
+          <Icon name="send" size={18} />
           {locale === "vi" ? "Hỏi về địa điểm này" : "Ask about this place"}
-        </button>
+        </Link>
       </div>
     </main>
   );
