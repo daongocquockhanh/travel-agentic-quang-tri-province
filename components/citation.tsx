@@ -11,7 +11,7 @@ export function Citation({ source, href, track = "war" }: Props) {
     <>
       <span
         aria-hidden
-        className="size-1.5 rounded-full"
+        className="mt-[5px] size-1.5 shrink-0 rounded-full"
         style={{ background: TRACK_COLOR[track] }}
       />
       <span>{source}</span>
@@ -20,7 +20,7 @@ export function Citation({ source, href, track = "war" }: Props) {
   );
 
   const className =
-    "inline-flex items-center gap-1.5 rounded-full border border-border bg-paper-card px-2.5 py-1 font-mono text-[11px] text-fg-muted";
+    "inline-flex items-start gap-1.5 rounded-[10px] border border-border bg-paper-card px-2.5 py-1 font-mono text-[11px] text-fg-muted";
 
   if (href) {
     return (

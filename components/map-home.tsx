@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MapView, type MapSite } from "@/components/map-view";
@@ -67,7 +68,9 @@ export function MapHome({ initialTrack, sites, cards, demoBanner }: Props) {
             track={demoBanner.track}
             nameVi={demoBanner.name_vi}
             nameEn={demoBanner.name_en}
-            onPlay={() => router.push(`/site/${demoBanner.slug}`)}
+            onPlay={() =>
+              router.push(`/chat?site=${demoBanner.slug}&intent=arrival_story&track=${track}`)
+            }
             onRead={() => router.push(`/site/${demoBanner.slug}`)}
             onDismiss={() => setBannerOpen(false)}
           />
@@ -89,13 +92,16 @@ export function MapHome({ initialTrack, sites, cards, demoBanner }: Props) {
         </button>
 
         <div className="px-4 pb-3 pt-1">
-          <div className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-paper-card px-3.5 py-2.5">
+          <Link
+            href={`/chat?track=${track}`}
+            className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-paper-card px-3.5 py-2.5"
+          >
             <Icon name="mic" size={18} className="text-fg-muted" />
             <span className="flex-1 truncate font-sans text-[15px] text-fg-muted">
               Ask about a place, route, or history…
             </span>
             <Icon name="arrowUp" size={16} className="text-fg-muted" />
-          </div>
+          </Link>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-6">

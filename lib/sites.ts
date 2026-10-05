@@ -66,19 +66,14 @@ export async function findNearby(args: {
 }
 
 /**
- * Returns the site plus its curated content sections.
- * For now only `vinh-moc` has VI/EN content; others return empty arrays
- * (the detail page falls back to "content coming soon").
- *
- * When Supabase is wired (M3), this will query `site_content`.
+ * Returns the site plus its curated content sections, read from
+ * `content/sites/<slug>/<lang>/*.md`. Sites without markdown return empty
+ * arrays (the detail page falls back to "content coming soon").
  */
 export async function getSiteWithContent(slug: string): Promise<SiteWithContent | null> {
   const site = await getSite(slug);
   if (!site) return null;
 
-  if (slug === "vinh-moc") {
-    const { readVinhMocContent } = await import("@/lib/vinh-moc-content");
-    return { ...site, content: await readVinhMocContent() };
-  }
-  return { ...site, content: { vi: [], en: [] } };
+  const { readSiteContent } = await import("@/lib/content");
+  return { ...site, content: await readSiteContent(slug) };
 }
