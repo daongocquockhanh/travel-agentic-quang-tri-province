@@ -34,7 +34,7 @@ docs/                   System design + design brief
 
 ## Milestones
 
-See `docs/SYSTEM_DESIGN.md` §10. Currently at **M3: chat agent with RAG** (M1 scaffold and M2 map + site detail are done).
+See `docs/SYSTEM_DESIGN.md` §10. Currently at **M4: voice loop** (M1 scaffold, M2 map + site detail, M3 chat agent are done).
 
 ## Chat agent (M3)
 
@@ -43,4 +43,12 @@ See `docs/SYSTEM_DESIGN.md` §10. Currently at **M3: chat agent with RAG** (M1 s
 - **Grounding is enforced server-side.** War track, war/religious sites and war/religious/ethnic questions get curated chunks retrieved *before* the model runs. The model is limited to those chunks, and the question is refused (and logged to `content_gaps`) when there are none. Chunks never come from a different site than the one the question is about.
 - Works without keys: with no Supabase it searches `content/sites/**` locally; with no `OPENAI_API_KEY` it answers with cited excerpts ("offline mode").
 - UI: `/chat` (also `?site=<slug>`, `?intent=arrival_story`, `?q=`). Reachable from the map ask bar, the site page "Ask about this place" button, and the geofence banner's Play button.
-- Tests: `bun run test` (guards, retrieval, agent grounding/refusal).
+- Tests: `bun run test` (guards, retrieval, agent grounding/refusal, voice).
+
+## Voice (M4)
+
+- Hold the mic button in `/chat` to talk (Space/Enter also works). Recording stops at 30 s, and taps shorter than 0.4 s are ignored.
+- `POST /api/agent/voice`: Whisper speech-to-text with a language hint plus a prompt listing Quảng Trị place names. The transcript then goes through the normal chat agent, so voice answers keep grounding and citations.
+- `POST /api/agent/tts`: TTS-1 audio, cached in memory by `hash(model, voice, lang, text)`. The voice is `onyx` on the war track and `nova` elsewhere.
+- The reply is spoken sentence by sentence while it streams (`lib/voice/sentences.ts`, `lib/voice/player.ts`). Every answer has a **Listen** button, and the geofence banner's Play speaks the arrival story.
+- Without `OPENAI_API_KEY`, speech-to-text shows a "type instead" notice and TTS falls back to the browser's built-in speech.

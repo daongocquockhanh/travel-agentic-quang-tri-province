@@ -112,7 +112,8 @@ Driving with family. Wants hidden beaches near Cua Tung, opening hours, ticket p
 | Route | Method | Purpose |
 |---|---|---|
 | `/api/agent/chat` | POST | SSE streaming agent. Body: `{messages, track, lang, lat?, lng?, site_slug?, intent?}`. |
-| `/api/agent/voice` | POST | Multipart audio → Whisper → chat → TTS-1. Returns `{transcript, response_text, audio_url}`. |
+| `/api/agent/voice` | POST | Multipart `audio` (≤ 2 MB) + `lang` → Whisper. Returns `{transcript}`; the client sends it through `/api/agent/chat` so voice and text share one grounded agent path. |
+| `/api/agent/tts` | POST | `{text, lang, voice?}` → `audio/mpeg` via TTS-1, cached by `hash(model, voice, lang, text)`. 503/502 tell the client to fall back to browser `speechSynthesis`. |
 | `/api/sites` | GET | List sites. Query: `?track=&near=lat,lng&radius_km=`. |
 | `/api/sites/[slug]` | GET | Single site row + curated content sections. |
 | `/api/nearby` | GET | PostGIS distance query. Query: `?lat&lng&radius_km`. |
@@ -267,19 +268,21 @@ Client                  /api/nearby      /api/agent/chat        Postgres        
 
 ### 7.2 Voice question
 
+Implemented in M4 as three calls, so the answer streams (and starts speaking)
+instead of arriving all at once, and voice reuses the chat agent's grounding
+and citations:
+
 ```
-Client (push-to-talk)        /api/agent/voice        OpenAI
-  │ MediaRecorder webm              │                   │
-  ├──── multipart POST ────────────►│                   │
-  │                                 ├── Whisper ───────►│
-  │                                 │◄── transcript ────│
-  │                                 ├── chat (tools) ──►│
-  │                                 │◄── response_text ─│
-  │                                 ├── TTS-1 ─────────►│
-  │                                 │◄── audio bytes ───│
-  │                                 │ store in Storage  │
-  │◄── {transcript, response_text, audio_url} ─────────│
-  │ play audio + render text                            │
+Client (push-to-talk)    /api/agent/voice   /api/agent/chat   /api/agent/tts   OpenAI
+  │ hold: MediaRecorder        │                  │                │            │
+  │ (webm/opus, mp4 on Safari) │                  │                │            │
+  ├── release: multipart ─────►├── Whisper (lang hint + place-name prompt) ────►│
+  │◄── {transcript} ───────────│                  │                │            │
+  ├── transcript as user msg ────────────────────►│ (grounded agent, SSE) ─────►│
+  │◄── token ── token ── token ───────────────────│                │            │
+  │ each complete sentence ──────────────────────────────────────►├── TTS-1 ──►│
+  │◄── audio/mpeg (LRU cached) ───────────────────────────────────│            │
+  │ play sentences in order while the rest streams                             │
 ```
 
 ### 7.3 Track switch

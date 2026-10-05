@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useChat, type Message } from "@ai-sdk/react";
 import { Citation } from "@/components/citation";
 import { Icon } from "@/components/icon";
 import { TrackChip } from "@/components/track-chip";
+import { VoiceButton } from "@/components/voice-button";
 import { arrivalStoryPrompt } from "@/lib/agent/system-prompts";
 import type { AgentAnnotation } from "@/lib/agent/types";
 import { TRACKS, TRACK_COLOR, TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
+import { defaultVoice } from "@/lib/voice/config";
+import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
+import { SentenceBuffer } from "@/lib/voice/sentences";
+import { useRecorder, type RecorderError } from "@/lib/voice/use-recorder";
 
 type Lang = "vi" | "en";
 
@@ -24,7 +29,7 @@ interface Props {
 
 const COPY = {
   en: {
-    placeholder: "Ask about a place, route, or history…",
+    placeholder: "Ask about a place or its history…",
     send: "Send",
     thinking: "Thinking…",
     searching: "Checking curated sources…",
@@ -38,9 +43,27 @@ const COPY = {
     context: "Asking about",
     back: "Back",
     language: "Switch language",
+    holdToTalk: "Hold to talk",
+    releaseToSend: "Release to send",
+    transcribing: "Transcribing…",
+    listen: "Listen",
+    stopListening: "Stop",
+    speaking: "Speaking…",
+    voiceErrors: {
+      unsupported: "Voice isn't supported in this browser. Please type instead.",
+      denied: "Microphone access is blocked. Allow it in your browser settings, or type instead.",
+      too_short: "Hold the button while you speak.",
+      too_large: "That recording was too long. Keep it under 30 seconds.",
+      failed: "Couldn't use the microphone. Please type instead.",
+      not_configured: "Voice input isn't set up on this server yet. Please type instead.",
+      empty: "Couldn't hear that. Try again, or type instead.",
+      stt_failed: "Couldn't hear that. Try again, or type instead.",
+      blocked: "Tap Listen to hear the answer.",
+      tts_failed: "Couldn't play the voice. The text is above.",
+    },
   },
   vi: {
-    placeholder: "Hỏi về địa điểm, lộ trình hay lịch sử…",
+    placeholder: "Hỏi về địa điểm, lịch sử…",
     send: "Gửi",
     thinking: "Đang suy nghĩ…",
     searching: "Đang tra cứu tư liệu đã biên soạn…",
@@ -54,6 +77,24 @@ const COPY = {
     context: "Đang hỏi về",
     back: "Quay lại",
     language: "Đổi ngôn ngữ",
+    holdToTalk: "Giữ để nói",
+    releaseToSend: "Thả tay để gửi",
+    transcribing: "Đang nhận dạng giọng nói…",
+    listen: "Nghe",
+    stopListening: "Dừng",
+    speaking: "Đang đọc…",
+    voiceErrors: {
+      unsupported: "Trình duyệt chưa hỗ trợ giọng nói. Vui lòng nhập bằng chữ.",
+      denied: "Micro đang bị chặn. Hãy cho phép trong cài đặt trình duyệt, hoặc nhập bằng chữ.",
+      too_short: "Hãy giữ nút trong lúc nói.",
+      too_large: "Đoạn ghi âm quá dài. Vui lòng nói dưới 30 giây.",
+      failed: "Không dùng được micro. Vui lòng nhập bằng chữ.",
+      not_configured: "Máy chủ chưa bật nhận dạng giọng nói. Vui lòng nhập bằng chữ.",
+      empty: "Mình chưa nghe rõ. Thử lại hoặc nhập bằng chữ nhé.",
+      stt_failed: "Mình chưa nghe rõ. Thử lại hoặc nhập bằng chữ nhé.",
+      blocked: "Nhấn Nghe để nghe câu trả lời.",
+      tts_failed: "Không phát được giọng đọc. Nội dung ở phía trên.",
+    },
   },
 } as const;
 
@@ -131,6 +172,113 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
 
   const busy = status === "submitted" || status === "streaming";
 
+  // ── voice: playback ─────────────────────────────────────────────
+  const [playerState, setPlayerState] = useState<PlayerState>({ speaking: false, key: null, error: null });
+  const [notice, setNotice] = useState<string | null>(null);
+  const voiceCtx = useRef({ lang, track });
+  voiceCtx.current = { lang, track };
+  const playerRef = useRef<SpeechPlayer | null>(null);
+  const getPlayer = useCallback(() => {
+    playerRef.current ??= new SpeechPlayer({
+      lang: () => voiceCtx.current.lang,
+      voice: () => defaultVoice(voiceCtx.current.track),
+      onChange: setPlayerState,
+    });
+    return playerRef.current;
+  }, []);
+  useEffect(() => () => playerRef.current?.stop(), []);
+
+  useEffect(() => {
+    if (!playerState.error) return;
+    setNotice(t.voiceErrors[playerState.error as keyof typeof t.voiceErrors] ?? null);
+  }, [playerState.error, t]);
+  useEffect(() => {
+    if (!notice) return;
+    const id = window.setTimeout(() => setNotice(null), 5000);
+    return () => window.clearTimeout(id);
+  }, [notice]);
+
+  /**
+   * When a turn should be spoken (voice question, arrival story), speak the
+   * answer sentence by sentence as it streams instead of waiting for the end.
+   */
+  const autoSpeak = useRef<{ armed: boolean; messageId: string | null; buffer: SentenceBuffer } | null>(null);
+  const armAutoSpeak = () => {
+    autoSpeak.current = { armed: true, messageId: null, buffer: new SentenceBuffer() };
+  };
+  useEffect(() => {
+    const a = autoSpeak.current;
+    if (!a?.armed) return;
+    if (status === "error") {
+      autoSpeak.current = null;
+      return;
+    }
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg || lastMsg.role !== "assistant") return;
+    const player = getPlayer();
+    if (!a.messageId) {
+      a.messageId = lastMsg.id;
+      player.begin(lastMsg.id);
+    }
+    if (lastMsg.id !== a.messageId) return;
+    const done = status === "ready";
+    const pieces = a.buffer.push(lastMsg.content);
+    if (done) pieces.push(...a.buffer.flush(lastMsg.content));
+    pieces.forEach((p) => player.enqueue(p));
+    if (done) autoSpeak.current = null;
+  }, [messages, status, getPlayer]);
+
+  const listenTo = (m: Message) => {
+    const player = getPlayer();
+    if (playerState.key === m.id && playerState.speaking) {
+      player.stop();
+      return;
+    }
+    player.unlock();
+    player.begin(m.id);
+    const buf = new SentenceBuffer(200);
+    [...buf.push(m.content), ...buf.flush(m.content)].forEach((p) => player.enqueue(p));
+  };
+
+  // ── voice: push-to-talk ─────────────────────────────────────────
+  const [transcribing, setTranscribing] = useState(false);
+  const voiceError = (code: RecorderError | string) =>
+    setNotice(t.voiceErrors[code as keyof typeof t.voiceErrors] ?? t.voiceErrors.failed);
+
+  const recorder = useRecorder({
+    onError: voiceError,
+    onAudio: async (audio) => {
+      setTranscribing(true);
+      try {
+        const form = new FormData();
+        const ext = audio.type.includes("mp4") ? "mp4" : audio.type.includes("ogg") ? "ogg" : "webm";
+        form.append("audio", audio, `speech.${ext}`);
+        form.append("lang", voiceCtx.current.lang);
+        const res = await fetch("/api/agent/voice", { method: "POST", body: form });
+        const data = (await res.json().catch(() => ({}))) as { transcript?: string; code?: string };
+        if (!res.ok || !data.transcript) {
+          voiceError(data.code ?? "stt_failed");
+          return;
+        }
+        armAutoSpeak();
+        await send(data.transcript);
+      } catch {
+        voiceError("stt_failed");
+      } finally {
+        setTranscribing(false);
+      }
+    },
+  });
+
+  const pressStart = () => {
+    // Unlock audio inside the gesture so the spoken reply can autoplay on iOS.
+    const player = getPlayer();
+    player.stop();
+    player.unlock();
+    setNotice(null);
+    void recorder.start();
+  };
+
   async function send(text: string) {
     const content = text.trim();
     if (!content || busy) return;
@@ -150,6 +298,8 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         : initialQuestion;
     if (!first) return;
     started.current = true;
+    // The banner's "Play" means hear it: speak the arrival story as it streams.
+    if (intent === "arrival_story") armAutoSpeak();
     void append({ role: "user", content: first });
   }, [append, initialQuestion, intent, lang, site]);
 
@@ -242,7 +392,13 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
               {m.role === "user" ? (
                 <UserBubble text={m.content} />
               ) : (
-                <AssistantBubble message={m} track={track} t={t} />
+                <AssistantBubble
+                  message={m}
+                  track={track}
+                  t={t}
+                  speaking={playerState.speaking && playerState.key === m.id}
+                  onListen={status === "ready" || m.id !== last?.id ? () => listenTo(m) : undefined}
+                />
               )}
             </li>
           ))}
@@ -296,35 +452,65 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
             ))}
           </div>
         )}
+        {(notice || recorder.recording || transcribing || playerState.speaking) && (
+          <div className="mb-2 flex items-center justify-between gap-2 text-[13px] text-fg-muted" aria-live="polite">
+            <span>
+              {recorder.recording
+                ? `${t.releaseToSend} · ${Math.ceil(recorder.elapsedMs / 1000)}s`
+                : transcribing
+                  ? t.transcribing
+                  : notice ?? t.speaking}
+            </span>
+            {playerState.speaking && !recorder.recording && (
+              <button
+                type="button"
+                onClick={() => getPlayer().stop()}
+                className="rounded-full border border-border px-2.5 py-1 text-[12px] font-medium text-fg"
+              >
+                {t.stopListening}
+              </button>
+            )}
+          </div>
+        )}
         <form onSubmit={onSubmit} className="flex items-end gap-2">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder={t.placeholder}
+            placeholder={recorder.recording ? t.releaseToSend : t.placeholder}
             rows={1}
             maxLength={4000}
             aria-label={t.placeholder}
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-border bg-paper-card px-3.5 py-2.5 text-[15px] text-fg outline-none placeholder:text-fg-muted focus:border-border-strong"
+            disabled={recorder.recording || transcribing}
+            className="mb-1.5 max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-border bg-paper-card px-3.5 py-2.5 text-[15px] text-fg outline-none placeholder:text-fg-muted focus:border-border-strong"
           />
           {busy ? (
             <button
               type="button"
               onClick={stop}
               aria-label="Stop"
-              className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-paper-card text-fg"
+              className="mb-1.5 grid size-11 shrink-0 place-items-center rounded-full border border-border bg-paper-card text-fg"
             >
               <Icon name="x" size={18} />
             </button>
-          ) : (
+          ) : input.trim() ? (
             <button
               type="submit"
               aria-label={t.send}
-              disabled={!input.trim()}
-              className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-paper disabled:opacity-40"
+              className="mb-1.5 grid size-11 shrink-0 place-items-center rounded-full bg-primary text-paper"
             >
               <Icon name="arrowUp" size={18} />
             </button>
+          ) : (
+            <VoiceButton
+              label={t.holdToTalk}
+              recording={recorder.recording}
+              transcribing={transcribing}
+              elapsedMs={recorder.elapsedMs}
+              disabled={transcribing}
+              onPressStart={pressStart}
+              onPressEnd={(cancel) => recorder.stop(cancel)}
+            />
           )}
         </form>
       </div>
@@ -353,10 +539,15 @@ function AssistantBubble({
   message,
   track,
   t,
+  speaking,
+  onListen,
 }: {
   message: Message;
   track: TrackKey;
   t: (typeof COPY)[Lang];
+  speaking: boolean;
+  /** Absent while the message is still streaming. */
+  onListen?: () => void;
 }) {
   const { citations, mode } = readAnnotations(message);
   const searching = message.parts?.some(
@@ -394,6 +585,17 @@ function AssistantBubble({
             <Citation key={c.n} source={`[${c.n}] ${c.source}`} track={track} />
           ))}
         </div>
+      )}
+      {onListen && message.content && (
+        <button
+          type="button"
+          onClick={onListen}
+          aria-pressed={speaking}
+          className="inline-flex items-center gap-1.5 rounded-full px-1 py-0.5 text-[12px] font-medium text-fg-muted hover:text-fg"
+        >
+          <Icon name={speaking ? "x" : "play"} size={12} />
+          {speaking ? t.stopListening : t.listen}
+        </button>
       )}
     </div>
   );
