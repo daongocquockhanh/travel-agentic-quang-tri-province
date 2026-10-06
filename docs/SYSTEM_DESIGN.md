@@ -117,7 +117,8 @@ Driving with family. Wants hidden beaches near Cua Tung, opening hours, ticket p
 | `/api/sites` | GET | List sites. Query: `?track=&near=lat,lng&radius_km=`. |
 | `/api/sites/[slug]` | GET | Single site row + curated content sections. |
 | `/api/nearby` | GET | PostGIS distance query. Query: `?lat&lng&radius_km`. |
-| `/api/route` | POST | Itinerary builder. Body: `{slugs[]}` → ordered sites + travel times via OSRM/Mapbox Directions. |
+| `/api/route` | POST | Itinerary builder. Body: `{slugs[], start?, start_time?, optimize?}` → timed stops (with opening-hours warnings) + legs. Drive times are road-factor estimates, replaced by Mapbox Directions when a token is set; Cồn Cỏ legs go via the Cửa Việt pier + boat. |
+| `/api/recommend` | GET | "Next place" suggestions. Query: `track, from=<slug>|lat&lng, exclude, time_left_min, k`. Scored on track fit, theme, story continuity, travel time, time budget and opening hours, with a bilingual reason per card. |
 
 ### 5.3 Agent layer (`lib/agent/`)
 
@@ -136,7 +137,8 @@ lib/agent/
 | `search_curated` | `(query, site_slug?, section?, lang) → chunks[]` | Top-k pgvector search on `site_content`. Returns body + `source_citation`. |
 | `find_nearby` | `(lat, lng, radius_km, type?) → sites[]` | PostGIS `<->` distance ordered. |
 | `get_site` | `(slug) → site` | Structured row including hours, price, image. |
-| `build_route` | `(slugs[]) → ordered_sites_with_times[]` | OSRM/Mapbox Directions. |
+| `build_route` | `(slugs[], start_time?, optimize?) → itinerary` | Same planner as `/api/route`. Rendered as a route card that opens on the map. |
+| `recommend_next` | `(from_slug?, exclude?, time_left_min?) → recommendations[]` | Same recommender as `/api/recommend`. Rendered as next-place cards. |
 | `web_search` | `(query) → snippets[]` | Tavily/Brave. Disallowed for war/religious topics. |
 
 **Hard rule (enforced in `guards.ts`):** if `type ∈ {war, religious}` or active `track == 'war'`, the agent must call `search_curated` first, answer only from returned chunks, and emit `source_citation`. If no chunks: refuse and log to `content_gaps` table.

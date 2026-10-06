@@ -6,6 +6,8 @@ import { TRACK_COLOR, TRACK_LABEL_EN, type TrackKey } from "@/lib/tracks";
 import { TrackIcon } from "@/components/track-icon";
 import { Citation } from "@/components/citation";
 import { Icon } from "@/components/icon";
+import { AddToPlanButton } from "@/components/add-to-plan";
+import { NextPlaces } from "@/components/next-places";
 
 const SECTION_LABEL: Record<SiteContentSection["section"], string> = {
   overview: "Overview",
@@ -87,6 +89,17 @@ export default async function SiteDetailPage({ params }: Props) {
         <Fact label="Type" value={site.type[0].toUpperCase() + site.type.slice(1)} />
       </ul>
 
+      <div className="flex items-center gap-2 px-4 pb-2">
+        <AddToPlanButton slug={site.slug} lang={locale} />
+        <Link
+          href={`/map?tab=plan`}
+          className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-[13px] font-medium text-primary"
+        >
+          <Icon name="route" size={14} />
+          {locale === "vi" ? "Xem lộ trình" : "View plan"}
+        </Link>
+      </div>
+
       {/* sections */}
       <article className="flex flex-col gap-6 px-4 pb-28">
         {sections.length === 0 ? (
@@ -117,6 +130,7 @@ export default async function SiteDetailPage({ params }: Props) {
             </section>
           ))
         )}
+        <NextPlaces fromSlug={site.slug} lang={locale} fallbackTrack={primaryTrack} />
       </article>
 
       {/* floating CTA */}

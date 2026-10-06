@@ -15,6 +15,8 @@ export interface Site {
   hours: string;
   ticket_price_vnd: number | null;
   distance_from_dong_ha_km: number;
+  visit_min: number;
+  boat?: { from: string; minutes: number };
 }
 
 export interface NearbySite extends Site {

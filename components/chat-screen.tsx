@@ -6,9 +6,13 @@ import { useChat, type Message } from "@ai-sdk/react";
 import { Citation } from "@/components/citation";
 import { Icon } from "@/components/icon";
 import { TrackChip } from "@/components/track-chip";
+import { NextPlaceCards, NextPlaces } from "@/components/next-places";
+import { RouteCard } from "@/components/route-card";
 import { VoiceButton } from "@/components/voice-button";
 import { arrivalStoryPrompt } from "@/lib/agent/system-prompts";
 import type { AgentAnnotation } from "@/lib/agent/types";
+import type { Recommendation } from "@/lib/recommend";
+import type { Itinerary } from "@/lib/route";
 import { TRACKS, TRACK_COLOR, TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
 import { defaultVoice } from "@/lib/voice/config";
 import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
@@ -395,6 +399,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
                 <AssistantBubble
                   message={m}
                   track={track}
+                  lang={lang}
                   t={t}
                   speaking={playerState.speaking && playerState.key === m.id}
                   onListen={status === "ready" || m.id !== last?.id ? () => listenTo(m) : undefined}
@@ -403,6 +408,12 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
             </li>
           ))}
         </ul>
+
+        {intent === "arrival_story" && site && status === "ready" && messages.length >= 2 && (
+          <div className="mt-4">
+            <NextPlaces fromSlug={site.slug} lang={lang} fallbackTrack={track} />
+          </div>
+        )}
 
         {waitingForFirstToken && (
           <p className="mt-3 flex items-center gap-2 text-[13px] text-fg-muted">
@@ -538,12 +549,14 @@ function readAnnotations(m: Message) {
 function AssistantBubble({
   message,
   track,
+  lang,
   t,
   speaking,
   onListen,
 }: {
   message: Message;
   track: TrackKey;
+  lang: Lang;
   t: (typeof COPY)[Lang];
   speaking: boolean;
   /** Absent while the message is still streaming. */
@@ -579,6 +592,7 @@ function AssistantBubble({
         </div>
       ) : null}
       {searching && <p className="text-[13px] text-fg-muted">{t.searching}</p>}
+      <ToolCards message={message} lang={lang} track={track} />
       {chips.length > 0 && (
         <div className="flex max-w-[92%] flex-wrap gap-1.5">
           {chips.map((c) => (
@@ -616,6 +630,33 @@ function WithRefs({ text, known }: { text: string; known: Set<number> }) {
           );
         }
         return <span key={i}>{piece}</span>;
+      })}
+    </>
+  );
+}
+
+/** Planner tool results render as cards under the answer. */
+function ToolCards({ message, lang, track }: { message: Message; lang: Lang; track: TrackKey }) {
+  const results = (message.parts ?? []).flatMap((p) =>
+    p.type === "tool-invocation" && p.toolInvocation.state === "result" ? [p.toolInvocation] : [],
+  );
+  return (
+    <>
+      {results.map((inv) => {
+        if (inv.toolName === "recommend_next") {
+          const items = (inv.result as { recommendations?: Recommendation[] })?.recommendations ?? [];
+          return (
+            <div key={inv.toolCallId} className="w-full">
+              <NextPlaceCards items={items} lang={lang} track={track} />
+            </div>
+          );
+        }
+        if (inv.toolName === "build_route") {
+          const itinerary = inv.result as Itinerary & { stops?: unknown[] };
+          if (!itinerary?.stops?.length) return null;
+          return <RouteCard key={inv.toolCallId} itinerary={itinerary} lang={lang} track={track} />;
+        }
+        return null;
       })}
     </>
   );

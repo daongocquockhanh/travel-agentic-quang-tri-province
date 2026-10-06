@@ -52,6 +52,14 @@ export function isSensitiveQuery(text: string): boolean {
   return SENSITIVE_RE.test(normalizeForMatch(text));
 }
 
+const PLANNING_RE =
+  /\b(where (should|can|do|could) (i|we) go|where next|what next|what else|next (place|stop|site)s?|plan( my| our| a| the)? (day|tomorrow|trip|route|visit)|plan tomorrow|itinerary|day plan|route between|di dau tiep|di dau|tiep theo|lo trinh|ke hoach|lich trinh)\b/i;
+
+/** "Where next?", "plan tomorrow", "lộ trình"… questions answered by the planner tools. */
+export function isPlanningIntent(text: string): boolean {
+  return PLANNING_RE.test(normalizeForMatch(text));
+}
+
 /**
  * Hard rule from SYSTEM_DESIGN §5.3: war track, war/religious sites, and
  * sensitive questions must be answered only from curated chunks.
@@ -61,6 +69,10 @@ export function requiresCuratedGrounding(args: {
   siteType?: SiteType | null;
   query: string;
 }): boolean {
+  // Logistics ("where next?", "plan tomorrow") make no historical claims, so
+  // the planner tools answer them even on the war track — unless the
+  // question itself is about war, religion or ethnicity.
+  if (isPlanningIntent(args.query) && !isSensitiveQuery(args.query)) return false;
   if (args.track === "war") return true;
   if (args.siteType && SENSITIVE_SITE_TYPES.has(args.siteType)) return true;
   return isSensitiveQuery(args.query);

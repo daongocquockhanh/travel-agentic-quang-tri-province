@@ -1,6 +1,7 @@
 import "server-only";
 import { tool } from "ai";
 import { z } from "zod";
+import { nextPlaces, planRoute } from "@/lib/planner";
 import { findNearby, getSite } from "@/lib/sites";
 import { searchCurated } from "@/lib/agent/retrieval";
 import type { CitationRef, CuratedChunk, Lang } from "@/lib/agent/types";
@@ -41,6 +42,9 @@ export function buildTools(ctx: {
   lang: Lang;
   track: TrackKey;
   registry: CitationRegistry;
+  /** Site in context and traveller position, used as the default "from". */
+  site_slug?: string | null;
+  location?: { lat: number; lng: number } | null;
 }) {
   return {
     search_curated: tool({
@@ -113,6 +117,53 @@ export function buildTools(ctx: {
             hours: s.hours,
           })),
         };
+      },
+    }),
+
+    recommend_next: tool({
+      description:
+        "Suggest the next places to visit, ranked for the traveller's track, travel time, story continuity and opening hours. " +
+        "The app shows the results as cards with an 'Add to plan' button, so keep your text brief.",
+      parameters: z.object({
+        from_slug: z.string().optional().describe("Where the traveller is now or will finish. Defaults to the site in context."),
+        exclude: z.array(z.string()).optional().describe("Slugs already visited or planned."),
+        time_left_min: z.number().int().positive().max(1440).optional().describe("Minutes left today, if the traveller said."),
+      }),
+      execute: async ({ from_slug, exclude, time_left_min }) => {
+        const recommendations = await nextPlaces({
+          track: ctx.track,
+          from_slug: from_slug ?? ctx.site_slug ?? null,
+          from: ctx.location ?? null,
+          exclude,
+          time_left_min,
+          k: 3,
+        });
+        return { recommendations };
+      },
+    }),
+
+    build_route: tool({
+      description:
+        "Order a list of sites into a day plan with arrival times, travel legs (including the boat to Cồn Cỏ) and opening-hours warnings. " +
+        "The app shows it as a route card that opens on the map.",
+      parameters: z.object({
+        slugs: z.array(z.string()).min(1).max(10),
+        start_time: z
+          .string()
+          .regex(/^\d{1,2}:\d{2}$/)
+          .optional()
+          .describe("HH:MM, default 08:00."),
+        optimize: z.boolean().default(true).describe("Reorder for the shortest day. False keeps the given order."),
+        from_current_location: z.boolean().default(false),
+      }),
+      execute: async ({ slugs, start_time, optimize, from_current_location }) => {
+        const { itinerary, unknown } = await planRoute({
+          slugs,
+          start_time,
+          optimize,
+          start: from_current_location ? ctx.location ?? null : null,
+        });
+        return { ...itinerary, unknown };
       },
     }),
   };

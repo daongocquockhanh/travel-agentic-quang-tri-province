@@ -11,7 +11,14 @@ type IconName =
   | "list"
   | "settings"
   | "play"
-  | "book";
+  | "book"
+  | "check"
+  | "plus"
+  | "car"
+  | "boat"
+  | "chevronUp"
+  | "chevronDown"
+  | "route";
 
 interface Props {
   name: IconName;
@@ -98,6 +105,37 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </>
+  ),
+  check: <polyline points="20 6 9 17 4 12" />,
+  plus: (
+    <>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </>
+  ),
+  car: (
+    <>
+      <path d="M5 17H3v-5l2-5h14l2 5v5h-2" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <circle cx="7.5" cy="17" r="1.8" />
+      <circle cx="16.5" cy="17" r="1.8" />
+    </>
+  ),
+  boat: (
+    <>
+      <path d="M3 17l2 3h14l2-3H3z" />
+      <path d="M12 3v11" />
+      <path d="M12 4l6 9h-6" />
+    </>
+  ),
+  chevronUp: <polyline points="18 15 12 9 6 15" />,
+  chevronDown: <polyline points="6 9 12 15 18 9" />,
+  route: (
+    <>
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="18" cy="5" r="2" />
+      <path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16" />
     </>
   ),
 };

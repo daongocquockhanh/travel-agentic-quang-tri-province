@@ -34,7 +34,7 @@ docs/                   System design + design brief
 
 ## Milestones
 
-See `docs/SYSTEM_DESIGN.md` §10. Currently at **M4: voice loop** (M1 scaffold, M2 map + site detail, M3 chat agent are done).
+See `docs/SYSTEM_DESIGN.md` §10. Currently at **M5: itinerary builder + next-place recommender** (M1–M4 are done).
 
 ## Chat agent (M3)
 
@@ -52,3 +52,12 @@ See `docs/SYSTEM_DESIGN.md` §10. Currently at **M4: voice loop** (M1 scaffold, 
 - `POST /api/agent/tts`: TTS-1 audio, cached in memory by `hash(model, voice, lang, text)`. The voice is `onyx` on the war track and `nova` elsewhere.
 - The reply is spoken sentence by sentence while it streams (`lib/voice/sentences.ts`, `lib/voice/player.ts`). Every answer has a **Listen** button, and the geofence banner's Play speaks the arrival story.
 - Without `OPENAI_API_KEY`, speech-to-text shows a "type instead" notice and TTS falls back to the browser's built-in speech.
+
+## Itinerary + next place (M5)
+
+- The **plan** is an ordered list of sites kept in localStorage (`lib/plan-store.ts`) and shared live by the map, site pages and chat.
+- **Map → My plan** shows route cards with arrive/depart times, drive or boat legs, opening-hours warnings, reorder/remove buttons, a start time, and **Optimize order** (exact search up to 8 stops, then nearest-neighbour + 2-opt). The same route is drawn on the map with numbered stops; boat crossings are dashed.
+- **Next places** (`lib/recommend.ts`): three cards with drive time and a reason ("13 min drive · continues the 17th-parallel story · open until 16:30"). They appear on site pages, after an arrival story, in the plan tab, and in chat.
+- Chat agent tools `recommend_next` and `build_route` render as those same cards. "Where next?" and "plan tomorrow" work on the war track too, and offline without an OpenAI key.
+- `/map?plan=a,b,c&tab=plan` opens a shared plan (the chat route card links there).
+- Drive times are estimates (straight line × 1.3 at 45 km/h) unless `MAPBOX_SECRET_TOKEN` or `NEXT_PUBLIC_MAPBOX_TOKEN` is set, in which case Mapbox Directions supplies real times and road geometry.
