@@ -5,12 +5,14 @@ import { getSite, type Site } from "@/lib/sites";
 import {
   MAX_HISTORY_MESSAGES,
   capMessage,
+  isPlanningIntent,
   refusalText,
   requiresCuratedGrounding,
 } from "@/lib/agent/guards";
 import { logContentGap, searchCurated, siteMentionedIn } from "@/lib/agent/retrieval";
 import { buildSystemPrompt, type NumberedChunk } from "@/lib/agent/system-prompts";
 import { CitationRegistry, buildTools } from "@/lib/agent/tools";
+import { nextPlaces } from "@/lib/planner";
 import type { AgentAnnotation, AgentRequest, Lang } from "@/lib/agent/types";
 
 /**
@@ -73,7 +75,13 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
       groundingChunks: grounding,
     }),
     messages: history,
-    tools: buildTools({ lang: req.lang, track: req.track, registry }),
+    tools: buildTools({
+      lang: req.lang,
+      track: req.track,
+      registry,
+      site_slug: site?.slug,
+      location: req.lat != null && req.lng != null ? { lat: req.lat, lng: req.lng } : null,
+    }),
     maxSteps: 4,
     maxTokens: 700,
     temperature: strict ? 0.2 : 0.5,
@@ -96,6 +104,31 @@ async function answerOffline(args: {
   stream: DataStreamWriter;
 }) {
   const { req, question, site, registry, stream } = args;
+
+  // Planning works without an LLM: answer with the recommender's cards,
+  // sent as a recommend_next tool result so the UI renders them as usual.
+  if (isPlanningIntent(question)) {
+    const recommendations = await nextPlaces({
+      track: req.track,
+      from_slug: site?.slug ?? null,
+      from: req.lat != null && req.lng != null ? { lat: req.lat, lng: req.lng } : null,
+      k: 3,
+    });
+    writeMode(stream, { grounded: false, offline: true, refused: false });
+    const toolCallId = "offline-recommend";
+    stream.write(
+      formatDataStreamPart("tool_call", { toolCallId, toolName: "recommend_next", args: { from_slug: site?.slug } }),
+    );
+    stream.write(formatDataStreamPart("tool_result", { toolCallId, result: { recommendations } }));
+    writeText(
+      stream,
+      req.lang === "vi"
+        ? "Chế độ ngoại tuyến — đây là những điểm nên đến tiếp theo cho hành trình của bạn:"
+        : "Offline mode — here are good next stops for your track:",
+    );
+    return;
+  }
+
   let numbered = args.grounding;
   if (!numbered) {
     const chunks = await searchCurated({ query: question, lang: req.lang, site_slug: site?.slug, k: 2 });

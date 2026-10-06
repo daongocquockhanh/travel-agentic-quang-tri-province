@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { MapView, type MapSite } from "@/components/map-view";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MapView, type MapRoute, type MapSite } from "@/components/map-view";
+import { PlanPanel } from "@/components/plan-panel";
 import { TrackChip } from "@/components/track-chip";
 import { SiteCard, type SiteCardData } from "@/components/site-card";
 import { GeofenceBanner } from "@/components/geofence-banner";
 import { Icon } from "@/components/icon";
+import { plan, usePlan } from "@/lib/plan-store";
 import { TRACK_STORAGE_KEY, type TrackKey } from "@/lib/tracks";
 
 interface Props {
@@ -16,14 +18,38 @@ interface Props {
   cards: SiteCardData[];
   /** Optional geofence demo: if non-null, banner shows for this site. */
   demoBanner?: { slug: string; name_vi: string; name_en: string; track: TrackKey } | null;
+  initialLang?: "vi" | "en";
+  initialTab?: "nearby" | "plan";
+  /** From `/map?plan=a,b,c` (e.g. a route card in chat): replaces the saved plan. */
+  sharedPlan?: string[] | null;
 }
 
 const TRACK_CYCLE: TrackKey[] = ["war", "foreign", "domestic"];
 
-export function MapHome({ initialTrack, sites, cards, demoBanner }: Props) {
+export function MapHome({
+  initialTrack,
+  sites,
+  cards,
+  demoBanner,
+  initialLang = "en",
+  initialTab = "nearby",
+  sharedPlan,
+}: Props) {
   const router = useRouter();
   const [track, setTrack] = useState<TrackKey>(initialTrack);
-  const [lang, setLang] = useState<"vi" | "en">("en");
+  const [lang, setLang] = useState<"vi" | "en">(initialLang);
+  const [tab, setTab] = useState<"nearby" | "plan">(sharedPlan?.length ? "plan" : initialTab);
+  const [route, setRoute] = useState<MapRoute | null>(null);
+  const planned = usePlan();
+  const onRoute = useCallback((r: MapRoute | null) => setRoute(r), []);
+  const names = useMemo(
+    () => Object.fromEntries(sites.map((s) => [s.slug, { vi: s.name_vi, en: s.name_en }])),
+    [sites],
+  );
+
+  useEffect(() => {
+    if (sharedPlan?.length) plan.set(sharedPlan);
+  }, [sharedPlan]);
   const [bannerOpen, setBannerOpen] = useState<boolean>(Boolean(demoBanner));
 
   const cycleTrack = () => {
@@ -46,6 +72,7 @@ export function MapHome({ initialTrack, sites, cards, demoBanner }: Props) {
         sites={sites}
         activeTrack={track}
         onSitePick={(slug) => router.push(`/site/${slug}`)}
+        route={planned.length ? route : null}
       />
 
       {/* top chrome */}
@@ -104,17 +131,38 @@ export function MapHome({ initialTrack, sites, cards, demoBanner }: Props) {
           </Link>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-fg-muted">
-            Nearby · {filteredCards.length} places
-          </p>
-          <ul className="flex flex-col gap-2">
-            {filteredCards.map((card) => (
-              <li key={card.slug}>
-                <SiteCard site={card} />
-              </li>
-            ))}
-          </ul>
+        <div role="tablist" className="mx-4 mb-2 grid grid-cols-2 gap-1 rounded-full bg-paper-sunk p-1">
+          {(["nearby", "plan"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={
+                "rounded-full py-1.5 text-[13px] font-medium transition " +
+                (tab === key ? "bg-paper-card text-fg shadow-[0_1px_3px_rgba(31,36,40,.12)]" : "text-fg-muted")
+              }
+            >
+              {key === "nearby"
+                ? `${lang === "vi" ? "Gần đây" : "Nearby"} · ${filteredCards.length}`
+                : `${lang === "vi" ? "Lộ trình" : "My plan"}${planned.length ? ` · ${planned.length}` : ""}`}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 pb-6" role="tabpanel">
+          {tab === "nearby" ? (
+            <ul className="flex flex-col gap-2">
+              {filteredCards.map((card) => (
+                <li key={card.slug}>
+                  <SiteCard site={card} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <PlanPanel lang={lang} track={track} names={names} onRoute={onRoute} />
+          )}
         </div>
       </section>
     </div>

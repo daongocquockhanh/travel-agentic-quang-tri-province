@@ -78,3 +78,19 @@ describe("capMessage", () => {
     expect(capMessage("x".repeat(MAX_MESSAGE_CHARS + 50))).toHaveLength(MAX_MESSAGE_CHARS);
   });
 });
+
+describe("planning intent", () => {
+  it.each(["Where should I go next?", "Plan tomorrow", "Lên lộ trình cho ngày mai", "Đi đâu tiếp?", "Make me an itinerary"])(
+    "recognises %s",
+    async (q) => {
+      const { isPlanningIntent } = await import("@/lib/agent/guards");
+      expect(isPlanningIntent(q)).toBe(true);
+    },
+  );
+
+  it("lets war-track logistics through but keeps sensitive planning questions grounded", () => {
+    expect(requiresCuratedGrounding({ track: "war", query: "Where should I go next?" })).toBe(false);
+    expect(requiresCuratedGrounding({ track: "war", query: "Plan a day of battle sites" })).toBe(true);
+    expect(requiresCuratedGrounding({ track: "war", query: "How deep are the tunnels?" })).toBe(true);
+  });
+});

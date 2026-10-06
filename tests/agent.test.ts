@@ -93,3 +93,26 @@ describe("runAgent grounding scope", () => {
     expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ grounded: true, refused: true });
   });
 });
+
+describe("runAgent planning (offline)", () => {
+  it("answers 'where next' with recommend_next tool parts instead of refusing on the war track", async () => {
+    const parts: string[] = [];
+    const s = fakeStream();
+    const writer = {
+      ...s.writer,
+      write(part: string) {
+        parts.push(part);
+        s.writer.write(part);
+      },
+    } as unknown as DataStreamWriter;
+    await runAgent(ask("Where should I go next?", { track: "war", site_slug: "hien-luong" }), writer);
+
+    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ refused: false, offline: true });
+    const call = parts.find((p) => p.startsWith("9:"));
+    const result = parts.find((p) => p.startsWith("a:"));
+    expect(JSON.parse(call!.slice(2))).toMatchObject({ toolName: "recommend_next" });
+    const recs = JSON.parse(result!.slice(2)).result.recommendations;
+    expect(recs.length).toBeGreaterThan(0);
+    expect(recs[0].slug).toBe("vinh-moc"); // same 17th-parallel story, minutes away
+  });
+});

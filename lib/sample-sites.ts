@@ -12,6 +12,10 @@ export interface SampleSite {
   hours: string;
   ticket_price_vnd: number | null;
   distance_from_dong_ha_km: number;
+  /** Typical time spent on site, for itinerary timing. */
+  visit_min: number;
+  /** Reached by boat from another site's pier (Cồn Cỏ from Cửa Việt). */
+  boat?: { from: string; minutes: number };
 }
 
 /** Ten anchor sites for MVP. Coordinates are approximate and live in `sites.geom` once Supabase is provisioned. */
@@ -28,6 +32,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "7:00–16:30",
     ticket_price_vnd: 50000,
     distance_from_dong_ha_km: 27,
+    visit_min: 90,
   },
   {
     slug: "hien-luong",
@@ -41,6 +46,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "Open 24h",
     ticket_price_vnd: null,
     distance_from_dong_ha_km: 22,
+    visit_min: 45,
   },
   {
     slug: "khe-sanh",
@@ -54,6 +60,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "7:00–17:00",
     ticket_price_vnd: 40000,
     distance_from_dong_ha_km: 64,
+    visit_min: 75,
   },
   {
     slug: "truong-son",
@@ -67,6 +74,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "Open 24h",
     ticket_price_vnd: null,
     distance_from_dong_ha_km: 35,
+    visit_min: 60,
   },
   {
     slug: "thach-han",
@@ -80,6 +88,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "Open 24h",
     ticket_price_vnd: null,
     distance_from_dong_ha_km: 6,
+    visit_min: 30,
   },
   {
     slug: "la-vang",
@@ -93,6 +102,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "5:00–20:00",
     ticket_price_vnd: null,
     distance_from_dong_ha_km: 11,
+    visit_min: 60,
   },
   {
     slug: "cua-tung",
@@ -106,6 +116,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "5:00–19:00",
     ticket_price_vnd: 30000,
     distance_from_dong_ha_km: 35,
+    visit_min: 120,
   },
   {
     slug: "cua-viet",
@@ -119,6 +130,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "5:00–19:00",
     ticket_price_vnd: null,
     distance_from_dong_ha_km: 16,
+    visit_min: 60,
   },
   {
     slug: "con-co",
@@ -132,6 +144,8 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "Day tour 6:00–17:00",
     ticket_price_vnd: 250000,
     distance_from_dong_ha_km: 47,
+    visit_min: 240,
+    boat: { from: "cua-viet", minutes: 90 },
   },
   {
     slug: "dong-ha",
@@ -145,6 +159,7 @@ export const SAMPLE_SITES: SampleSite[] = [
     hours: "Always open",
     ticket_price_vnd: null,
     distance_from_dong_ha_km: 0,
+    visit_min: 90,
   },
 ];
 

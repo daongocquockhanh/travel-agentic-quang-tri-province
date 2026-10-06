@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import { MapHome } from "@/components/map-home";
 import { listSites } from "@/lib/sites";
 import { isTrackKey, type TrackKey } from "@/lib/tracks";
@@ -5,7 +6,7 @@ import type { MapSite } from "@/components/map-view";
 import type { SiteCardData } from "@/components/site-card";
 
 interface Props {
-  searchParams: Promise<{ track?: string; demo?: string }>;
+  searchParams: Promise<{ track?: string; demo?: string; plan?: string; tab?: string }>;
 }
 
 function primaryTrack(tracks: TrackKey[]): TrackKey {
@@ -13,7 +14,8 @@ function primaryTrack(tracks: TrackKey[]): TrackKey {
 }
 
 export default async function MapPage({ searchParams }: Props) {
-  const { track: trackParam, demo } = await searchParams;
+  const { track: trackParam, demo, plan: planParam, tab } = await searchParams;
+  const lang = (await getLocale()) === "vi" ? "vi" : "en";
   const initialTrack: TrackKey =
     trackParam && isTrackKey(trackParam) ? trackParam : "foreign";
 
@@ -57,6 +59,16 @@ export default async function MapPage({ searchParams }: Props) {
       sites={mapSites}
       cards={cards}
       demoBanner={demoBanner}
+      initialLang={lang}
+      initialTab={tab === "plan" ? "plan" : "nearby"}
+      sharedPlan={
+        planParam
+          ? planParam
+              .split(",")
+              .filter((slug) => sites.some((s) => s.slug === slug))
+              .slice(0, 10)
+          : null
+      }
     />
   );
 }
