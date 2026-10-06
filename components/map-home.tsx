@@ -9,7 +9,9 @@ import { TrackChip } from "@/components/track-chip";
 import { SiteCard, type SiteCardData } from "@/components/site-card";
 import { GeofenceBanner } from "@/components/geofence-banner";
 import { Icon } from "@/components/icon";
+import { haversineMeters } from "@/lib/geo";
 import { plan, usePlan } from "@/lib/plan-store";
+import { useLocation } from "@/lib/use-location";
 import { TRACK_STORAGE_KEY, type TrackKey } from "@/lib/tracks";
 
 interface Props {
@@ -25,6 +27,9 @@ interface Props {
 }
 
 const TRACK_CYCLE: TrackKey[] = ["war", "foreign", "domestic"];
+/** "You're here" radius (SYSTEM_DESIGN §7.1) and the "nearby" radius before we fall back to nearest. */
+const GEOFENCE_M = 300;
+const NEARBY_M = 2000;
 
 export function MapHome({
   initialTrack,
@@ -50,7 +55,31 @@ export function MapHome({
   useEffect(() => {
     if (sharedPlan?.length) plan.set(sharedPlan);
   }, [sharedPlan]);
-  const [bannerOpen, setBannerOpen] = useState<boolean>(Boolean(demoBanner));
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const { status: locStatus, position, start: startLocation } = useLocation();
+
+  // Distances from the traveller, once we know where they are.
+  const distanceTo = useMemo(() => {
+    if (!position) return null;
+    return new Map(sites.map((s) => [s.slug, haversineMeters(position, s)]));
+  }, [position, sites]);
+
+  // Real geofence: the nearest site within 300 m; the ?demo= banner otherwise.
+  const here = useMemo(() => {
+    if (!distanceTo) return null;
+    const nearest = sites
+      .filter((s) => (distanceTo.get(s.slug) ?? Infinity) <= GEOFENCE_M)
+      .sort((a, b) => distanceTo.get(a.slug)! - distanceTo.get(b.slug)!)[0];
+    return nearest
+      ? {
+          slug: nearest.slug,
+          name_vi: nearest.name_vi,
+          name_en: nearest.name_en,
+          track: nearest.primary_track,
+        }
+      : null;
+  }, [distanceTo, sites]);
+  const banner = here ?? demoBanner ?? null;
 
   const cycleTrack = () => {
     const next = TRACK_CYCLE[(TRACK_CYCLE.indexOf(track) + 1) % TRACK_CYCLE.length];
@@ -63,8 +92,17 @@ export function MapHome({
   };
   const cycleLang = () => setLang((l) => (l === "en" ? "vi" : "en"));
 
-  const filteredCards =
-    track === "war" ? cards.filter((c) => c.primary_track === "war") : cards;
+  const trackCards = track === "war" ? cards.filter((c) => c.primary_track === "war") : cards;
+  // With a position: real distances, nearest first, and whether anything is within 2 km.
+  const filteredCards = distanceTo
+    ? trackCards
+        .map((c) => ({ ...c, distance_km: (distanceTo.get(c.slug) ?? 0) / 1000 }))
+        .sort((a, b) => a.distance_km - b.distance_km)
+    : trackCards;
+  const nothingClose =
+    distanceTo != null &&
+    !filteredCards.some((c) => (c.distance_km ?? Infinity) * 1000 <= NEARBY_M);
+  const vi = lang === "vi";
 
   return (
     <div className="relative h-screen overflow-hidden bg-[#2F4549]">
@@ -73,15 +111,35 @@ export function MapHome({
         activeTrack={track}
         onSitePick={(slug) => router.push(`/site/${slug}`)}
         route={planned.length ? route : null}
+        you={position}
       />
 
       {/* top chrome */}
       <div className="absolute inset-x-3.5 top-3.5 z-30 flex items-start justify-between gap-2">
         <TrackChip track={track} lang={lang} glass onClick={cycleTrack} />
+        <span className="flex-1" />
+        <button
+          type="button"
+          onClick={startLocation}
+          aria-label={vi ? "Dùng vị trí của tôi" : "Use my location"}
+          aria-pressed={locStatus === "watching"}
+          className={
+            "border-border grid size-[34px] cursor-pointer place-items-center rounded-full border backdrop-blur-md " +
+            (locStatus === "watching"
+              ? "bg-primary text-paper"
+              : "text-fg bg-[rgba(247,244,238,0.86)]")
+          }
+        >
+          <Icon
+            name="pin"
+            size={16}
+            className={locStatus === "locating" ? "animate-pulse" : undefined}
+          />
+        </button>
         <button
           type="button"
           onClick={cycleLang}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-[rgba(247,244,238,0.86)] px-3 py-1.5 font-sans text-[13px] font-medium text-fg backdrop-blur-md"
+          className="border-border text-fg inline-flex cursor-pointer items-center gap-1.5 rounded-full border bg-[rgba(247,244,238,0.86)] px-3 py-1.5 font-sans text-[13px] font-medium backdrop-blur-md"
         >
           <Icon name="globe" size={14} />
           {lang.toUpperCase()}
@@ -89,49 +147,49 @@ export function MapHome({
       </div>
 
       {/* geofence banner */}
-      {bannerOpen && demoBanner && (
+      {banner && !dismissed.has(banner.slug) && (
         <div className="absolute inset-x-3.5 top-16 z-20">
           <GeofenceBanner
-            track={demoBanner.track}
-            nameVi={demoBanner.name_vi}
-            nameEn={demoBanner.name_en}
+            track={banner.track}
+            nameVi={banner.name_vi}
+            nameEn={banner.name_en}
             onPlay={() =>
-              router.push(`/chat?site=${demoBanner.slug}&intent=arrival_story&track=${track}`)
+              router.push(`/chat?site=${banner.slug}&intent=arrival_story&track=${track}`)
             }
-            onRead={() => router.push(`/site/${demoBanner.slug}`)}
-            onDismiss={() => setBannerOpen(false)}
+            onRead={() => router.push(`/site/${banner.slug}`)}
+            onDismiss={() => setDismissed((d) => new Set(d).add(banner.slug))}
           />
         </div>
       )}
 
       {/* bottom sheet (half height) */}
       <section
-        className="absolute inset-x-0 bottom-0 z-10 flex h-[55vh] flex-col overflow-hidden rounded-t-3xl bg-paper shadow-[0_-16px_40px_-12px_rgba(31,36,40,.18)]"
+        className="bg-paper absolute inset-x-0 bottom-0 z-10 flex h-[55vh] flex-col overflow-hidden rounded-t-3xl shadow-[0_-16px_40px_-12px_rgba(31,36,40,.18)]"
         aria-label="Nearby sites"
       >
-        <button
-          type="button"
-          aria-label="Drag handle"
-          className="pt-2.5 pb-1.5"
-          tabIndex={-1}
-        >
-          <span className="mx-auto block h-1 w-9 rounded-full bg-ink/20" />
+        <button type="button" aria-label="Drag handle" className="pt-2.5 pb-1.5" tabIndex={-1}>
+          <span className="bg-ink/20 mx-auto block h-1 w-9 rounded-full" />
         </button>
 
-        <div className="px-4 pb-3 pt-1">
+        <div className="px-4 pt-1 pb-3">
           <Link
             href={`/chat?track=${track}`}
-            className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-paper-card px-3.5 py-2.5"
+            className="border-border bg-paper-card flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5"
           >
             <Icon name="mic" size={18} className="text-fg-muted" />
-            <span className="flex-1 truncate font-sans text-[15px] text-fg-muted">
-              Ask about a place, route, or history…
+            <span className="text-fg-muted flex-1 truncate font-sans text-[15px]">
+              {vi
+                ? "Hỏi về địa điểm, lộ trình hay lịch sử…"
+                : "Ask about a place, route, or history…"}
             </span>
             <Icon name="arrowUp" size={16} className="text-fg-muted" />
           </Link>
         </div>
 
-        <div role="tablist" className="mx-4 mb-2 grid grid-cols-2 gap-1 rounded-full bg-paper-sunk p-1">
+        <div
+          role="tablist"
+          className="bg-paper-sunk mx-4 mb-2 grid grid-cols-2 gap-1 rounded-full p-1"
+        >
           {(["nearby", "plan"] as const).map((key) => (
             <button
               key={key}
@@ -141,7 +199,9 @@ export function MapHome({
               onClick={() => setTab(key)}
               className={
                 "rounded-full py-1.5 text-[13px] font-medium transition " +
-                (tab === key ? "bg-paper-card text-fg shadow-[0_1px_3px_rgba(31,36,40,.12)]" : "text-fg-muted")
+                (tab === key
+                  ? "bg-paper-card text-fg shadow-[0_1px_3px_rgba(31,36,40,.12)]"
+                  : "text-fg-muted")
               }
             >
               {key === "nearby"
@@ -153,18 +213,78 @@ export function MapHome({
 
         <div className="flex-1 overflow-y-auto px-4 pb-6" role="tabpanel">
           {tab === "nearby" ? (
-            <ul className="flex flex-col gap-2">
-              {filteredCards.map((card) => (
-                <li key={card.slug}>
-                  <SiteCard site={card} />
-                </li>
-              ))}
-            </ul>
+            <>
+              <LocationNote
+                status={locStatus}
+                nothingClose={nothingClose}
+                vi={vi}
+                onRetry={startLocation}
+              />
+              <ul className="flex flex-col gap-2">
+                {filteredCards.map((card) => (
+                  <li key={card.slug}>
+                    <SiteCard site={card} />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
             <PlanPanel lang={lang} track={track} names={names} onRoute={onRoute} />
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+/** Calm, actionable copy for location states (design brief: friendly, not alarmed). */
+function LocationNote({
+  status,
+  nothingClose,
+  vi,
+  onRetry,
+}: {
+  status: ReturnType<typeof useLocation>["status"];
+  nothingClose: boolean;
+  vi: boolean;
+  onRetry: () => void;
+}) {
+  let text: string | null = null;
+  let action: string | null = null;
+  if (status === "idle") {
+    text = vi
+      ? "Bật vị trí để biết bạn đang ở gần đâu."
+      : "Turn on location to see what's near you.";
+    action = vi ? "Dùng vị trí" : "Use my location";
+  } else if (status === "locating") {
+    text = vi ? "Đang xác định vị trí…" : "Finding where you are…";
+  } else if (status === "denied") {
+    text = vi
+      ? "Vị trí đang tắt. Bạn vẫn có thể xem bản đồ và chọn một địa điểm bên dưới."
+      : "Location is off. You can still browse the map and pick a place below.";
+  } else if (status === "unavailable") {
+    text = vi
+      ? "Chưa xác định được vị trí. Bạn có thể chọn địa điểm bên dưới."
+      : "Couldn't get your location. Pick a place below instead.";
+    action = vi ? "Thử lại" : "Try again";
+  } else if (nothingClose) {
+    text = vi
+      ? "Không có địa điểm nào trong vòng 2 km. Đây là những nơi gần bạn nhất."
+      : "No sites within 2 km of you. These are the nearest.";
+  }
+  if (!text) return null;
+  return (
+    <div
+      className="bg-paper-sunk text-fg-muted mb-2.5 flex items-center gap-2 rounded-[10px] px-3 py-2 text-[13px]"
+      role="status"
+    >
+      <Icon name="pin" size={14} className="shrink-0" />
+      <span className="flex-1">{text}</span>
+      {action && (
+        <button type="button" onClick={onRetry} className="text-primary shrink-0 font-medium">
+          {action}
+        </button>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { planRoute } from "@/lib/planner";
+import { rateLimited } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,9 @@ const BodySchema = z.object({
 
 /** Itinerary builder: ordered stops with arrival times and travel legs. */
 export async function POST(request: Request) {
+  const limited = await rateLimited("route", request);
+  if (limited) return limited;
+
   let parsed;
   try {
     parsed = BodySchema.safeParse(await request.json());

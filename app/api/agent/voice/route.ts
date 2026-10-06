@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { MAX_AUDIO_BYTES, STT_VOCABULARY } from "@/lib/voice/config";
+import { rateLimited } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,9 @@ const EXT_BY_TYPE: Record<string, string> = {
  * speaks the answer via /api/agent/tts.
  */
 export async function POST(request: Request) {
+  const limited = await rateLimited("voice", request);
+  if (limited) return limited;
+
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_AUDIO_BYTES + 64 * 1024) {
     return Response.json({ error: "Audio too large", code: "too_large" }, { status: 413 });

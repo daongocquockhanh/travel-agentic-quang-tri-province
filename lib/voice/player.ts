@@ -87,7 +87,8 @@ export class SpeechPlayer {
         body: JSON.stringify({ text, lang: this.opts.lang(), voice: this.opts.voice() }),
       });
       if (res.ok) return await res.blob();
-      if (res.status >= 500) this.browserFallback = true;
+      // Server TTS unavailable (5xx) or rate-limited (429): the browser voice keeps the answer audible.
+      if (res.status >= 500 || res.status === 429) this.browserFallback = true;
       return null;
     } catch {
       return null;

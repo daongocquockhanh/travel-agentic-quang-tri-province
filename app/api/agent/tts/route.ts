@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { MAX_TTS_CHARS, TTS_VOICES, toSpeakable } from "@/lib/voice/config";
 import { getCachedSpeech, setCachedSpeech, ttsCacheKey } from "@/lib/voice/tts-cache";
+import { rateLimited } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,9 @@ const BodySchema = z.object({
 
 /** POST {text, lang, voice?} → audio/mpeg. Cached by hash(model, voice, lang, text). */
 export async function POST(request: Request) {
+  const limited = await rateLimited("tts", request);
+  if (limited) return limited;
+
   let parsed;
   try {
     parsed = BodySchema.safeParse(await request.json());

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Lint
+        run: bunx eslint app components lib scripts tests
+      - name: Content checks
+        run: bun run content:check
+      # Unit, component, offline agent eval (180 cases) and RLS tests.
+      # The runner image ships Postgres 16, which the RLS suite starts on its own port.
+      - name: Tests
+        run: bun run test
+      - name: Build
+        run: bun run build

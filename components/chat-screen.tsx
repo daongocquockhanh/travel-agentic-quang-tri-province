@@ -8,6 +8,7 @@ import { Icon } from "@/components/icon";
 import { TrackChip } from "@/components/track-chip";
 import { NextPlaceCards, NextPlaces } from "@/components/next-places";
 import { RouteCard } from "@/components/route-card";
+import { OverviewFallback } from "@/components/overview-fallback";
 import { VoiceButton } from "@/components/voice-button";
 import { arrivalStoryPrompt } from "@/lib/agent/system-prompts";
 import type { AgentAnnotation } from "@/lib/agent/types";
@@ -18,6 +19,7 @@ import { defaultVoice } from "@/lib/voice/config";
 import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
 import { SentenceBuffer } from "@/lib/voice/sentences";
 import { useRecorder, type RecorderError } from "@/lib/voice/use-recorder";
+import { clearThread, loadThread, saveThread } from "@/lib/chat-thread";
 
 type Lang = "vi" | "en";
 
@@ -40,12 +42,14 @@ const COPY = {
     grounded: "Answered from curated, cited sources",
     offline: "Offline mode",
     error: "Something went wrong.",
+    rateLimited: "You're asking faster than the guide can answer. Please wait a minute and try again.",
     retry: "Try again",
     readInstead: "Read the curated page instead",
     emptyTitle: "Ask your guide",
     emptyBody: "History, culture, opening hours, what to see next. War and religious topics are answered only from cited sources.",
     context: "Asking about",
     back: "Back",
+    newChat: "New chat",
     language: "Switch language",
     holdToTalk: "Hold to talk",
     releaseToSend: "Release to send",
@@ -64,6 +68,7 @@ const COPY = {
       stt_failed: "Couldn't hear that. Try again, or type instead.",
       blocked: "Tap Listen to hear the answer.",
       tts_failed: "Couldn't play the voice. The text is above.",
+      rate_limited: "Too many voice questions in a row. Please wait a minute, or type instead.",
     },
   },
   vi: {
@@ -74,12 +79,14 @@ const COPY = {
     grounded: "Trả lời từ nguồn đã biên soạn và dẫn nguồn",
     offline: "Chế độ ngoại tuyến",
     error: "Đã có lỗi xảy ra.",
+    rateLimited: "Bạn hỏi nhanh hơn hướng dẫn viên kịp trả lời. Vui lòng đợi một phút rồi thử lại.",
     retry: "Thử lại",
     readInstead: "Đọc trang thông tin thay thế",
     emptyTitle: "Hỏi hướng dẫn viên",
     emptyBody: "Lịch sử, văn hóa, giờ mở cửa, nên đi đâu tiếp. Chủ đề chiến tranh và tôn giáo chỉ được trả lời từ nguồn có dẫn chứng.",
     context: "Đang hỏi về",
     back: "Quay lại",
+    newChat: "Hỏi mới",
     language: "Đổi ngôn ngữ",
     holdToTalk: "Giữ để nói",
     releaseToSend: "Thả tay để gửi",
@@ -98,6 +105,7 @@ const COPY = {
       stt_failed: "Mình chưa nghe rõ. Thử lại hoặc nhập bằng chữ nhé.",
       blocked: "Nhấn Nghe để nghe câu trả lời.",
       tts_failed: "Không phát được giọng đọc. Nội dung ở phía trên.",
+      rate_limited: "Bạn đã hỏi bằng giọng nói nhiều lần liên tiếp. Vui lòng đợi một phút hoặc nhập bằng chữ.",
     },
   },
 } as const;
@@ -163,7 +171,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
     });
   }
 
-  const { messages, input, setInput, append, status, error, reload, stop } = useChat({
+  const { messages, setMessages, input, setInput, append, status, error, reload, stop } = useChat({
     api: "/api/agent/chat",
     body: {
       track,
@@ -175,6 +183,20 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
   });
 
   const busy = status === "submitted" || status === "streaming";
+
+  // Restore the last thread for this context, unless the page was opened to start a new one.
+  const threadContext = site ? `site:${site.slug}` : "general";
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (intent || initialQuestion) return;
+    const saved = loadThread(threadContext);
+    if (saved?.length) setMessages(saved);
+  }, [threadContext, intent, initialQuestion, setMessages]);
+  useEffect(() => {
+    if (status === "ready" && messages.length) saveThread(threadContext, messages);
+  }, [status, messages, threadContext]);
 
   // ── voice: playback ─────────────────────────────────────────────
   const [playerState, setPlayerState] = useState<PlayerState>({ speaking: false, key: null, error: null });
@@ -358,6 +380,19 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         </Link>
         <TrackChip track={track} lang={lang} onClick={cycleTrack} />
         <span className="flex-1" />
+        {messages.length > 0 && !busy && (
+          <button
+            type="button"
+            onClick={() => {
+              getPlayer().stop();
+              setMessages([]);
+              clearThread();
+            }}
+            className="rounded-full px-2.5 py-1.5 text-[13px] font-medium text-fg-muted hover:text-fg"
+          >
+            {t.newChat}
+          </button>
+        )}
         <button
           type="button"
           onClick={toggleLang}
@@ -424,7 +459,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
 
         {error && (
           <div className="mt-3 rounded-[10px] border border-border bg-paper-card p-3 text-sm" role="alert">
-            <p className="text-fg">{t.error}</p>
+            <p className="text-fg">{error.message.includes("rate_limited") ? t.rateLimited : t.error}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -442,6 +477,9 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
                 </Link>
               )}
             </div>
+            {site && !error.message.includes("rate_limited") && (
+              <OverviewFallback slug={site.slug} lang={lang} track={track} />
+            )}
           </div>
         )}
         <div ref={bottomRef} />

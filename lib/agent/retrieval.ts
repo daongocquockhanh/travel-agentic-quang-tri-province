@@ -15,6 +15,12 @@ export interface SearchArgs {
   site_slug?: string;
   section?: Section;
   k?: number;
+  /**
+   * Lexical search only: the share of the query's terms a chunk must contain.
+   * Used for unscoped sensitive questions, so "battle of Hamburger Hill" doesn't
+   * ground on Hiền Lương's "flag battle". (pgvector uses MIN_SIMILARITY instead.)
+   */
+  minCoverage?: number;
 }
 
 /**
@@ -64,9 +70,22 @@ export async function searchCurated(args: SearchArgs): Promise<CuratedChunk[]> {
  */
 export function siteMentionedIn(text: string): string | null {
   const norm = ` ${normalizeForMatch(text).replace(/[^a-z0-9]+/g, " ")} `;
-  const hit = SAMPLE_SITES.find((s) => norm.includes(` ${s.slug.replace(/-/g, " ")} `));
+  const hit = SAMPLE_SITES.find((s) =>
+    [s.slug.replace(/-/g, " "), ...(SITE_ALIASES[s.slug] ?? [])].some((name) => norm.includes(` ${name} `)),
+  );
   return hit?.slug ?? null;
 }
+
+/**
+ * Other names travellers use for places whose story lives in a site's content
+ * (diacritic-free, lowercase). The Quảng Trị Citadel is told under Thạch Hãn.
+ */
+const SITE_ALIASES: Record<string, string[]> = {
+  "thach-han": ["citadel", "thanh co", "quang tri citadel"],
+  "hien-luong": ["ben hai", "17th parallel bridge", "cau hien luong"],
+  "truong-son": ["truong son cemetery", "nghia trang truong son"],
+  "con-co": ["hero island", "dao anh hung"],
+};
 
 // ── pgvector ─────────────────────────────────────────────────────
 
@@ -115,7 +134,10 @@ async function searchVector(args: Required<Pick<SearchArgs, "query" | "lang" | "
 // ── local lexical index ──────────────────────────────────────────
 
 interface IndexedChunk extends Omit<CuratedChunk, "score"> {
+  /** Diacritic-free terms, for queries typed without accents ("dia dao vinh moc"). */
   terms: Map<string, number>;
+  /** Terms with their diacritics, for accented queries: keeps "đồi" (hill) apart from "đội" (unit). */
+  exactTerms: Map<string, number>;
   length: number;
 }
 
@@ -135,6 +157,23 @@ export function tokenize(text: string): string[] {
     .filter((t) => t.length >= 2 && !STOPWORDS.has(t));
 }
 
+/** Lowercase words that keep their diacritics; stopwords judged on the stripped form. */
+export function tokenizeExact(text: string): string[] {
+  return text
+    .normalize("NFC")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t.length >= 2 && !STOPWORDS.has(normalizeForMatch(t)));
+}
+
+const hasDiacritics = (text: string) => normalizeForMatch(text) !== text.toLowerCase();
+
+const count = (tokens: string[]) => {
+  const m = new Map<string, number>();
+  for (const t of tokens) m.set(t, (m.get(t) ?? 0) + 1);
+  return m;
+}
+
 let indexPromise: Promise<IndexedChunk[]> | null = null;
 
 async function buildIndex(): Promise<IndexedChunk[]> {
@@ -147,9 +186,10 @@ async function buildIndex(): Promise<IndexedChunk[]> {
     for (const lang of ["vi", "en"] as const) {
       for (const sec of content[lang]) {
         for (const body of chunk(sec.body)) {
-          const terms = new Map<string, number>();
-          const tokens = tokenize(`${names} ${body}`);
-          for (const t of tokens) terms.set(t, (terms.get(t) ?? 0) + 1);
+          const text = `${names} ${body}`;
+          const tokens = tokenize(text);
+          const terms = count(tokens);
+          const exactTerms = count(tokenizeExact(text));
           out.push({
             site_slug: slug,
             section: sec.section,
@@ -158,6 +198,7 @@ async function buildIndex(): Promise<IndexedChunk[]> {
             source_citation: sec.source_citation,
             review_status: sec.review_status,
             terms,
+            exactTerms,
             length: tokens.length,
           });
         }
@@ -185,24 +226,37 @@ export async function searchLocal(args: SearchArgs): Promise<CuratedChunk[]> {
   );
   if (!pool.length) return [];
 
-  const queryTerms = [...new Set(tokenize(args.query))];
+  // An accented query is matched accent-exact; a plain-ASCII one, loosely.
+  const exact = hasDiacritics(args.query);
+  const queryTerms = [...new Set(exact ? tokenizeExact(args.query) : tokenize(args.query))];
+  const termsOf = (c: IndexedChunk) => (exact ? c.exactTerms : c.terms);
   const avgLen = pool.reduce((n, c) => n + c.length, 0) / pool.length;
   const K1 = 1.2;
   const B = 0.75;
 
+  // Terms that appear nowhere in the pool get the highest weight: the content can't answer them.
+  const idf = new Map(
+    queryTerms.map((t) => {
+      const df = pool.filter((p) => termsOf(p).has(t)).length;
+      return [t, Math.log(1 + (pool.length - df + 0.5) / (df + 0.5))];
+    }),
+  );
+  const totalIdf = [...idf.values()].reduce((a, b) => a + b, 0);
+
   const scored = pool
     .map((c) => {
       let score = 0;
+      let matchedIdf = 0;
       for (const t of queryTerms) {
-        const tf = c.terms.get(t) ?? 0;
+        const tf = termsOf(c).get(t) ?? 0;
         if (!tf) continue;
-        const df = pool.filter((p) => p.terms.has(t)).length;
-        const idf = Math.log(1 + (pool.length - df + 0.5) / (df + 0.5));
-        score += idf * ((tf * (K1 + 1)) / (tf + K1 * (1 - B + (B * c.length) / avgLen)));
+        matchedIdf += idf.get(t)!;
+        score += idf.get(t)! * ((tf * (K1 + 1)) / (tf + K1 * (1 - B + (B * c.length) / avgLen)));
       }
-      return { c, score };
+      // Coverage weighted by rarity: missing "massacre" counts far more than missing "people".
+      return { c, score, coverage: totalIdf ? matchedIdf / totalIdf : 0 };
     })
-    .filter((x) => x.score > 0)
+    .filter((x) => x.score > 0 && (!args.minCoverage || queryTerms.length < 2 || x.coverage >= args.minCoverage))
     .sort((a, b) => b.score - a.score);
 
   // Scoped to a site but the query has no lexical overlap ("tell me the story"):

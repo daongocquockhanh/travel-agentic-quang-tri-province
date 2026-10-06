@@ -242,8 +242,9 @@ create table content_gaps (
 | Table | Policy |
 |---|---|
 | `sites`, `site_content` | Public read. Service-role write only. |
-| `agent_sessions`, `agent_messages` | `user_id = auth.uid()` for read/write. Anonymous sessions allowed (`user_id is null`). |
+| `agent_sessions`, `agent_messages` | Signed-in users: read, insert and delete only rows where `user_id = auth.uid()`. Anonymous sessions (`user_id is null`) are reachable only through the server (service role). (Migration 0003 closed a leak in 0001, where anonymous sessions were readable by any client; covered by `tests/rls.test.ts` against real Postgres.) |
 | `content_gaps` | Service-role only (server logs to it). |
+| Write helpers `upsert_site`, `replace_site_content` | `EXECUTE` revoked from anon/authenticated; service role only. All functions have a fixed `search_path`. |
 
 ## 7. Sequence diagrams (text form)
 
@@ -319,7 +320,8 @@ Client                       Postgres
 - Supabase RLS on every table.
 - OpenAI key server-only. Never sent to the client.
 - Mapbox token URL-restricted via referrer allowlist in Mapbox dashboard.
-- Per-IP rate limits via Upstash Ratelimit: chat 30/min, voice 10/min, TTS 20/min.
+- Per-IP rate limits via Upstash Ratelimit: chat 30/min, voice 10/min, TTS 20/min (plus route 60/min, recommend 120/min). Falls back to an in-process sliding window when Upstash isn't configured. 429 responses carry `Retry-After`; the UI explains and TTS falls back to browser speech.
+- Security headers: `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, and a `Permissions-Policy` allowing only microphone and geolocation.
 - Input caps: chat message ≤ 4 000 chars; audio ≤ 30 s and ≤ 2 MB.
 - Prompt-injection scrub on RAG chunks before insertion (`guards.ts`): regex strip `ignore previous`, role tokens (`<|im_start|>`, etc.), system markers.
 - PII minimization: `user_id` only, no email or name in messages. Voice audio in Storage with 7-day TTL lifecycle rule.
@@ -337,7 +339,7 @@ Client                       Postgres
 
 - Logs: Vercel + Supabase log drains → Logflare.
 - Analytics: PostHog. Events: `track_selected`, `site_viewed`, `chat_sent`, `voice_used`, `arrival_story_started`, `next_place_clicked`.
-- Eval: golden-set agent eval (180 prompts) runs nightly via GitHub Action; PR fails on regression.
+- Eval: golden-set agent eval (30 prompts × 3 tracks × 2 langs = 180 cases, `lib/eval/`). Offline (deterministic retrieval, grounding and refusal) it runs in every CI build and must pass 100%; with a model (`bun run eval`) it runs nightly via `.github/workflows/eval.yml` with a 95% gate.
 
 ## 9. Verification plan
 

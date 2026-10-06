@@ -44,3 +44,6 @@ coverage/
 # supabase
 supabase/.branches
 supabase/.temp
+
+# eval output
+eval-results.json
