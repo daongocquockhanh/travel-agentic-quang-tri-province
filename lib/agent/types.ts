@@ -13,6 +13,7 @@ export interface CuratedChunk {
   lang: Lang;
   body: string;
   source_citation: string | null;
+  review_status: "draft" | "reviewed";
   score: number;
 }
 
@@ -23,6 +24,8 @@ export interface CitationRef {
   site_slug: string;
   section: Section;
   source: string;
+  /** Drawn from content not yet editorially reviewed. */
+  draft: boolean;
 }
 
 export interface AgentRequest {
@@ -37,5 +40,5 @@ export interface AgentRequest {
 
 /** Annotation shape the chat UI reads off each assistant message. */
 export type AgentAnnotation =
-  | { type: "citation"; n: number; site_slug: string; section: string; source: string }
+  | { type: "citation"; n: number; site_slug: string; section: string; source: string; draft: boolean }
   | { type: "mode"; grounded: boolean; offline: boolean; refused: boolean };

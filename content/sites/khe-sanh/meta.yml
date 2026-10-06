@@ -1,0 +1,13 @@
+slug: khe-sanh
+name_vi: "Cứ điểm Khe Sanh"
+name_en: "Khe Sanh Combat Base"
+type: war
+tracks:
+  - war
+  - foreign
+geom:
+  lat: 16.6406
+  lng: 106.7314
+hero_image: null
+hours: "7:00–17:00"
+ticket_price_vnd: 40000

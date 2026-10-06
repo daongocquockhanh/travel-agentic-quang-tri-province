@@ -1,0 +1,12 @@
+slug: cua-viet
+name_vi: "Cảng Cửa Việt"
+name_en: "Cua Viet Port & Beach"
+type: nature
+tracks:
+  - domestic
+geom:
+  lat: 16.9
+  lng: 107.1833
+hero_image: null
+hours: "5:00–19:00"
+ticket_price_vnd: null

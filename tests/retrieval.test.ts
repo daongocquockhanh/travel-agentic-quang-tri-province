@@ -38,8 +38,30 @@ describe("searchLocal", () => {
 });
 
 describe("searchCurated", () => {
-  it("returns nothing for a site with no curated content in either language", async () => {
-    expect(await searchCurated({ query: "bridge", lang: "en", site_slug: "hien-luong" })).toEqual([]);
+  it("finds content for every catalogue site", async () => {
+    const { SAMPLE_SITES } = await import("@/lib/sample-sites");
+    for (const site of SAMPLE_SITES) {
+      for (const lang of ["vi", "en"] as const) {
+        const hits = await searchCurated({ query: "overview", lang, site_slug: site.slug });
+        expect(hits.length, `${site.slug}/${lang}`).toBeGreaterThan(0);
+        expect(hits.every((h) => h.lang === lang)).toBe(true);
+      }
+    }
+  });
+
+  it("finds the right site for specific facts", async () => {
+    expect((await searchCurated({ query: "flag battle flagpole 38.6 metres", lang: "en" }))[0].site_slug).toBe("hien-luong");
+    expect((await searchCurated({ query: "nghĩa trang hơn 10.000 phần mộ liệt sĩ", lang: "vi" }))[0].site_slug).toBe("truong-son");
+    expect((await searchCurated({ query: "minor basilica 1961 bell tower", lang: "en" }))[0].site_slug).toBe("la-vang");
+  });
+
+  it("drops drafts when CONTENT_REQUIRE_REVIEWED=true", async () => {
+    process.env.CONTENT_REQUIRE_REVIEWED = "true";
+    try {
+      expect(await searchCurated({ query: "tunnels", lang: "en", site_slug: "vinh-moc" })).toEqual([]);
+    } finally {
+      delete process.env.CONTENT_REQUIRE_REVIEWED;
+    }
   });
 });
 

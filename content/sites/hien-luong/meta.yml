@@ -1,0 +1,14 @@
+slug: hien-luong
+name_vi: "Cầu Hiền Lương – Bến Hải"
+name_en: "Hien Luong Bridge & Ben Hai River"
+type: war
+tracks:
+  - war
+  - foreign
+  - domestic
+geom:
+  lat: 17.0383
+  lng: 107.0728
+hero_image: null
+hours: "Open 24h"
+ticket_price_vnd: null

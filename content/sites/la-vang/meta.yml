@@ -1,0 +1,13 @@
+slug: la-vang
+name_vi: "Vương cung thánh đường La Vang"
+name_en: "La Vang Basilica"
+type: religious
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 16.7228
+  lng: 107.1956
+hero_image: null
+hours: "5:00–20:00"
+ticket_price_vnd: null

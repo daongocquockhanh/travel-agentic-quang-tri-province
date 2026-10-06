@@ -26,6 +26,7 @@ export class CitationRegistry {
       site_slug: c.site_slug,
       section: c.section,
       source: c.source_citation ?? "Curated content",
+      draft: c.review_status !== "reviewed",
     };
     this.byKey.set(key, ref.n);
     this.refs.push(ref);
