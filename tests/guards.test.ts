@@ -94,3 +94,11 @@ describe("planning intent", () => {
     expect(requiresCuratedGrounding({ track: "war", query: "How deep are the tunnels?" })).toBe(true);
   });
 });
+
+describe("Vietnamese battle and massacre terms", () => {
+  it("flags them without catching 'trần' (ceiling)", () => {
+    expect(isSensitiveQuery("Có bao nhiêu người thiệt mạng trong vụ thảm sát?")).toBe(true);
+    expect(isSensitiveQuery("Kể về trận đồi Thịt Băm")).toBe(true);
+    expect(isSensitiveQuery("Trần hầm có thấp không?")).toBe(false);
+  });
+});

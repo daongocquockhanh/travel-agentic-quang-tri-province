@@ -35,7 +35,7 @@ docs/                   System design + design brief
 
 ## Milestones
 
-See `docs/SYSTEM_DESIGN.md` §10. Currently at **M6: curate + ingest the top 10 sites** (M1–M5 are done). All ten sites have VI + EN drafts awaiting editorial review; see `docs/CONTENT_GUIDE.md`.
+See `docs/SYSTEM_DESIGN.md` §10. All milestones M1–M7 are implemented. Before launch: content review (all sections are still drafts; see `docs/CONTENT_GUIDE.md`) and testing with real API keys on real phones (see **Ship checklist** below).
 
 ## Chat agent (M3)
 
@@ -62,3 +62,20 @@ See `docs/SYSTEM_DESIGN.md` §10. Currently at **M6: curate + ingest the top 10 
 - Chat agent tools `recommend_next` and `build_route` render as those same cards. "Where next?" and "plan tomorrow" work on the war track too, and offline without an OpenAI key.
 - `/map?plan=a,b,c&tab=plan` opens a shared plan (the chat route card links there).
 - Drive times are estimates (straight line × 1.3 at 45 km/h) unless `MAPBOX_SECRET_TOKEN` or `NEXT_PUBLIC_MAPBOX_TOKEN` is set, in which case Mapbox Directions supplies real times and road geometry.
+
+## Ship-readiness (M7)
+
+- **Rate limits** (`lib/rate-limit.ts`): chat 30/min, voice 10/min, TTS 20/min, route 60/min, recommend 120/min per IP. Upstash Redis when `UPSTASH_REDIS_REST_*` is set, otherwise in-memory.
+- **RLS** (`supabase/migrations/0003_rls_hardening.sql`): anonymous agent sessions are no longer readable by every client; write helpers are service-role only. `tests/rls.test.ts` checks the policies against a real Postgres 16.
+- **Eval** (`lib/eval/`, `bun run eval`): 30 golden prompts × 3 tracks × 2 languages. Checks grounding, citations (and that they come from the right site), declining out-of-scope questions, planner tool use, reply language, length, and prompt-leak resistance. Offline it gates CI; with `OPENAI_API_KEY` it evaluates the real model nightly.
+- **Error states**: when chat fails, the site's curated overview is shown; location is opt-in, with calm denied/unavailable/"nothing within 2 km" states; real 300 m geofence banner; bilingual error, 404 and offline pages; offline banner.
+- **PWA**: icons from the logomark (including maskable), manifest shortcuts, service worker (`public/sw.js`) keeping the last 5 site pages and the map/chat shells; the last chat thread is kept in localStorage; pinch-zoom no longer disabled.
+- **CI** (`.github/workflows/`): `ci.yml` (typecheck, lint, content checks, tests incl. offline eval and RLS, build); `eval.yml` (nightly live eval); `ingest.yml` (ingest on merge to main, skipped with a warning while drafts remain).
+
+### Ship checklist
+
+1. Editors review all content and set `review_status: reviewed` (`bun run content:check --strict` must pass).
+2. Apply migrations 0001–0003; set `CONTENT_REQUIRE_REVIEWED=true` and the Upstash, OpenAI, Supabase and Mapbox env vars in production.
+3. Add `OPENAI_API_KEY` as a repo secret and run the live eval (Actions → Agent eval) until it passes.
+4. On-device check on a mid-range Android over 3G and on iOS Safari: load time, map frame rate, push-to-talk round-trip, install to home screen, offline.
+

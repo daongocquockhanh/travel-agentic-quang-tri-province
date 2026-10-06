@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { OfflineBanner } from "@/components/offline-banner";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,12 +10,13 @@ export const metadata: Metadata = {
   description:
     "Location-aware AI travel guide for Quang Tri Province, Vietnam. War history, culture, and 3D map.",
   manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Quảng Trị", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   themeColor: "#0F4C5C",
 };
 
@@ -33,6 +36,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="bg-paper font-sans text-fg antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <OfflineBanner />
+          <ServiceWorkerRegister />
           {children}
         </NextIntlClientProvider>
       </body>

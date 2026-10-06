@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "ingest": "bun run scripts/ingest.ts",
     "content:check": "bun run scripts/check-content.ts",
+    "eval": "bun --conditions=react-server run scripts/eval.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "posthog-js": "^1.205.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
     "yaml": "^2.6.0",
     "zod": "^3.23.8"
   },

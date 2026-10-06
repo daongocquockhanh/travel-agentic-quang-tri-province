@@ -12,5 +12,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    // Route tests call handlers repeatedly from one "IP"; rate-limit tests opt back in.
+    env: { RATE_LIMIT: "off" },
   },
 });

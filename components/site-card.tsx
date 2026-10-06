@@ -32,7 +32,13 @@ export function SiteCard({ site }: Props) {
         <p className="truncate font-display text-[17px] leading-tight text-fg">{site.name_vi}</p>
         <p className="truncate font-display text-[13px] italic text-fg-muted">{site.name_en}</p>
         <p className="mt-0.5 text-[12px] text-fg-muted">
-          {site.distance_km != null && <>{site.distance_km.toFixed(0)} km</>}
+          {site.distance_km != null && (
+            <>
+              {site.distance_km < 1
+                ? `${Math.round((site.distance_km * 1000) / 10) * 10} m`
+                : `${site.distance_km.toFixed(site.distance_km < 10 ? 1 : 0)} km`}
+            </>
+          )}
           {site.distance_km != null && site.hours && <span aria-hidden> · </span>}
           {site.hours}
         </p>

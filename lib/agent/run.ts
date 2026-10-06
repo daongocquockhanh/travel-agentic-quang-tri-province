@@ -36,8 +36,8 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
   const mentioned = siteMentionedIn(question);
   const target = mentioned && mentioned !== site?.slug ? await getSite(mentioned) : site;
   const strict =
-    requiresCuratedGrounding({ track: req.track, siteType: target?.type, query: question }) ||
-    requiresCuratedGrounding({ track: req.track, siteType: site?.type, query: question });
+    requiresCuratedGrounding({ track: req.track, siteType: target?.type, query: question, hasSite: Boolean(target) }) ||
+    requiresCuratedGrounding({ track: req.track, siteType: site?.type, query: question, hasSite: Boolean(site) });
 
   const registry = new CitationRegistry((ref) =>
     stream.writeMessageAnnotation({ type: "citation", ...ref } satisfies AgentAnnotation),
@@ -47,7 +47,14 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
   if (strict) {
     // Never fall back to other sites' content: an answer about Hiền Lương
     // must not be built from Vĩnh Mốc chunks.
-    const chunks = await searchCurated({ query: question, lang: req.lang, site_slug: target?.slug, k: 5 });
+    const chunks = await searchCurated({
+      query: question,
+      lang: req.lang,
+      site_slug: target?.slug,
+      k: 5,
+      // Without a site to scope to, a chunk must match most of the question, not one shared word.
+      minCoverage: target ? undefined : 0.5,
+    });
     if (!chunks.length) {
       await logContentGap({ query: question, track: req.track, lang: req.lang, site_slug: target?.slug });
       writeMode(stream, { grounded: true, offline: false, refused: true });
@@ -131,7 +138,13 @@ async function answerOffline(args: {
 
   let numbered = args.grounding;
   if (!numbered) {
-    const chunks = await searchCurated({ query: question, lang: req.lang, site_slug: site?.slug, k: 2 });
+    const chunks = await searchCurated({
+      query: question,
+      lang: req.lang,
+      site_slug: site?.slug,
+      k: 2,
+      minCoverage: site ? undefined : 0.5,
+    });
     numbered = chunks.map((chunk) => ({ ref: registry.register(chunk), chunk }));
   }
 

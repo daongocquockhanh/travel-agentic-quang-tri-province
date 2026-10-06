@@ -25,7 +25,11 @@ interface Props {
   activeTrack: TrackKey;
   onSitePick?: (slug: string) => void;
   route?: MapRoute | null;
+  /** The traveller's position, once they share it. */
+  you?: { lat: number; lng: number } | null;
 }
+
+const YOU_COLOR = "#2E7DD1";
 
 const ROUTE_COLOR = "#0F4C5C";
 
@@ -56,7 +60,7 @@ export function MapView(props: Props) {
 }
 
 // ── Mapbox path ───────────────────────────────────────────────────
-function MapboxMapView({ sites, activeTrack, onSitePick, route }: Props) {
+function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
   const container = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const markers = useRef<Marker[]>([]);
@@ -153,6 +157,29 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route }: Props) {
     })();
   }, [sites, activeTrack, ready, onSitePick, route]);
 
+  // "You" marker.
+  const youMarker = useRef<Marker | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    if (!you) {
+      youMarker.current?.remove();
+      youMarker.current = null;
+      return;
+    }
+    (async () => {
+      const mapbox = await import("mapbox-gl");
+      if (!youMarker.current) {
+        const el = document.createElement("div");
+        el.setAttribute("aria-label", "Your position");
+        el.style.cssText = `width:14px;height:14px;border-radius:999px;background:${YOU_COLOR};box-shadow:0 0 0 3px #fff,0 0 0 9px rgba(46,125,209,.25)`;
+        youMarker.current = new mapbox.default.Marker({ element: el }).setLngLat([you.lng, you.lat]).addTo(map);
+      } else {
+        youMarker.current.setLngLat([you.lng, you.lat]);
+      }
+    })();
+  }, [you, ready]);
+
   // Route line + fit to the planned stops.
   useEffect(() => {
     const map = mapRef.current;
@@ -203,7 +230,7 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route }: Props) {
 }
 
 // ── Fallback (no Mapbox token) ───────────────────────────────────
-function FallbackMapView({ sites, activeTrack, onSitePick, route }: Props) {
+function FallbackMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
   // Project lat/lng → percent positions within a Quang Tri bounding box.
   const BBOX = { minLat: 16.55, maxLat: 17.25, minLng: 106.65, maxLng: 107.4 };
   const project = (lat: number, lng: number) => ({
@@ -310,6 +337,21 @@ function FallbackMapView({ sites, activeTrack, onSitePick, route }: Props) {
           />
         );
       })}
+
+      {you && (
+        <span
+          aria-label="Your position"
+          role="img"
+          className="absolute z-30 size-3.5 rounded-full"
+          style={{
+            left: `${project(you.lat, you.lng).x}%`,
+            top: `${project(you.lat, you.lng).y}%`,
+            transform: "translate(-50%,-50%)",
+            background: YOU_COLOR,
+            boxShadow: "0 0 0 3px #fff, 0 0 0 9px rgba(46,125,209,.25)",
+          }}
+        />
+      )}
 
       <p
         className="absolute bottom-3 left-0 right-0 text-center font-mono text-[11px] text-paper/70"

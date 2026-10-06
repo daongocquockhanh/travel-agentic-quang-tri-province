@@ -20,6 +20,8 @@ const SENSITIVE_TERMS: Record<"war" | "religious" | "ethnic", string[]> = {
     "marines?", "napalm", "massacre", "casualt(y|ies)", "martyrs?", "siege", "combat", "military",
     "chien tranh", "khang chien", "bom", "tran danh", "liet si", "bo doi", "vi tuyen",
     "chien dich", "thanh co", "chien si", "quan doi", "hy sinh",
+    // Bare "tran" would also match "trần" (ceiling), so only battle phrases.
+    "tham sat", "thiet mang", "tran (?:danh|chien|dia|doi|dau|bao vay)", "chien truong",
   ],
   religious: [
     "church", "basilica", "catholic", "buddhis[mt]", "pagoda", "temple", "marian", "apparition",
@@ -60,6 +62,14 @@ export function isPlanningIntent(text: string): boolean {
   return PLANNING_RE.test(normalizeForMatch(text));
 }
 
+const HISTORY_RE =
+  /\b(why|history|historical|what happened|happened|story|called|named|origin|built|founded|vi sao|tai sao|lich su|chuyen gi|cau chuyen|duoc goi|xay dung|nguon goc|ra doi)\b/i;
+
+/** "Why…", "what happened…", "lịch sử…": the question asks for historical claims. */
+export function isHistoryQuestion(text: string): boolean {
+  return HISTORY_RE.test(normalizeForMatch(text));
+}
+
 /**
  * Hard rule from SYSTEM_DESIGN §5.3: war track, war/religious sites, and
  * sensitive questions must be answered only from curated chunks.
@@ -68,6 +78,8 @@ export function requiresCuratedGrounding(args: {
   track: TrackKey;
   siteType?: SiteType | null;
   query: string;
+  /** A specific site is in context or named in the question. */
+  hasSite?: boolean;
 }): boolean {
   // Logistics ("where next?", "plan tomorrow") make no historical claims, so
   // the planner tools answer them even on the war track — unless the
@@ -75,6 +87,9 @@ export function requiresCuratedGrounding(args: {
   if (isPlanningIntent(args.query) && !isSensitiveQuery(args.query)) return false;
   if (args.track === "war") return true;
   if (args.siteType && SENSITIVE_SITE_TYPES.has(args.siteType)) return true;
+  // History questions about a specific place are answered from its curated
+  // history, even for sites typed "nature" that carry war memory (Thạch Hãn, Cồn Cỏ).
+  if (args.hasSite && isHistoryQuestion(args.query)) return true;
   return isSensitiveQuery(args.query);
 }
 

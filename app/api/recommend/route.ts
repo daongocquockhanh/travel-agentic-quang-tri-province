@@ -1,5 +1,6 @@
 import { nextPlaces } from "@/lib/planner";
 import { isTrackKey } from "@/lib/tracks";
+import { rateLimited } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,9 @@ export const dynamic = "force-dynamic";
  * Query: track, from=<slug> or lat&lng, exclude=a,b, time_left_min, k (≤ 5).
  */
 export async function GET(request: Request) {
+  const limited = await rateLimited("recommend", request);
+  if (limited) return limited;
+
   const q = new URL(request.url).searchParams;
   const track = q.get("track");
   if (!isTrackKey(track)) return Response.json({ error: "track is required" }, { status: 400 });

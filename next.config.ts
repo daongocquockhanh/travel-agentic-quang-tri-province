@@ -14,6 +14,28 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "DENY" },
+          // Only what the app uses: the mic for push-to-talk and location for the geofence.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(self), payment=()" },
+        ],
+      },
+      {
+        // Browsers must always re-check the worker so updates roll out.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     // Let /design-preview/ and /design-preview/<slug>/ serve their index.html.
     return [

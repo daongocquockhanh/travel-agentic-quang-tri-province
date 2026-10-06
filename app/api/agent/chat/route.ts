@@ -2,6 +2,7 @@ import { createDataStreamResponse } from "ai";
 import { z } from "zod";
 import { runAgent } from "@/lib/agent/run";
 import { TRACKS } from "@/lib/tracks";
+import { rateLimited } from "@/lib/rate-limit";
 
 // Node runtime: the local retrieval fallback reads content/sites from disk.
 export const runtime = "nodejs";
@@ -25,6 +26,9 @@ const BodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = await rateLimited("chat", request);
+  if (limited) return limited;
+
   let parsed;
   try {
     parsed = BodySchema.safeParse(await request.json());
