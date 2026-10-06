@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "ingest": "bun run scripts/ingest.ts",
+    "content:check": "bun run scripts/check-content.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

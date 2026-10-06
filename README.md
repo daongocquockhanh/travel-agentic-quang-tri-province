@@ -14,8 +14,9 @@ Next.js 15 (App Router) · Supabase (Postgres + PostGIS + pgvector) · OpenAI (G
 bun install
 cp .env.example .env.local   # fill in keys
 # apply migration via Supabase CLI or dashboard:
-#   supabase/migrations/0001_init.sql
-bun run ingest               # ingests content/sites/* into DB
+#   supabase/migrations/0001_init.sql, 0002_content_review.sql
+bun run content:check        # editorial checks (add --strict for production)
+bun run ingest               # checks, then ingests content/sites/* into DB
 bun run dev
 ```
 
@@ -34,7 +35,7 @@ docs/                   System design + design brief
 
 ## Milestones
 
-See `docs/SYSTEM_DESIGN.md` §10. Currently at **M5: itinerary builder + next-place recommender** (M1–M4 are done).
+See `docs/SYSTEM_DESIGN.md` §10. Currently at **M6: curate + ingest the top 10 sites** (M1–M5 are done). All ten sites have VI + EN drafts awaiting editorial review; see `docs/CONTENT_GUIDE.md`.
 
 ## Chat agent (M3)
 

@@ -116,7 +116,21 @@ export default async function SiteDetailPage({ params }: Props) {
         ) : (
           sections.map((sec) => (
             <section key={sec.section} className="flex flex-col gap-3">
-              <h2 className="font-display text-xl">{sectionLabel[sec.section]}</h2>
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="font-display text-xl">{sectionLabel[sec.section]}</h2>
+                {sec.review_status === "draft" && (
+                  <span
+                    className="shrink-0 rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] text-fg-muted"
+                    title={
+                      locale === "vi"
+                        ? "Nội dung đang chờ biên tập viên duyệt"
+                        : "This section is awaiting editorial review"
+                    }
+                  >
+                    {locale === "vi" ? "Bản nháp" : "Draft"}
+                  </span>
+                )}
+              </div>
               <div className="space-y-3 text-[15px] leading-[1.55] text-fg">
                 {sec.body.split(/\n{2,}/).map((p, i) => (
                   <p key={i}>{p}</p>
@@ -124,7 +138,7 @@ export default async function SiteDetailPage({ params }: Props) {
               </div>
               {sec.source_citation && (
                 <div className="flex flex-wrap gap-1.5">
-                  <Citation source={sec.source_citation} track={primaryTrack} />
+                  <Citation source={sec.source_citation} href={sec.sources[0]} track={primaryTrack} />
                 </div>
               )}
             </section>

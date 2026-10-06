@@ -1,0 +1,13 @@
+slug: dong-ha
+name_vi: "Đông Hà"
+name_en: "Dong Ha"
+type: city
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 16.8167
+  lng: 107.1
+hero_image: null
+hours: "Always open"
+ticket_price_vnd: null

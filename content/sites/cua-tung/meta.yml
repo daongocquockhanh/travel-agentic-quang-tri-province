@@ -1,0 +1,13 @@
+slug: cua-tung
+name_vi: "Bãi tắm Cửa Tùng"
+name_en: "Cua Tung Beach"
+type: nature
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 17.0167
+  lng: 107.1167
+hero_image: null
+hours: "5:00–19:00"
+ticket_price_vnd: 30000

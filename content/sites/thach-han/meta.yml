@@ -1,0 +1,13 @@
+slug: thach-han
+name_vi: "Sông Thạch Hãn"
+name_en: "Thach Han River"
+type: nature
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 16.7548
+  lng: 107.1851
+hero_image: null
+hours: "Open 24h"
+ticket_price_vnd: null

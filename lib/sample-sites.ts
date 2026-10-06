@@ -149,8 +149,9 @@ export const SAMPLE_SITES: SampleSite[] = [
   },
   {
     slug: "dong-ha",
-    name_vi: "Thành phố Đông Hà",
-    name_en: "Dong Ha City",
+    // Đông Hà was the provincial capital until Quảng Trị merged with Quảng Bình on 1 July 2025.
+    name_vi: "Đông Hà",
+    name_en: "Dong Ha",
     type: "city",
     tracks: ["foreign", "domestic"],
     lat: 16.8167,

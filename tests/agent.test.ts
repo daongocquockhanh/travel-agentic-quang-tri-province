@@ -49,25 +49,42 @@ describe("runAgent (offline)", () => {
     expect(s.text()).toMatch(/\[1\]/);
   });
 
-  it("refuses a sensitive question with no curated content and does not invent an answer", async () => {
+  // Every section is still a draft, so the production switch leaves no usable content.
+  const withReviewedOnly = async (fn: () => Promise<void>) => {
+    process.env.CONTENT_REQUIRE_REVIEWED = "true";
+    try {
+      await fn();
+    } finally {
+      delete process.env.CONTENT_REQUIRE_REVIEWED;
+    }
+  };
+
+  it("refuses a sensitive question with no usable curated content and does not invent an answer", async () => {
     const s = fakeStream();
-    await runAgent(
-      ask("What battles happened at the bridge?", { track: "war", site_slug: "hien-luong" }),
-      s.writer,
+    await withReviewedOnly(() =>
+      runAgent(ask("What battles happened at the bridge?", { track: "war", site_slug: "hien-luong" }), s.writer),
     );
     const mode = s.annotations.find((a) => a.type === "mode");
     expect(mode).toMatchObject({ refused: true });
     expect(s.annotations.some((a) => a.type === "citation")).toBe(false);
     expect(s.text()).toMatch(/verified, sourced material/);
+    expect(s.text()).toMatch(/about Hien Luong/);
   });
 
   it("refuses in Vietnamese when lang is vi", async () => {
     const s = fakeStream();
-    await runAgent(
-      ask("Có trận đánh nào ở cầu Hiền Lương không?", { lang: "vi", site_slug: "hien-luong" }),
-      s.writer,
+    await withReviewedOnly(() =>
+      runAgent(ask("Có trận đánh nào ở cầu Hiền Lương không?", { lang: "vi", site_slug: "hien-luong" }), s.writer),
     );
     expect(s.text()).toMatch(/Mình chưa có tư liệu/);
+  });
+
+  it("marks citations drawn from draft content", async () => {
+    const s = fakeStream();
+    await runAgent(ask("How tall was the flagpole?", { track: "war", site_slug: "hien-luong" }), s.writer);
+    const citations = s.annotations.filter((a) => a.type === "citation");
+    expect(citations.length).toBeGreaterThan(0);
+    expect(citations.every((c) => c.type === "citation" && c.draft)).toBe(true);
   });
 
   it("serves Vietnamese curated content for a vi question", async () => {
@@ -79,18 +96,22 @@ describe("runAgent (offline)", () => {
 });
 
 describe("runAgent grounding scope", () => {
+  const citedSites = (anns: AgentAnnotation[]) =>
+    new Set(anns.flatMap((a) => (a.type === "citation" ? [a.site_slug] : [])));
+
   it("grounds on the site named in the question, not the site in context", async () => {
     const s = fakeStream();
-    // Standing at Vinh Moc but asking about Hien Luong, which has no content yet.
+    // Standing at Vinh Moc but asking about Hien Luong.
     await runAgent(ask("Tell me the war history of Hien Luong bridge", { site_slug: "vinh-moc" }), s.writer);
-    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ refused: true });
-    expect(s.text()).toMatch(/about Hien Luong/);
+    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ grounded: true, refused: false });
+    expect(citedSites(s.annotations)).toEqual(new Set(["hien-luong"]));
   });
 
   it("treats a question naming a war site as sensitive even from a nature site", async () => {
     const s = fakeStream();
     await runAgent(ask("What happened at Hien Luong?", { site_slug: "cua-tung" }), s.writer);
-    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ grounded: true, refused: true });
+    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ grounded: true });
+    expect(citedSites(s.annotations)).toEqual(new Set(["hien-luong"]));
   });
 });
 
@@ -102,7 +123,7 @@ describe("runAgent planning (offline)", () => {
       ...s.writer,
       write(part: string) {
         parts.push(part);
-        s.writer.write(part);
+        (s.writer.write as (p: string) => void)(part);
       },
     } as unknown as DataStreamWriter;
     await runAgent(ask("Where should I go next?", { track: "war", site_slug: "hien-luong" }), writer);

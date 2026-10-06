@@ -1,0 +1,13 @@
+slug: con-co
+name_vi: "Đảo Cồn Cỏ"
+name_en: "Con Co Island"
+type: nature
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 17.1583
+  lng: 107.3439
+hero_image: null
+hours: "Day tour 6:00–17:00"
+ticket_price_vnd: 250000

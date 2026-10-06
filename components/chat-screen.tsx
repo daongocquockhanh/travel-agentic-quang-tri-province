@@ -569,7 +569,18 @@ function AssistantBubble({
 
   // Show the sources the answer actually cites; if it cites none, show all it was given.
   const cited = new Set([...message.content.matchAll(/\[(\d+)\]/g)].map((x) => Number(x[1])));
-  const chips = cited.size ? citations.filter((c) => cited.has(c.n)) : citations;
+  const shown = cited.size ? citations.filter((c) => cited.has(c.n)) : citations;
+  // Sections of one site often share a citation: one chip per source, listing every ref number.
+  const chips: { source: string; ns: number[]; draft: boolean }[] = [];
+  for (const c of shown) {
+    const chip = chips.find((x) => x.source === c.source);
+    if (chip) {
+      chip.ns.push(c.n);
+      chip.draft ||= c.draft;
+    } else {
+      chips.push({ source: c.source, ns: [c.n], draft: c.draft });
+    }
+  }
 
   return (
     <div className="flex flex-col items-start gap-1.5">
@@ -596,7 +607,11 @@ function AssistantBubble({
       {chips.length > 0 && (
         <div className="flex max-w-[92%] flex-wrap gap-1.5">
           {chips.map((c) => (
-            <Citation key={c.n} source={`[${c.n}] ${c.source}`} track={track} />
+            <Citation
+              key={c.source}
+              source={`[${c.ns.join(", ")}] ${c.source}${c.draft ? (lang === "vi" ? " · bản nháp" : " · draft") : ""}`}
+              track={track}
+            />
           ))}
         </div>
       )}

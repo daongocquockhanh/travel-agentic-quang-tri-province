@@ -164,7 +164,8 @@ content/sites/<slug>/
 `scripts/ingest.ts`:
 1. Scan `content/sites/*/meta.yml` → upsert `sites`.
 2. Scan `content/sites/*/<lang>/<section>.md` → split ~500-token chunks → embed via `text-embedding-3-small` → upsert `site_content`.
-3. Reject any war/religious section missing `source_citation` in frontmatter.
+3. Reject any war/religious section missing `source_citation` in frontmatter. All editorial rules live in `lib/content-check.ts` (`bun run content:check`); ingest runs them first and writes nothing on error. With `INGEST_REQUIRE_REVIEWED=1`, any `review_status: draft` section is an error.
+   Frontmatter: `section, lang, source_citation, sources[], review_status (draft|reviewed), last_verified`. See `docs/CONTENT_GUIDE.md`.
 4. Triggered locally (`bun run ingest`) and via GitHub Action on merge to `main`.
 
 ## 6. Data model

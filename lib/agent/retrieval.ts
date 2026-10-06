@@ -17,6 +17,13 @@ export interface SearchArgs {
   k?: number;
 }
 
+/**
+ * With CONTENT_REQUIRE_REVIEWED=true (production), draft sections never
+ * reach the agent, so strict-grounded answers rest only on reviewed content.
+ */
+const allowed = (c: CuratedChunk) =>
+  process.env.CONTENT_REQUIRE_REVIEWED !== "true" || c.review_status === "reviewed";
+
 /** Below this cosine similarity a pgvector hit is treated as "no match". */
 const MIN_SIMILARITY = 0.25;
 
@@ -46,8 +53,8 @@ export async function searchCurated(args: SearchArgs): Promise<CuratedChunk[]> {
     return searchLocal({ ...args, lang, k });
   };
 
-  const primary = await search(args.lang);
-  const chunks = primary.length ? primary : await search(args.lang === "vi" ? "en" : "vi");
+  const primary = (await search(args.lang)).filter(allowed);
+  const chunks = primary.length ? primary : (await search(args.lang === "vi" ? "en" : "vi")).filter(allowed);
   return chunks.map((c) => ({ ...c, body: scrubChunk(c.body) }));
 }
 
@@ -84,7 +91,14 @@ async function searchVector(args: Required<Pick<SearchArgs, "query" | "lang" | "
   });
   if (error) throw error;
 
-  type Row = { site_slug: string; section: Section; body: string; source_citation: string | null; similarity: number };
+  type Row = {
+    site_slug: string;
+    section: Section;
+    body: string;
+    source_citation: string | null;
+    review_status: string | null;
+    similarity: number;
+  };
   return ((data ?? []) as Row[])
     .filter((r) => r.similarity >= MIN_SIMILARITY)
     .map<CuratedChunk>((r) => ({
@@ -93,6 +107,7 @@ async function searchVector(args: Required<Pick<SearchArgs, "query" | "lang" | "
       lang: args.lang,
       body: r.body,
       source_citation: r.source_citation,
+      review_status: r.review_status === "reviewed" ? "reviewed" : "draft",
       score: r.similarity,
     }));
 }
@@ -141,6 +156,7 @@ async function buildIndex(): Promise<IndexedChunk[]> {
             lang,
             body,
             source_citation: sec.source_citation,
+            review_status: sec.review_status,
             terms,
             length: tokens.length,
           });
@@ -210,6 +226,7 @@ function toChunk(c: IndexedChunk, score: number): CuratedChunk {
     lang: c.lang,
     body: c.body,
     source_citation: c.source_citation,
+    review_status: c.review_status,
     score,
   };
 }

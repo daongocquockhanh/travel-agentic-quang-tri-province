@@ -21,6 +21,9 @@ async function readSection(
       section,
       body: fm.content.trim(),
       source_citation: (fm.data.source_citation as string | undefined) ?? null,
+      sources: Array.isArray(fm.data.sources) ? fm.data.sources.filter((u: unknown) => typeof u === "string") : [],
+      // Anything not explicitly marked reviewed is treated as a draft.
+      review_status: fm.data.review_status === "reviewed" ? "reviewed" : "draft",
     };
   } catch {
     return null;

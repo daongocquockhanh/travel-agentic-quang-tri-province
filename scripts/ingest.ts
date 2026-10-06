@@ -9,6 +9,10 @@
  *   SUPABASE_SERVICE_ROLE_KEY
  *   OPENAI_API_KEY
  *   OPENAI_EMBEDDING_MODEL (default: text-embedding-3-small)
+ * Optional:
+ *   INGEST_REQUIRE_REVIEWED=1  refuse to ingest unless every section is reviewed (production)
+ *
+ * Runs the editorial checks (lib/content-check.ts) first and writes nothing if they fail.
  */
 
 import { readFile, readdir } from "node:fs/promises";
@@ -18,13 +22,13 @@ import OpenAI from "openai";
 import matter from "gray-matter";
 import YAML from "yaml";
 import { chunk } from "../lib/chunk";
+import { checkContent } from "../lib/content-check";
 
 const CONTENT_DIR = join(process.cwd(), "content/sites");
 const REQUIRES_CITATION = new Set(["war", "religious"]);
 const SECTIONS = ["overview", "history", "visit_tips", "culture_notes"] as const;
 type Section = (typeof SECTIONS)[number];
 const LANGS = ["vi", "en"] as const;
-type Lang = (typeof LANGS)[number];
 
 interface SiteMeta {
   slug: string;
@@ -34,6 +38,8 @@ interface SiteMeta {
   tracks: string[];
   geom: { lat: number; lng: number };
   hero_image?: string | null;
+  /** Free-text hours, e.g. "7:00–16:30". Stored as {text} when opening_hours is absent. */
+  hours?: string;
   opening_hours?: Record<string, string> | null;
   ticket_price_vnd?: number | null;
 }
@@ -84,7 +90,7 @@ async function ingestSite(slug: string) {
     p_lat: meta.geom.lat,
     p_lng: meta.geom.lng,
     p_hero_image: meta.hero_image ?? null,
-    p_opening_hours: meta.opening_hours ?? null,
+    p_opening_hours: meta.opening_hours ?? (meta.hours ? { text: meta.hours } : null),
     p_ticket_price_vnd: meta.ticket_price_vnd ?? null,
   });
   if (upsertErr) throw upsertErr;
@@ -140,6 +146,8 @@ async function ingestSite(slug: string) {
           body: c,
           embedding: await embed(c),
           source_citation: sourceCitation,
+          review_status: fm.data.review_status === "reviewed" ? "reviewed" : "draft",
+          sources: Array.isArray(fm.data.sources) ? fm.data.sources : [],
           chunk_index: idx,
         })),
       );
@@ -152,6 +160,14 @@ async function ingestSite(slug: string) {
 }
 
 async function main() {
+  const strict = process.env.INGEST_REQUIRE_REVIEWED === "1";
+  const report = await checkContent(CONTENT_DIR, { strict });
+  if (report.errors.length) {
+    for (const e of report.errors) console.error(`  ERROR ${e}`);
+    console.error(`\nContent check failed (${report.errors.length} error(s)${strict ? ", strict" : ""}). Nothing ingested.`);
+    process.exit(1);
+  }
+
   let entries: string[];
   try {
     entries = await readdir(CONTENT_DIR);

@@ -1,0 +1,13 @@
+slug: truong-son
+name_vi: "Nghĩa trang liệt sĩ Trường Sơn"
+name_en: "Truong Son National Cemetery"
+type: war
+tracks:
+  - war
+  - domestic
+geom:
+  lat: 16.7833
+  lng: 106.9667
+hero_image: null
+hours: "Open 24h"
+ticket_price_vnd: null

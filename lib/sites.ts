@@ -23,10 +23,16 @@ export interface NearbySite extends Site {
   distance_m: number;
 }
 
+export type ReviewStatus = "draft" | "reviewed";
+
 export interface SiteContentSection {
   section: "overview" | "history" | "visit_tips" | "culture_notes";
   body: string;
   source_citation: string | null;
+  /** Source URLs backing the section, for editors and citation links. */
+  sources: string[];
+  /** Drafts are shown with a label and kept out of production ingest. */
+  review_status: ReviewStatus;
 }
 
 export interface SiteWithContent extends Site {
