@@ -16,6 +16,9 @@
     },
   ],
   "observability": { "enabled": true },
+  "workers_dev": true,
+  // Per-PR preview versions (CI uploads them with --preview-alias pr-<number>).
+  "preview_urls": true,
   // Run near Google's API instead of at the visitor's nearest edge: the Gemini API
   // rejects calls from some regions ("User location is not supported for the API use").
   "placement": { "mode": "targeted", "region": "gcp:us-central1" },
