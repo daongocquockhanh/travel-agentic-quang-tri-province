@@ -47,3 +47,11 @@ supabase/.temp
 
 # eval output
 eval-results.json
+
+# generated content bundle (scripts/bundle-content.ts)
+lib/generated/
+
+# cloudflare
+.open-next/
+.wrangler/
+.dev.vars

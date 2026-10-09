@@ -3,21 +3,32 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "bun run content:bundle",
     "dev": "next dev --turbo",
+    "prebuild": "bun run content:bundle",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "pretypecheck": "bun run content:bundle",
     "typecheck": "tsc --noEmit",
+    "pretest": "bun run content:bundle",
     "test": "vitest run",
     "test:watch": "vitest",
     "ingest": "bun run scripts/ingest.ts",
     "content:check": "bun run scripts/check-content.ts",
+    "preeval": "bun run content:bundle",
     "eval": "bun --conditions=react-server run scripts/eval.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "content:bundle": "bun run scripts/bundle-content.ts",
+    "preview": "bun run content:bundle && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "bun run content:bundle && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.2.22",
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/react": "^1.2.12",
+    "@opennextjs/cloudflare": "^1.20.9",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.0",
     "@upstash/ratelimit": "^2.0.0",
@@ -51,7 +62,8 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "wrangler": "^4.148.0"
   },
   "engines": {
     "node": ">=20"

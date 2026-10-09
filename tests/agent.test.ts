@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DataStreamWriter } from "ai";
 import { runAgent } from "@/lib/agent/run";
 import type { AgentAnnotation, AgentRequest } from "@/lib/agent/types";
@@ -33,6 +33,7 @@ const ask = (content: string, extra: Partial<AgentRequest> = {}): AgentRequest =
 beforeEach(() => {
   // Offline path: no LLM, no Supabase. Exercises grounding + refusal logic.
   delete process.env.OPENAI_API_KEY;
+  delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 });
@@ -116,6 +117,14 @@ describe("runAgent grounding scope", () => {
 });
 
 describe("runAgent planning (offline)", () => {
+  // The recommender ranks sites open on arrival first, so pin the clock to
+  // 10:00 in Vietnam (03:00 UTC); at night Vĩnh Mốc is closed and drops behind.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-03-10T03:00:00Z"));
+  });
+  afterEach(() => vi.useRealTimers());
+
   it("answers 'where next' with recommend_next tool parts instead of refusing on the war track", async () => {
     const parts: string[] = [];
     const s = fakeStream();

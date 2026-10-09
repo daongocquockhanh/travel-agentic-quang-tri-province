@@ -1,6 +1,6 @@
 import "server-only";
 import { embed } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { embeddingModel, hasAiKey, minVectorSimilarity } from "@/lib/ai/provider";
 import { createClient } from "@supabase/supabase-js";
 import { chunk } from "@/lib/chunk";
 import { listContentSlugs, readSiteContent } from "@/lib/content";
@@ -18,7 +18,7 @@ export interface SearchArgs {
   /**
    * Lexical search only: the share of the query's terms a chunk must contain.
    * Used for unscoped sensitive questions, so "battle of Hamburger Hill" doesn't
-   * ground on Hiền Lương's "flag battle". (pgvector uses MIN_SIMILARITY instead.)
+   * ground on Hiền Lương's "flag battle". (pgvector uses minVectorSimilarity() instead.)
    */
   minCoverage?: number;
 }
@@ -30,18 +30,15 @@ export interface SearchArgs {
 const allowed = (c: CuratedChunk) =>
   process.env.CONTENT_REQUIRE_REVIEWED !== "true" || c.review_status === "reviewed";
 
-/** Below this cosine similarity a pgvector hit is treated as "no match". */
-const MIN_SIMILARITY = 0.25;
-
 const hasVectorBackend = () =>
   Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-      process.env.OPENAI_API_KEY,
+      hasAiKey(),
   );
 
 /**
- * Top-k curated chunks for a query. Uses pgvector when Supabase + OpenAI are
+ * Top-k curated chunks for a query. Uses pgvector when Supabase + an AI key are
  * configured, otherwise a lexical index over `content/sites/**` so the agent
  * stays grounded in local dev. Falls back to the other language when the
  * requested one has no content (the model translates).
@@ -90,9 +87,8 @@ const SITE_ALIASES: Record<string, string[]> = {
 // ── pgvector ─────────────────────────────────────────────────────
 
 async function searchVector(args: Required<Pick<SearchArgs, "query" | "lang" | "k">> & SearchArgs) {
-  const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const { embedding } = await embed({
-    model: openai.embedding(process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small"),
+    model: embeddingModel("query"),
     value: args.query,
   });
 
@@ -118,8 +114,9 @@ async function searchVector(args: Required<Pick<SearchArgs, "query" | "lang" | "
     review_status: string | null;
     similarity: number;
   };
+  const minSimilarity = minVectorSimilarity();
   return ((data ?? []) as Row[])
-    .filter((r) => r.similarity >= MIN_SIMILARITY)
+    .filter((r) => r.similarity >= minSimilarity)
     .map<CuratedChunk>((r) => ({
       site_slug: r.site_slug,
       section: r.section,

@@ -6,6 +6,12 @@ import { clearSpeechCache, getCachedSpeech, setCachedSpeech, ttsCacheKey } from 
 const mocks = vi.hoisted(() => ({
   speech: vi.fn(),
   transcribe: vi.fn(),
+  generateText: vi.fn(),
+}));
+
+vi.mock("ai", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("ai")>()),
+  generateText: mocks.generateText,
 }));
 
 vi.mock("openai", () => ({
@@ -23,7 +29,10 @@ const { POST: voicePOST } = await import("@/app/api/agent/voice/route");
 beforeEach(() => {
   mocks.speech.mockReset();
   mocks.transcribe.mockReset();
+  mocks.generateText.mockReset();
   clearSpeechCache();
+  delete process.env.AI_PROVIDER;
+  delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   process.env.OPENAI_API_KEY = "sk-test";
 });
 
@@ -179,5 +188,41 @@ describe("POST /api/agent/voice", () => {
     const res = await voicePOST(voiceReq(clip()));
     expect(res.status).toBe(502);
     expect(await res.json()).toMatchObject({ code: "stt_failed" });
+  });
+});
+
+describe("POST /api/agent/voice with Gemini", () => {
+  beforeEach(() => {
+    delete process.env.OPENAI_API_KEY;
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "g-test";
+  });
+
+  it("sends the clip to Gemini with the language and place names", async () => {
+    mocks.generateText.mockResolvedValue({ text: " Địa đạo Vĩnh Mốc ở đâu? \n" });
+    const res = await voicePOST(voiceReq(new File([new Uint8Array(500)], "blob", { type: "audio/webm;codecs=opus" })));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ transcript: "Địa đạo Vĩnh Mốc ở đâu?" });
+    const [prompt, file] = mocks.generateText.mock.calls[0][0].messages[0].content;
+    expect(prompt.text).toContain("Vietnamese");
+    expect(prompt.text).toContain("Vĩnh Mốc");
+    expect(file).toMatchObject({ type: "file", mimeType: "audio/webm" });
+    expect(mocks.transcribe).not.toHaveBeenCalled();
+  });
+
+  it("reports stt_failed when Gemini errors", async () => {
+    mocks.generateText.mockRejectedValue(new Error("429"));
+    const res = await voicePOST(voiceReq(new File([new Uint8Array(10)], "a.ogg", { type: "audio/ogg" }), "en"));
+    expect(res.status).toBe(502);
+    expect(await res.json()).toMatchObject({ code: "stt_failed" });
+  });
+});
+
+describe("POST /api/agent/tts without an OpenAI key", () => {
+  it("falls back to browser speech even when Gemini is configured", async () => {
+    delete process.env.OPENAI_API_KEY;
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "g-test";
+    const res = await ttsPOST(ttsReq({ text: "hello", lang: "en" }));
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ fallback: "browser" });
   });
 });

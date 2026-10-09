@@ -4,6 +4,7 @@ import { searchCurated, searchLocal, siteMentionedIn, tokenize } from "@/lib/age
 beforeEach(() => {
   // Force the local index; never hit the network from tests.
   delete process.env.OPENAI_API_KEY;
+  delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
 });
 

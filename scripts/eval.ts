@@ -7,7 +7,7 @@
  *   bun run eval --tracks war --langs vi
  *   bun run eval --min-pass 0.95 --out eval-results.json
  *
- * Without OPENAI_API_KEY the agent runs offline (deterministic retrieval and
+ * Without an AI key (GOOGLE_GENERATIVE_AI_API_KEY or OPENAI_API_KEY) the agent runs offline (deterministic retrieval and
  * refusal logic) and every case must pass. With a key it evaluates the real
  * model; --min-pass sets the gate (default 0.95).
  */
@@ -15,6 +15,7 @@ import { writeFileSync } from "node:fs";
 import { GOLDEN } from "../lib/eval/golden";
 import { runEval, type CaseResult } from "../lib/eval/runner";
 import type { TrackKey } from "../lib/tracks";
+import { aiProvider } from "../lib/ai/provider";
 
 const arg = (name: string) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -22,14 +23,15 @@ const arg = (name: string) => {
 };
 const list = (v?: string) => v?.split(",").map((s) => s.trim()).filter(Boolean);
 
-const live = Boolean(process.env.OPENAI_API_KEY);
+const provider = aiProvider();
+const live = provider !== null;
 const only = list(arg("only"));
 const cases = only ? GOLDEN.filter((c) => only.includes(c.id)) : GOLDEN;
 const tracks = (list(arg("tracks")) as TrackKey[] | undefined) ?? ["war", "foreign", "domestic"];
 const langs = (list(arg("langs")) as ("vi" | "en")[] | undefined) ?? ["en", "vi"];
 const minPass = Number(arg("min-pass") ?? (live ? 0.95 : 1));
 
-console.log(`Agent eval · ${live ? "LIVE model" : "offline"} · ${cases.length} prompts × ${tracks.length} tracks × ${langs.length} langs\n`);
+console.log(`Agent eval · ${live ? `LIVE model (${provider})` : "offline"} · ${cases.length} prompts × ${tracks.length} tracks × ${langs.length} langs\n`);
 
 const results = await runEval({
   cases,

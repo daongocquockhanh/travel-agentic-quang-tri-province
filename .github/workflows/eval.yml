@@ -23,10 +23,13 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Check secrets
         id: secrets
-        run: echo "ok=${{ secrets.OPENAI_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "ok=${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY != '' || secrets.OPENAI_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
       - name: Run eval
         if: steps.secrets.outputs.ok == 'true'
         env:
+          AI_PROVIDER: ${{ vars.AI_PROVIDER }}
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          GOOGLE_CHAT_MODEL: ${{ vars.GOOGLE_CHAT_MODEL || 'gemini-2.5-flash-lite' }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_CHAT_MODEL: ${{ vars.OPENAI_CHAT_MODEL || 'gpt-4o-mini' }}
           # Evaluate what production would serve.
@@ -34,7 +37,7 @@ jobs:
         run: bun run eval --min-pass "${{ inputs.min_pass || '0.95' }}" --out eval-results.json
       - name: Skipped
         if: steps.secrets.outputs.ok != 'true'
-        run: echo "::warning::OPENAI_API_KEY secret not set; live eval skipped."
+        run: echo "::warning::No AI key secret (GOOGLE_GENERATIVE_AI_API_KEY or OPENAI_API_KEY) set; live eval skipped."
       - uses: actions/upload-artifact@v4
         if: always() && steps.secrets.outputs.ok == 'true'
         with:

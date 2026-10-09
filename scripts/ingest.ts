@@ -1,14 +1,16 @@
 /**
  * Ingest script — reads content/sites/<slug>/{meta.yml, <lang>/<section>.md},
- * chunks markdown, embeds via OpenAI, upserts into Supabase.
+ * chunks markdown, embeds via the configured AI provider, upserts into Supabase.
  *
  * Usage:  bun run scripts/ingest.ts
  *
  * Env required:
  *   NEXT_PUBLIC_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY
- *   OPENAI_API_KEY
- *   OPENAI_EMBEDDING_MODEL (default: text-embedding-3-small)
+ *   GOOGLE_GENERATIVE_AI_API_KEY or OPENAI_API_KEY (see lib/ai/provider.ts)
+ *   GOOGLE_EMBEDDING_MODEL (default: gemini-embedding-001) / OPENAI_EMBEDDING_MODEL (default: text-embedding-3-small)
+ *
+ * Changing provider changes the embedding space, so re-ingest after switching.
  * Optional:
  *   INGEST_REQUIRE_REVIEWED=1  refuse to ingest unless every section is reviewed (production)
  *
@@ -18,11 +20,12 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import OpenAI from "openai";
+import { embed as embedValue } from "ai";
 import matter from "gray-matter";
 import YAML from "yaml";
 import { chunk } from "../lib/chunk";
 import { checkContent } from "../lib/content-check";
+import { aiProvider, embeddingModel } from "../lib/ai/provider";
 
 const CONTENT_DIR = join(process.cwd(), "content/sites");
 const REQUIRES_CITATION = new Set(["war", "religious"]);
@@ -56,12 +59,12 @@ const supabase = createClient(
   { auth: { persistSession: false } },
 );
 
-const openai = new OpenAI({ apiKey: env("OPENAI_API_KEY") });
-const EMBEDDING_MODEL = env("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small");
+if (!aiProvider()) throw new Error("Missing env var GOOGLE_GENERATIVE_AI_API_KEY or OPENAI_API_KEY");
+const embeddingModelForDocs = embeddingModel("document");
 
 async function embed(input: string): Promise<number[]> {
-  const res = await openai.embeddings.create({ model: EMBEDDING_MODEL, input });
-  return res.data[0].embedding;
+  const { embedding } = await embedValue({ model: embeddingModelForDocs, value: input, maxRetries: 3 });
+  return embedding;
 }
 
 async function loadMeta(slug: string): Promise<SiteMeta> {

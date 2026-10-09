@@ -1,6 +1,6 @@
 import "server-only";
 import { formatDataStreamPart, streamText, type DataStreamWriter } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { CHAT_PROVIDER_OPTIONS, chatModel, hasAiKey } from "@/lib/ai/provider";
 import { getSite, type Site } from "@/lib/sites";
 import {
   MAX_HISTORY_MESSAGES,
@@ -64,16 +64,15 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
     grounding = chunks.map((chunk) => ({ ref: registry.register(chunk), chunk }));
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!hasAiKey()) {
     await answerOffline({ req, question, site: target, grounding, registry, stream });
     return;
   }
 
   writeMode(stream, { grounded: strict, offline: false, refused: false });
 
-  const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const result = streamText({
-    model: openai(process.env.OPENAI_CHAT_MODEL ?? "gpt-4o-mini"),
+    model: chatModel(),
     system: buildSystemPrompt({
       track: req.track,
       lang: req.lang,
@@ -94,12 +93,13 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
     temperature: strict ? 0.2 : 0.5,
     // SYSTEM_DESIGN §8.1: one retry with backoff on LLM failure.
     maxRetries: 1,
+    providerOptions: CHAT_PROVIDER_OPTIONS,
   });
   result.mergeIntoDataStream(stream);
 }
 
 /**
- * No OpenAI key configured: answer extractively from the curated chunks so
+ * No AI key configured: answer extractively from the curated chunks so
  * local dev and demos still show grounded, cited content.
  */
 async function answerOffline(args: {
@@ -154,8 +154,8 @@ async function answerOffline(args: {
     writeText(
       stream,
       req.lang === "vi"
-        ? "Chế độ ngoại tuyến (chưa cấu hình OPENAI_API_KEY): mình chưa tìm thấy nội dung biên soạn nào khớp với câu hỏi này."
-        : "Offline mode (OPENAI_API_KEY not set): I couldn't find curated content matching that question.",
+        ? "Chế độ ngoại tuyến (chưa cấu hình khoá AI): mình chưa tìm thấy nội dung biên soạn nào khớp với câu hỏi này."
+        : "Offline mode (no AI key set): I couldn't find curated content matching that question.",
     );
     return;
   }

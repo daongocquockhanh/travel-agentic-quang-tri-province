@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "quang-tri-travel-agent",
+  "account_id": "e32909be56be76cc20fdd85683683604",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "quang-tri-travel-agent",
+    },
+  ],
+  "observability": { "enabled": true },
+  // Run near Google's API instead of at the visitor's nearest edge: the Gemini API
+  // rejects calls from some regions ("User location is not supported for the API use").
+  "placement": { "mode": "targeted", "region": "gcp:us-central1" },
+  // Non-secret settings. Secrets (API keys) go in with `wrangler secret put <NAME>`;
+  // NEXT_PUBLIC_* values are inlined at build time, so set them in .env.local before deploying.
+  "vars": {
+    "AI_PROVIDER": "google",
+    "GOOGLE_CHAT_MODEL": "gemini-2.5-flash-lite",
+    "CONTENT_REQUIRE_REVIEWED": "false",
+    "RATE_LIMIT": "on",
+  },
+}

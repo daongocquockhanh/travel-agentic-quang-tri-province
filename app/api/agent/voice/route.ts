@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { hasAiKey, transcribe } from "@/lib/ai/provider";
 import { MAX_AUDIO_BYTES, STT_VOCABULARY } from "@/lib/voice/config";
 import { rateLimited } from "@/lib/rate-limit";
 
@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-/** Containers Whisper accepts that browsers' MediaRecorder actually produces. */
+/** Containers the STT models accept that browsers' MediaRecorder actually produces. */
 const EXT_BY_TYPE: Record<string, string> = {
   "audio/webm": "webm",
   "audio/ogg": "ogg",
@@ -54,21 +54,18 @@ export async function POST(request: Request) {
     return Response.json({ error: `Unsupported audio type ${audio.type || "(none)"}`, code: "bad_type" }, { status: 415 });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!hasAiKey()) {
     return Response.json({ error: "Speech-to-text not configured", code: "not_configured" }, { status: 503 });
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 1 });
-    // Whisper infers the container from the file name, so give it the right extension.
-    const file = new File([await audio.arrayBuffer()], `speech.${ext}`, { type: baseType });
-    const result = await openai.audio.transcriptions.create({
-      file,
-      model: process.env.OPENAI_STT_MODEL ?? "whisper-1",
-      language: lang,
-      prompt: STT_VOCABULARY,
+    const transcript = await transcribe({
+      audio: new Uint8Array(await audio.arrayBuffer()),
+      mimeType: baseType,
+      ext,
+      lang,
+      vocabulary: STT_VOCABULARY,
     });
-    const transcript = result.text.trim();
     if (!transcript) {
       return Response.json({ error: "No speech detected", code: "empty" }, { status: 422 });
     }
