@@ -41,7 +41,10 @@ beforeEach(() => {
 describe("runAgent (offline)", () => {
   it("answers a war-track question from curated chunks with citations", async () => {
     const s = fakeStream();
-    await runAgent(ask("How deep do the tunnels go?", { track: "war", site_slug: "vinh-moc" }), s.writer);
+    await runAgent(
+      ask("How deep do the tunnels go?", { track: "war", site_slug: "vinh-moc" }),
+      s.writer,
+    );
 
     const mode = s.annotations.find((a) => a.type === "mode");
     expect(mode).toMatchObject({ grounded: true, offline: true, refused: false });
@@ -63,7 +66,10 @@ describe("runAgent (offline)", () => {
   it("refuses a sensitive question with no usable curated content and does not invent an answer", async () => {
     const s = fakeStream();
     await withReviewedOnly(() =>
-      runAgent(ask("What battles happened at the bridge?", { track: "war", site_slug: "hien-luong" }), s.writer),
+      runAgent(
+        ask("What battles happened at the bridge?", { track: "war", site_slug: "hien-luong" }),
+        s.writer,
+      ),
     );
     const mode = s.annotations.find((a) => a.type === "mode");
     expect(mode).toMatchObject({ refused: true });
@@ -75,14 +81,20 @@ describe("runAgent (offline)", () => {
   it("refuses in Vietnamese when lang is vi", async () => {
     const s = fakeStream();
     await withReviewedOnly(() =>
-      runAgent(ask("Có trận đánh nào ở cầu Hiền Lương không?", { lang: "vi", site_slug: "hien-luong" }), s.writer),
+      runAgent(
+        ask("Có trận đánh nào ở cầu Hiền Lương không?", { lang: "vi", site_slug: "hien-luong" }),
+        s.writer,
+      ),
     );
     expect(s.text()).toMatch(/Mình chưa có tư liệu/);
   });
 
   it("marks citations drawn from draft content", async () => {
     const s = fakeStream();
-    await runAgent(ask("How tall was the flagpole?", { track: "war", site_slug: "hien-luong" }), s.writer);
+    await runAgent(
+      ask("How tall was the flagpole?", { track: "war", site_slug: "hien-luong" }),
+      s.writer,
+    );
     const citations = s.annotations.filter((a) => a.type === "citation");
     expect(citations.length).toBeGreaterThan(0);
     expect(citations.every((c) => c.type === "citation" && c.draft)).toBe(true);
@@ -90,7 +102,10 @@ describe("runAgent (offline)", () => {
 
   it("serves Vietnamese curated content for a vi question", async () => {
     const s = fakeStream();
-    await runAgent(ask("Địa đạo Vĩnh Mốc sâu bao nhiêu?", { lang: "vi", site_slug: "vinh-moc" }), s.writer);
+    await runAgent(
+      ask("Địa đạo Vĩnh Mốc sâu bao nhiêu?", { lang: "vi", site_slug: "vinh-moc" }),
+      s.writer,
+    );
     expect(s.text()).toMatch(/Chế độ ngoại tuyến/);
     expect(s.annotations.some((a) => a.type === "citation")).toBe(true);
   });
@@ -103,8 +118,14 @@ describe("runAgent grounding scope", () => {
   it("grounds on the site named in the question, not the site in context", async () => {
     const s = fakeStream();
     // Standing at Vinh Moc but asking about Hien Luong.
-    await runAgent(ask("Tell me the war history of Hien Luong bridge", { site_slug: "vinh-moc" }), s.writer);
-    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ grounded: true, refused: false });
+    await runAgent(
+      ask("Tell me the war history of Hien Luong bridge", { site_slug: "vinh-moc" }),
+      s.writer,
+    );
+    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({
+      grounded: true,
+      refused: false,
+    });
     expect(citedSites(s.annotations)).toEqual(new Set(["hien-luong"]));
   });
 
@@ -135,9 +156,15 @@ describe("runAgent planning (offline)", () => {
         (s.writer.write as (p: string) => void)(part);
       },
     } as unknown as DataStreamWriter;
-    await runAgent(ask("Where should I go next?", { track: "war", site_slug: "hien-luong" }), writer);
+    await runAgent(
+      ask("Where should I go next?", { track: "war", site_slug: "hien-luong" }),
+      writer,
+    );
 
-    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ refused: false, offline: true });
+    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({
+      refused: false,
+      offline: true,
+    });
     const call = parts.find((p) => p.startsWith("9:"));
     const result = parts.find((p) => p.startsWith("a:"));
     expect(JSON.parse(call!.slice(2))).toMatchObject({ toolName: "recommend_next" });
