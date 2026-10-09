@@ -81,8 +81,13 @@ export function resetMemoryLimits() {
 
 // ── public API ───────────────────────────────────────────────────
 
-/** Best-effort client IP from the proxy headers Vercel and most hosts set. */
+/**
+ * Best-effort client IP. Cloudflare sets cf-connecting-ip itself, while the
+ * first X-Forwarded-For entry is whatever the client sent, so prefer it.
+ */
 export function clientIp(request: Request): string {
+  const cf = request.headers.get("cf-connecting-ip")?.trim();
+  if (cf) return cf;
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
   return request.headers.get("x-real-ip")?.trim() || "unknown";

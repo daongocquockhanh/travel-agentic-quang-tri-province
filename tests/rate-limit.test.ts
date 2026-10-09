@@ -18,6 +18,15 @@ describe("rate limits (in-memory)", () => {
     expect(clientIp(new Request("http://x"))).toBe("unknown");
   });
 
+  it("trusts Cloudflare's connecting IP over a client-supplied X-Forwarded-For", () => {
+    // Behind Cloudflare the client controls the first X-Forwarded-For entry,
+    // so rotating it would dodge every limit.
+    const spoofed = new Request("http://x/api", {
+      headers: { "cf-connecting-ip": "198.51.100.7", "x-forwarded-for": "1.2.3.4, 198.51.100.7" },
+    });
+    expect(clientIp(spoofed)).toBe("198.51.100.7");
+  });
+
   it("allows the voice budget, then returns 429 with Retry-After", async () => {
     for (let i = 0; i < LIMITS.voice.requests; i++) expect(await rateLimited("voice", req("1.1.1.1"))).toBeNull();
     const blocked = await rateLimited("voice", req("1.1.1.1"));
