@@ -93,7 +93,11 @@ export function clientIp(request: Request): string {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-export async function checkLimit(name: LimitName, request: Request, now = Date.now()): Promise<LimitResult> {
+export async function checkLimit(
+  name: LimitName,
+  request: Request,
+  now = Date.now(),
+): Promise<LimitResult> {
   if (process.env.RATE_LIMIT === "off") {
     return { success: true, limit: Infinity, remaining: Infinity, reset: now };
   }
