@@ -33,7 +33,8 @@ export async function POST(request: Request) {
   const text = toSpeakable(parsed.data.text).slice(0, MAX_TTS_CHARS);
   if (!text) return Response.json({ error: "Nothing to speak" }, { status: 400 });
 
-  // No key: tell the client to fall back to the browser's own speech synthesis.
+  // TTS is OpenAI-only (Gemini's free tier barely covers it). Without that key,
+  // even when Gemini serves chat, the client falls back to the browser's speech synthesis.
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: "TTS not configured", fallback: "browser" }, { status: 503 });
   }

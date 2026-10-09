@@ -46,3 +46,7 @@ const nextConfig: NextConfig = {
 };
 
 export default withNextIntl(nextConfig);
+
+// Lets `next dev` use Cloudflare bindings (getCloudflareContext); no effect on the build.
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();

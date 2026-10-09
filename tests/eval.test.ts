@@ -6,13 +6,14 @@ import { runEval, vietnameseRatio, type CaseResult } from "@/lib/eval/runner";
  * The full golden set (30 prompts × 3 tracks × 2 languages) in offline mode:
  * deterministic retrieval, grounding and refusal logic. Every case must pass,
  * so a change that weakens grounding fails CI. The live-model run is
- * `bun run eval` with OPENAI_API_KEY set (nightly workflow).
+ * `bun run eval` with an AI key set (nightly workflow).
  */
 describe("agent eval (offline)", () => {
   let results: CaseResult[] = [];
 
   beforeAll(async () => {
     delete process.env.OPENAI_API_KEY;
+    delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.CONTENT_REQUIRE_REVIEWED;
     results = await runEval();
