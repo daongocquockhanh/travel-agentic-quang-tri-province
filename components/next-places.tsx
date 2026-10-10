@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
+import { SitePhoto } from "@/components/site-photo";
+import { SAMPLE_SITES } from "@/lib/sample-sites";
 import { plan, usePlan } from "@/lib/plan-store";
 import type { Recommendation } from "@/lib/recommend";
 import { TRACK_COLOR, TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
@@ -10,9 +12,23 @@ import { TRACK_COLOR, TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib
 type Lang = "vi" | "en";
 
 const COPY = {
-  en: { title: "Where next", add: "Add to plan", added: "In plan", loading: "Finding good next stops…", view: "View plan on map" },
-  vi: { title: "Đi đâu tiếp", add: "Thêm vào lộ trình", added: "Đã thêm", loading: "Đang tìm điểm đến tiếp theo…", view: "Xem lộ trình trên bản đồ" },
+  en: {
+    title: "Where next",
+    add: "Add to plan",
+    added: "In plan",
+    loading: "Finding good next stops…",
+    view: "View plan on map",
+  },
+  vi: {
+    title: "Đi đâu tiếp",
+    add: "Thêm vào lộ trình",
+    added: "Đã thêm",
+    loading: "Đang tìm điểm đến tiếp theo…",
+    view: "Xem lộ trình trên bản đồ",
+  },
 };
+
+const siteOf = (slug: string) => SAMPLE_SITES.find((s) => s.slug === slug);
 
 /** Three "next place" cards: drive time, why it fits, and Add to plan. */
 export function NextPlaceCards({
@@ -37,30 +53,41 @@ export function NextPlaceCards({
           return (
             <li
               key={r.slug}
-              className="flex w-[78%] max-w-[280px] shrink-0 snap-start flex-col rounded-[12px] border border-border bg-paper-card p-3"
-              style={{ borderTop: `3px solid ${TRACK_COLOR[track]}` }}
+              className="border-border bg-paper-card flex w-[78%] max-w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-[12px] border"
             >
-              <Link href={`/site/${r.slug}`} className="min-w-0">
-                <p className="truncate font-display text-[17px] leading-tight text-fg">
-                  {lang === "vi" ? r.name_vi : r.name_en}
+              <SitePhoto
+                photo={siteOf(r.slug)?.photo}
+                gradient={siteOf(r.slug)?.hero_gradient ?? TRACK_COLOR[track]}
+                lang={lang}
+                width={400}
+                decorative
+                className="h-24 w-full"
+              />
+              <div className="flex flex-1 flex-col p-3">
+                <Link href={`/site/${r.slug}`} className="min-w-0">
+                  <p className="font-display text-fg truncate text-[17px] leading-tight">
+                    {lang === "vi" ? r.name_vi : r.name_en}
+                  </p>
+                  <p className="font-display text-fg-muted truncate text-[12px] italic">
+                    {lang === "vi" ? r.name_en : r.name_vi}
+                  </p>
+                </Link>
+                <p className="text-fg-muted mt-1.5 flex-1 text-[12.5px] leading-snug">
+                  {r.reason[lang]}
                 </p>
-                <p className="truncate font-display text-[12px] italic text-fg-muted">
-                  {lang === "vi" ? r.name_en : r.name_vi}
-                </p>
-              </Link>
-              <p className="mt-1.5 flex-1 text-[12.5px] leading-snug text-fg-muted">{r.reason[lang]}</p>
-              <button
-                type="button"
-                onClick={() => plan.toggle(r.slug)}
-                aria-pressed={inPlan}
-                className={
-                  "mt-2.5 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium " +
-                  (inPlan ? "border border-border text-fg" : "bg-primary text-paper")
-                }
-              >
-                <Icon name={inPlan ? "check" : "plus"} size={14} />
-                {inPlan ? t.added : t.add}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => plan.toggle(r.slug)}
+                  aria-pressed={inPlan}
+                  className={
+                    "mt-2.5 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium " +
+                    (inPlan ? "border-border text-fg border" : "bg-primary text-paper")
+                  }
+                >
+                  <Icon name={inPlan ? "check" : "plus"} size={14} />
+                  {inPlan ? t.added : t.add}
+                </button>
+              </div>
             </li>
           );
         })}
@@ -68,7 +95,7 @@ export function NextPlaceCards({
       {showViewPlan && planned.length > 0 && (
         <Link
           href={`/map?track=${track}&tab=plan`}
-          className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-primary"
+          className="text-primary inline-flex items-center gap-1.5 self-start text-[13px] font-medium"
         >
           <Icon name="pin" size={14} />
           {t.view} ({planned.length})
@@ -79,7 +106,15 @@ export function NextPlaceCards({
 }
 
 /** Self-loading section for site pages: suggestions from this site for the saved track. */
-export function NextPlaces({ fromSlug, lang, fallbackTrack }: { fromSlug: string; lang: Lang; fallbackTrack: TrackKey }) {
+export function NextPlaces({
+  fromSlug,
+  lang,
+  fallbackTrack,
+}: {
+  fromSlug: string;
+  lang: Lang;
+  fallbackTrack: TrackKey;
+}) {
   const [track, setTrack] = useState<TrackKey>(fallbackTrack);
   const [items, setItems] = useState<Recommendation[] | null>(null);
 
@@ -107,7 +142,11 @@ export function NextPlaces({ fromSlug, lang, fallbackTrack }: { fromSlug: string
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-display text-xl">{t.title}</h2>
-      {items === null ? <p className="text-sm text-fg-muted">{t.loading}</p> : <NextPlaceCards items={items} lang={lang} track={track} />}
+      {items === null ? (
+        <p className="text-fg-muted text-sm">{t.loading}</p>
+      ) : (
+        <NextPlaceCards items={items} lang={lang} track={track} />
+      )}
     </section>
   );
 }

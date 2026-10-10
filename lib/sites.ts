@@ -17,6 +17,7 @@ export interface Site {
   distance_from_dong_ha_km: number;
   visit_min: number;
   boat?: { from: string; minutes: number };
+  photo?: { file: string; alt_en: string; alt_vi: string };
 }
 
 export interface NearbySite extends Site {

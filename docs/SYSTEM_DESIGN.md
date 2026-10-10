@@ -141,6 +141,11 @@ lib/agent/
 | `recommend_next` | `(from_slug?, exclude?, time_left_min?) → recommendations[]` | Same recommender as `/api/recommend`. Rendered as next-place cards. |
 | `web_search` | `(query) → snippets[]` | Tavily/Brave. Disallowed for war/religious topics. |
 
+**Retrieval** (`lib/agent/retrieval.ts`, `lib/chunk.ts`):
+- Content is split into paragraph-sized passages (~700 chars), each indexed/embedded with its site names and section ("contextual" passages), so answers cite the paragraph that answers.
+- With Supabase configured, pgvector and the BM25 index both run and are merged by reciprocal rank fusion (hybrid search); without it, BM25 alone.
+- Follow-ups use the conversation: the site under discussion comes from earlier turns when the question doesn't name one, and short or pronoun-led questions are searched together with the question they follow.
+
 **Hard rule (enforced in `guards.ts`):** if `type ∈ {war, religious}` or active `track == 'war'`, the agent must call `search_curated` first, answer only from returned chunks, and emit `source_citation`. If no chunks: refuse and log to `content_gaps` table.
 
 ### 5.4 Content pipeline
@@ -339,7 +344,7 @@ Client                       Postgres
 
 - Logs: Vercel + Supabase log drains → Logflare.
 - Analytics: PostHog. Events: `track_selected`, `site_viewed`, `chat_sent`, `voice_used`, `arrival_story_started`, `next_place_clicked`.
-- Eval: golden-set agent eval (30 prompts × 3 tracks × 2 langs = 180 cases, `lib/eval/`). Offline (deterministic retrieval, grounding and refusal) it runs in every CI build and must pass 100%; with a model (`bun run eval`) it runs nightly via `.github/workflows/eval.yml` with a 95% gate.
+- Eval: golden-set agent eval (36 prompts, incl. 6 multi-turn follow-ups, × 3 tracks × 2 langs = 216 cases, `lib/eval/`). Offline (deterministic retrieval, grounding and refusal) it runs in every CI build and must pass 100%; with a model (`bun run eval`) it runs nightly via `.github/workflows/eval.yml` with a 95% gate.
 
 ## 9. Verification plan
 
@@ -348,7 +353,7 @@ Client                       Postgres
 | Unit | Vitest | `lib/geo.ts` haversine, ingest chunker, tool schema validation. |
 | Component | Vitest + Testing Library | TrackPicker persists across reload. VoiceButton mic permission flow. ChatStream renders SSE chunks. |
 | E2E | Playwright (mobile viewport) | (a) Track switch persists. (b) Mock geolocation at Vinh Moc → banner appears. (c) Text question → SSE renders + citation visible. (d) Voice flow with fixture audio → transcript + audio URL. (e) Network killed → last site page loads from SW. |
-| Agent eval | Custom script | 30 prompts × 3 tracks × 2 langs = 180. Asserts tool used, citation present where required, language matches, length < 800 tokens. |
+| Agent eval | Custom script | 36 prompts × 3 tracks × 2 langs = 216, incl. follow-ups that rely on earlier turns. Asserts tool used, citation present where required, language matches, length < 800 tokens. |
 | Spatial sanity | SQL test | Seed 10 sites; assert `find_nearby` ordering matches haversine. |
 | On-device manual | Redmi-class Android on 3G | Initial load < 5 s. Map ≥ 30 fps. Push-to-talk RTT < 4 s. |
 

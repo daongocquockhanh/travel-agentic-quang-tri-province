@@ -23,7 +23,7 @@ import { createClient } from "@supabase/supabase-js";
 import { embed as embedValue } from "ai";
 import matter from "gray-matter";
 import YAML from "yaml";
-import { chunk } from "../lib/chunk";
+import { contextualize, passages } from "../lib/chunk";
 import { checkContent } from "../lib/content-check";
 import { aiProvider, embeddingModel } from "../lib/ai/provider";
 
@@ -138,8 +138,11 @@ async function ingestSite(slug: string) {
         );
       }
 
-      const chunks = chunk(body);
-      console.log(`   ${lang}/${section}: ${chunks.length} chunk(s)`);
+      // Same passages as the local index; each is embedded with its site and section
+      // so short paragraphs still carry their context (re-ingest after changing this).
+      const chunks = passages(body);
+      const names = `${meta.name_en} ${meta.name_vi}`;
+      console.log(`   ${lang}/${section}: ${chunks.length} passage(s)`);
 
       const rows = await Promise.all(
         chunks.map(async (c, idx) => ({
@@ -147,7 +150,7 @@ async function ingestSite(slug: string) {
           lang,
           section,
           body: c,
-          embedding: await embed(c),
+          embedding: await embed(contextualize(c, { names, section })),
           source_citation: sourceCitation,
           review_status: fm.data.review_status === "reviewed" ? "reviewed" : "draft",
           sources: Array.isArray(fm.data.sources) ? fm.data.sources : [],

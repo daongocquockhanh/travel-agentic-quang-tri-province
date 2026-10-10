@@ -20,7 +20,15 @@ export default async function ChatPage({ searchParams }: Props) {
       initialTrack={track ?? site?.tracks[0] ?? "foreign"}
       trackFromUrl={Boolean(track)}
       initialLang={lang}
-      site={site && { slug: site.slug, name_vi: site.name_vi, name_en: site.name_en }}
+      site={
+        site && {
+          slug: site.slug,
+          name_vi: site.name_vi,
+          name_en: site.name_en,
+          hero_gradient: site.hero_gradient,
+          photo: site.photo,
+        }
+      }
       intent={intent === "arrival_story" ? "arrival_story" : undefined}
       initialQuestion={q?.slice(0, 500)}
     />

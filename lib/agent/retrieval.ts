@@ -2,7 +2,7 @@ import "server-only";
 import { embed } from "ai";
 import { embeddingModel, hasAiKey, minVectorSimilarity } from "@/lib/ai/provider";
 import { createClient } from "@supabase/supabase-js";
-import { chunk } from "@/lib/chunk";
+import { contextualize, passages } from "@/lib/chunk";
 import { listContentSlugs, readSiteContent } from "@/lib/content";
 import { SAMPLE_SITES } from "@/lib/sample-sites";
 import { normalizeForMatch, scrubChunk } from "@/lib/agent/guards";
@@ -48,7 +48,13 @@ export async function searchCurated(args: SearchArgs): Promise<CuratedChunk[]> {
   const search = async (lang: Lang) => {
     if (hasVectorBackend()) {
       try {
-        return await searchVector({ ...args, lang, k });
+        // Hybrid: vector search finds paraphrases, keyword search finds exact names and
+        // dates; reciprocal rank fusion keeps what either ranks highly.
+        const [vector, lexical] = await Promise.all([
+          searchVector({ ...args, lang, k: k * 2 }),
+          searchLocal({ ...args, lang, k: k * 2 }),
+        ]);
+        return fuseRankings([vector, lexical], k);
       } catch (err) {
         console.warn("[retrieval] vector search failed, using local index:", err);
       }
@@ -83,6 +89,26 @@ const SITE_ALIASES: Record<string, string[]> = {
   "truong-son": ["truong son cemetery", "nghia trang truong son"],
   "con-co": ["hero island", "dao anh hung"],
 };
+
+/**
+ * Reciprocal rank fusion: each list contributes 1 / (60 + rank) per passage.
+ * Robust to the two retrievers' incomparable score scales. Exported for tests.
+ */
+export function fuseRankings(lists: CuratedChunk[][], k: number): CuratedChunk[] {
+  const key = (c: CuratedChunk) => `${c.site_slug}|${c.section}|${c.lang}|${c.body.slice(0, 80)}`;
+  const fused = new Map<string, { chunk: CuratedChunk; score: number }>();
+  for (const list of lists) {
+    list.forEach((c, rank) => {
+      const entry = fused.get(key(c)) ?? { chunk: c, score: 0 };
+      entry.score += 1 / (60 + rank + 1);
+      fused.set(key(c), entry);
+    });
+  }
+  return [...fused.values()]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k)
+    .map(({ chunk, score }) => ({ ...chunk, score }));
+}
 
 // ── pgvector ─────────────────────────────────────────────────────
 
@@ -182,8 +208,8 @@ async function buildIndex(): Promise<IndexedChunk[]> {
     const content = await readSiteContent(slug);
     for (const lang of ["vi", "en"] as const) {
       for (const sec of content[lang]) {
-        for (const body of chunk(sec.body)) {
-          const text = `${names} ${body}`;
+        for (const body of passages(sec.body)) {
+          const text = contextualize(body, { names, section: sec.section });
           const tokens = tokenize(text);
           const terms = count(tokens);
           const exactTerms = count(tokenizeExact(text));

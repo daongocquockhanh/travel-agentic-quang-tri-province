@@ -32,9 +32,12 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
   const question = [...history].reverse().find((m) => m.role === "user")?.content ?? "";
 
   const site = req.site_slug ? await getSite(req.site_slug) : null;
-  // The site the question is about: one it names explicitly, else the one in context.
-  const mentioned = siteMentionedIn(question);
+  // The site the question is about: one it names explicitly, else the page in
+  // context, else the one the conversation was about ("how many were born there?").
+  const mentioned = siteMentionedIn(question) ?? (site ? null : siteFromHistory(history));
   const target = mentioned && mentioned !== site?.slug ? await getSite(mentioned) : site;
+  // Follow-ups like "why is it painted in two colours?" are searched with the question they follow.
+  const query = retrievalQuery(question, history);
   const strict =
     requiresCuratedGrounding({ track: req.track, siteType: target?.type, query: question, hasSite: Boolean(target) }) ||
     requiresCuratedGrounding({ track: req.track, siteType: site?.type, query: question, hasSite: Boolean(site) });
@@ -48,7 +51,7 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
     // Never fall back to other sites' content: an answer about Hiền Lương
     // must not be built from Vĩnh Mốc chunks.
     const chunks = await searchCurated({
-      query: question,
+      query,
       lang: req.lang,
       site_slug: target?.slug,
       k: 5,
@@ -65,7 +68,7 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
   }
 
   if (!hasAiKey()) {
-    await answerOffline({ req, question, site: target, grounding, registry, stream });
+    await answerOffline({ req, question, query, site: target, grounding, registry, stream });
     return;
   }
 
@@ -76,7 +79,12 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
     system: buildSystemPrompt({
       track: req.track,
       lang: req.lang,
-      site: site && { slug: site.slug, name_vi: site.name_vi, name_en: site.name_en, type: site.type },
+      site: (site ?? target) && {
+        slug: (site ?? target)!.slug,
+        name_vi: (site ?? target)!.name_vi,
+        name_en: (site ?? target)!.name_en,
+        type: (site ?? target)!.type,
+      },
       location: req.lat != null && req.lng != null ? { lat: req.lat, lng: req.lng } : null,
       groundingChunks: grounding,
     }),
@@ -105,12 +113,14 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
 async function answerOffline(args: {
   req: AgentRequest;
   question: string;
+  /** The question as searched (with its antecedent, for follow-ups). */
+  query: string;
   site: Site | null;
   grounding: NumberedChunk[] | null;
   registry: CitationRegistry;
   stream: DataStreamWriter;
 }) {
-  const { req, question, site, registry, stream } = args;
+  const { req, question, query, site, registry, stream } = args;
 
   // Planning works without an LLM: answer with the recommender's cards,
   // sent as a recommend_next tool result so the UI renders them as usual.
@@ -139,7 +149,7 @@ async function answerOffline(args: {
   let numbered = args.grounding;
   if (!numbered) {
     const chunks = await searchCurated({
-      query: question,
+      query,
       lang: req.lang,
       site_slug: site?.slug,
       k: 2,
@@ -169,6 +179,37 @@ async function answerOffline(args: {
     .map(({ ref, chunk }) => `${chunk.body} [${ref}]`)
     .join("\n\n");
   writeText(stream, `${intro}\n\n${body}`);
+}
+
+type Turn = { role: "user" | "assistant"; content: string };
+
+/**
+ * The site the conversation is about: the most recent one named in earlier
+ * turns (the user's or the guide's), so follow-ups keep their subject.
+ */
+export function siteFromHistory(history: Turn[]): string | null {
+  for (let i = history.length - 2; i >= 0; i--) {
+    const slug = siteMentionedIn(history[i].content);
+    if (slug) return slug;
+  }
+  return null;
+}
+
+// \b only knows ASCII letters, so "đó" or "nó" would never match; use Unicode letter lookarounds.
+const ANAPHORA_RE =
+  /(?<!\p{L})(it|its|it's|there|that|this|they|them|their|those|these|he|she|đó|này|ấy|kia|nó)(?!\p{L})/iu;
+const CONTINUATION_RE = /^(and|also|what about|how about|còn|vậy|thế)(?!\p{L})/iu;
+
+/**
+ * What to search for. A follow-up that leans on the previous question
+ * ("why is it painted in two colours?") is searched together with it.
+ */
+export function retrievalQuery(question: string, history: Turn[]): string {
+  const prevUser = [...history.slice(0, -1)].reverse().find((t) => t.role === "user")?.content;
+  if (!prevUser) return question;
+  const words = question.trim().split(/\s+/).length;
+  const followUp = words <= 6 || ANAPHORA_RE.test(question) || CONTINUATION_RE.test(question.trim());
+  return followUp ? `${prevUser} ${question}` : question;
 }
 
 function siteName(site: Site | null, lang: Lang) {
