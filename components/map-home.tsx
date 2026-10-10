@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MapView, type MapRoute, type MapSite } from "@/components/map-view";
 import { PlanPanel } from "@/components/plan-panel";
-import { TrackChip } from "@/components/track-chip";
+import { ModeMenu } from "@/components/mode-menu";
 import { SiteCard, type SiteCardData } from "@/components/site-card";
 import { GeofenceBanner } from "@/components/geofence-banner";
 import { Icon } from "@/components/icon";
 import { haversineMeters } from "@/lib/geo";
 import { plan, usePlan } from "@/lib/plan-store";
 import { useLocation } from "@/lib/use-location";
-import { TRACK_STORAGE_KEY, type TrackKey } from "@/lib/tracks";
+import { type TrackKey } from "@/lib/tracks";
+import { useLang } from "@/lib/use-lang";
 
 interface Props {
   initialTrack: TrackKey;
@@ -26,7 +27,6 @@ interface Props {
   sharedPlan?: string[] | null;
 }
 
-const TRACK_CYCLE: TrackKey[] = ["war", "foreign", "domestic"];
 /** "You're here" radius (SYSTEM_DESIGN §7.1) and the "nearby" radius before we fall back to nearest. */
 const GEOFENCE_M = 300;
 const NEARBY_M = 2000;
@@ -42,7 +42,7 @@ export function MapHome({
 }: Props) {
   const router = useRouter();
   const [track, setTrack] = useState<TrackKey>(initialTrack);
-  const [lang, setLang] = useState<"vi" | "en">(initialLang);
+  const { lang, toggle: toggleLang } = useLang(initialLang);
   const [tab, setTab] = useState<"nearby" | "plan">(sharedPlan?.length ? "plan" : initialTab);
   const [route, setRoute] = useState<MapRoute | null>(null);
   const planned = usePlan();
@@ -81,18 +81,8 @@ export function MapHome({
   }, [distanceTo, sites]);
   const banner = here ?? demoBanner ?? null;
 
-  const cycleTrack = () => {
-    const next = TRACK_CYCLE[(TRACK_CYCLE.indexOf(track) + 1) % TRACK_CYCLE.length];
-    setTrack(next);
-    try {
-      window.localStorage.setItem(TRACK_STORAGE_KEY, next);
-    } catch {
-      /* private mode */
-    }
-  };
-  const cycleLang = () => setLang((l) => (l === "en" ? "vi" : "en"));
-
-  const trackCards = track === "war" ? cards.filter((c) => c.primary_track === "war") : cards;
+  // Each mode lists the places that belong to it.
+  const trackCards = cards.filter((c) => c.tracks.includes(track));
   // With a position: real distances, nearest first, and whether anything is within 2 km.
   const filteredCards = distanceTo
     ? trackCards
@@ -112,11 +102,13 @@ export function MapHome({
         onSitePick={(slug) => router.push(`/site/${slug}`)}
         route={planned.length ? route : null}
         you={position}
+        lang={lang}
+        bottomInset={0.55}
       />
 
       {/* top chrome */}
       <div className="absolute inset-x-3.5 top-3.5 z-30 flex items-start justify-between gap-2">
-        <TrackChip track={track} lang={lang} glass onClick={cycleTrack} />
+        <ModeMenu track={track} lang={lang} onChange={setTrack} glass />
         <span className="flex-1" />
         <button
           type="button"
@@ -138,11 +130,12 @@ export function MapHome({
         </button>
         <button
           type="button"
-          onClick={cycleLang}
+          onClick={toggleLang}
+          aria-label={vi ? "Switch to English" : "Chuyển sang tiếng Việt"}
           className="border-border text-fg inline-flex cursor-pointer items-center gap-1.5 rounded-full border bg-[rgba(247,244,238,0.86)] px-3 py-1.5 font-sans text-[13px] font-medium backdrop-blur-md"
         >
           <Icon name="globe" size={14} />
-          {lang.toUpperCase()}
+          {vi ? "EN" : "VI"}
         </button>
       </div>
 
@@ -165,7 +158,7 @@ export function MapHome({
       {/* bottom sheet (half height) */}
       <section
         className="bg-paper absolute inset-x-0 bottom-0 z-10 flex h-[55vh] flex-col overflow-hidden rounded-t-3xl shadow-[0_-16px_40px_-12px_rgba(31,36,40,.18)]"
-        aria-label="Nearby sites"
+        aria-label={vi ? "Địa điểm" : "Places"}
       >
         <button type="button" aria-label="Drag handle" className="pt-2.5 pb-1.5" tabIndex={-1}>
           <span className="bg-ink/20 mx-auto block h-1 w-9 rounded-full" />
@@ -174,15 +167,22 @@ export function MapHome({
         <div className="px-4 pt-1 pb-3">
           <Link
             href={`/chat?track=${track}`}
-            className="border-border bg-paper-card flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5"
+            className="bg-primary text-paper shadow-soft flex cursor-pointer items-center gap-3 rounded-2xl px-3.5 py-3"
           >
-            <Icon name="mic" size={18} className="text-fg-muted" />
-            <span className="text-fg-muted flex-1 truncate font-sans text-[15px]">
-              {vi
-                ? "Hỏi về địa điểm, lộ trình hay lịch sử…"
-                : "Ask about a place, route, or history…"}
+            <span className="bg-paper/15 grid size-9 shrink-0 place-items-center rounded-full">
+              <Icon name="mic" size={18} />
             </span>
-            <Icon name="arrowUp" size={16} className="text-fg-muted" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium">
+                {vi ? "Hỏi hướng dẫn viên" : "Ask the guide"}
+              </span>
+              <span className="block truncate text-[12.5px] opacity-80">
+                {vi
+                  ? "Lịch sử, lộ trình, giờ mở cửa — gõ hoặc nói"
+                  : "History, routes, opening hours — type or talk"}
+              </span>
+            </span>
+            <Icon name="arrow" size={18} />
           </Link>
         </div>
 
@@ -205,7 +205,7 @@ export function MapHome({
               }
             >
               {key === "nearby"
-                ? `${lang === "vi" ? "Gần đây" : "Nearby"} · ${filteredCards.length}`
+                ? `${vi ? "Địa điểm" : "Places"} · ${filteredCards.length}`
                 : `${lang === "vi" ? "Lộ trình" : "My plan"}${planned.length ? ` · ${planned.length}` : ""}`}
             </button>
           ))}
@@ -220,10 +220,19 @@ export function MapHome({
                 vi={vi}
                 onRetry={startLocation}
               />
+              <p className="text-fg-muted mb-2 text-[11px] font-medium tracking-[0.08em] uppercase">
+                {distanceTo
+                  ? vi
+                    ? "Gần bạn nhất trước"
+                    : "Nearest to you first"
+                  : vi
+                    ? "Khoảng cách tính từ Đông Hà"
+                    : "Distances from Đông Hà"}
+              </p>
               <ul className="flex flex-col gap-2">
                 {filteredCards.map((card) => (
                   <li key={card.slug}>
-                    <SiteCard site={card} />
+                    <SiteCard site={card} lang={lang} />
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapboxMap, Marker } from "mapbox-gl";
 import { TRACK_COLOR, type TrackKey } from "@/lib/tracks";
-import { PROVINCE_CENTER, PROVINCE_ZOOM } from "@/lib/sample-sites";
+import { PROVINCE_CENTER, PROVINCE_ZOOM, SHORT_NAME } from "@/lib/sample-sites";
+import { labelStyle, layoutLabels } from "@/lib/label-layout";
 
 export interface MapSite {
   slug: string;
@@ -27,6 +28,13 @@ interface Props {
   route?: MapRoute | null;
   /** The traveller's position, once they share it. */
   you?: { lat: number; lng: number } | null;
+  lang?: "vi" | "en";
+  /** Share of the map's height covered by a bottom sheet; pins and fits stay above it. */
+  bottomInset?: number;
+}
+
+function pinLabel(s: MapSite, lang: "vi" | "en") {
+  return SHORT_NAME[s.slug]?.[lang] ?? (lang === "vi" ? s.name_vi : s.name_en);
 }
 
 const YOU_COLOR = "#2E7DD1";
@@ -60,11 +68,14 @@ export function MapView(props: Props) {
 }
 
 // ── Mapbox path ───────────────────────────────────────────────────
-function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
+function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en", bottomInset = 0 }: Props) {
   const container = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const markers = useRef<Marker[]>([]);
   const [ready, setReady] = useState(false);
+  // Read once when the map loads; the map itself is created a single time.
+  const initial = useRef({ sites, bottomInset });
+  initial.current = { sites, bottomInset };
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +107,19 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
           maxzoom: 14,
         });
         map.setTerrain({ source: "mapbox-dem", exaggeration: 1.4 });
+        // Keep every site in the part of the map the bottom sheet doesn't cover.
+        const { sites: all, bottomInset: inset } = initial.current;
+        const pad = { top: 80, bottom: Math.round(window.innerHeight * inset) + 24, left: 32, right: 32 };
+        map.setPadding(pad);
+        if (all.length > 1) {
+          map.fitBounds(
+            [
+              [Math.min(...all.map((x) => x.lng)), Math.min(...all.map((x) => x.lat))],
+              [Math.max(...all.map((x) => x.lng)), Math.max(...all.map((x) => x.lat))],
+            ],
+            { padding: pad, duration: 0 },
+          );
+        }
         setReady(true);
       });
 
@@ -121,13 +145,17 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
     markers.current = [];
 
     const numbers = stopNumbers(route);
+    const labels = new Map<string, HTMLSpanElement>();
     (async () => {
       const mapbox = await import("mapbox-gl");
       sites.forEach((s) => {
         const n = numbers.get(s.slug);
+        // Zero-size anchor at the site: dot centred on it, label placed around it.
+        const wrap = document.createElement("div");
+        wrap.style.cssText = "position:relative;width:0;height:0";
         const el = document.createElement("button");
         el.type = "button";
-        el.setAttribute("aria-label", `Open ${s.name_en}`);
+        el.setAttribute("aria-label", lang === "vi" ? s.name_vi : s.name_en);
         el.style.width = "14px";
         el.style.height = "14px";
         el.style.borderRadius = "999px";
@@ -135,7 +163,9 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
         el.style.border = "none";
         el.style.background = TRACK_COLOR[s.primary_track];
         el.style.boxShadow = "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)";
-        el.style.transform = s.primary_track === activeTrack ? "scale(1.4)" : "scale(1)";
+        el.style.position = "absolute";
+        el.style.left = el.style.top = "0";
+        el.style.transform = `translate(-50%,-50%) scale(${s.primary_track === activeTrack ? 1.4 : 1})`;
         el.style.transition = "transform 240ms cubic-bezier(.32,.72,0,1)";
         el.onclick = () => onSitePick?.(s.slug);
         if (n) {
@@ -145,17 +175,51 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
           el.style.background = ROUTE_COLOR;
           el.style.color = "#F7F4EE";
           el.style.font = "600 12px/24px var(--font-body), sans-serif";
-          el.style.transform = "scale(1)";
+          el.style.transform = "translate(-50%,-50%)";
           el.style.zIndex = "2";
         }
 
-        const marker = new mapbox.default.Marker({ element: el })
+        const label = document.createElement("span");
+        label.textContent = pinLabel(s, lang);
+        label.style.cssText =
+          "font:500 11px/1.2 var(--font-body),sans-serif;color:#1F2428;background:rgba(247,244,238,.92);" +
+          "padding:2px 6px;border-radius:999px;white-space:nowrap;box-shadow:0 1px 3px rgba(31,36,40,.2);pointer-events:none;position:absolute";
+        labels.set(s.slug, label);
+        wrap.append(el, label);
+        const marker = new mapbox.default.Marker({ element: wrap, anchor: "center" })
           .setLngLat([s.lng, s.lat])
           .addTo(map);
         markers.current.push(marker);
       });
+      relayout();
     })();
-  }, [sites, activeTrack, ready, onSitePick, route]);
+
+    // Re-place labels whenever the view settles, so clustered pins stay readable at any zoom.
+    function relayout() {
+      const m = mapRef.current;
+      if (!m) return;
+      const canvas = m.getCanvas();
+      const where = layoutLabels(
+        sites.map((s) => {
+          const pt = m.project([s.lng, s.lat]);
+          return { id: s.slug, x: pt.x, y: pt.y, text: pinLabel(s, lang) };
+        }),
+        { width: canvas.clientWidth, height: canvas.clientHeight },
+      );
+      for (const [slug, label] of labels) {
+        const st = labelStyle(where[slug] ?? "below");
+        label.style.top = st.top ?? "";
+        label.style.bottom = st.bottom ?? "";
+        label.style.left = st.left ?? "";
+        label.style.right = st.right ?? "";
+        label.style.transform = st.transform ?? "";
+      }
+    }
+    map.on("moveend", relayout);
+    return () => {
+      map.off("moveend", relayout);
+    };
+  }, [sites, activeTrack, ready, onSitePick, route, lang]);
 
   // "You" marker.
   const youMarker = useRef<Marker | null>(null);
@@ -230,16 +294,39 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
 }
 
 // ── Fallback (no Mapbox token) ───────────────────────────────────
-function FallbackMapView({ sites, activeTrack, onSitePick, route, you }: Props) {
-  // Project lat/lng → percent positions within a Quang Tri bounding box.
-  const BBOX = { minLat: 16.55, maxLat: 17.25, minLng: 106.65, maxLng: 107.4 };
+function FallbackMapView({ sites, activeTrack, onSitePick, route, you, lang = "en", bottomInset = 0 }: Props) {
+  // Project lat/lng into the visible band: below the top chrome, above the bottom sheet.
+  const BBOX = { minLat: 16.6, maxLat: 17.2, minLng: 106.68, maxLng: 107.38 };
+  const top = 13;
+  const bottom = Math.max(top + 20, (1 - bottomInset) * 100 - 6);
   const project = (lat: number, lng: number) => ({
-    x: ((lng - BBOX.minLng) / (BBOX.maxLng - BBOX.minLng)) * 100,
-    y: ((BBOX.maxLat - lat) / (BBOX.maxLat - BBOX.minLat)) * 100,
+    x: 8 + ((lng - BBOX.minLng) / (BBOX.maxLng - BBOX.minLng)) * 76,
+    y: top + ((BBOX.maxLat - lat) / (BBOX.maxLat - BBOX.minLat)) * (bottom - top),
   });
+
+  // Measure the map so labels can be laid out in pixels without colliding.
+  const box = useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ width: 390, height: 844 });
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) =>
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const placement = layoutLabels(
+    sites.map((s) => {
+      const { x, y } = project(s.lat, s.lng);
+      return { id: s.slug, x: (x / 100) * size.width, y: (y / 100) * size.height, text: pinLabel(s, lang) };
+    }),
+    { width: size.width, height: size.height * (1 - bottomInset) },
+  );
 
   return (
     <div
+      ref={box}
       // isolate: keep the pins' z-index inside the map so they never cover the bottom sheet.
       className="absolute inset-0 isolate"
       style={{
@@ -296,45 +383,44 @@ function FallbackMapView({ sites, activeTrack, onSitePick, route, you }: Props) 
         const { x, y } = project(s.lat, s.lng);
         const active = s.primary_track === activeTrack;
         const n = stopNumbers(route).get(s.slug);
-        if (n) {
-          return (
-            <button
-              key={s.slug}
-              type="button"
-              aria-label={`Stop ${n}: ${s.name_en}`}
-              onClick={() => onSitePick?.(s.slug)}
-              className="absolute z-20 grid size-6 cursor-pointer place-items-center rounded-full border-0 p-0 font-sans text-[12px] font-semibold text-paper"
-              style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                background: ROUTE_COLOR,
-                boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)",
-                transform: "translate(-50%,-50%)",
-              }}
-            >
-              {n}
-            </button>
-          );
-        }
+        const name = lang === "vi" ? s.name_vi : s.name_en;
         return (
+          // Dot centred on the site, short name underneath; the whole thing is the tap target.
           <button
             key={s.slug}
             type="button"
-            aria-label={`Open ${s.name_en}`}
+            aria-label={n ? `${n}. ${name}` : name}
             onClick={() => onSitePick?.(s.slug)}
-            className="absolute z-10 cursor-pointer rounded-full border-0 p-0 transition"
-            style={{
-              left: `${x}%`,
-              top: `${y}%`,
-              width: 14,
-              height: 14,
-              background: TRACK_COLOR[s.primary_track],
-              boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)",
-              transform: `translate(-50%,-100%) scale(${active ? 1.4 : 1})`,
-              transitionDuration: "240ms",
-              transitionTimingFunction: "cubic-bezier(.32,.72,0,1)",
-            }}
-          />
+            // A zero-size anchor exactly at the site; dot and label are positioned from it.
+            className="absolute z-10 size-0 cursor-pointer border-0 bg-transparent p-0"
+            style={{ left: `${x}%`, top: `${y}%` }}
+          >
+            {n ? (
+              <span
+                className="absolute left-0 top-0 grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full font-sans text-[12px] font-semibold text-paper"
+                style={{ background: ROUTE_COLOR, boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)" }}
+              >
+                {n}
+              </span>
+            ) : (
+              <span
+                className="absolute left-0 top-0 block rounded-full transition-transform"
+                style={{
+                  width: 14,
+                  height: 14,
+                  background: TRACK_COLOR[s.primary_track],
+                  boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)",
+                  transform: `translate(-50%,-50%) scale(${active ? 1.25 : 1})`,
+                }}
+              />
+            )}
+            <span
+              className="absolute whitespace-nowrap rounded-full bg-[rgba(247,244,238,0.92)] px-1.5 py-px font-sans text-[11px] font-medium text-ink shadow-[0_1px_3px_rgba(31,36,40,.2)]"
+              style={labelStyle(placement[s.slug] ?? "below")}
+            >
+              {pinLabel(s, lang)}
+            </span>
+          </button>
         );
       })}
 

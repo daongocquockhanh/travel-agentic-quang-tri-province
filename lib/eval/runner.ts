@@ -103,6 +103,10 @@ export function judge(c: GoldenCase, track: TrackKey, lang: "vi" | "en", t: Tran
       break;
     case "answer":
       if (refused) failures.push("refused a logistics question");
+      {
+        const stray = c.sites ? citedSites.filter((s) => !c.sites!.includes(s)) : [];
+        if (stray.length) failures.push(`cited other sites: ${stray.join(", ")}`);
+      }
       // The war track grounds everything that isn't planning.
       if (track === "war" && !planned && !(mode?.grounded && citations.length)) {
         failures.push("war track answer not grounded with citations");
@@ -135,7 +139,7 @@ export async function runEval(opts: {
       for (const lang of langs) {
         const started = Date.now();
         const t = await collect({
-          messages: [{ role: "user", content: c[lang] }],
+          messages: [...(c.history?.[lang] ?? []), { role: "user", content: c[lang] }],
           track,
           lang,
           site_slug: c.site,

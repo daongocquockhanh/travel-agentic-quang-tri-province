@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type Keyboard
 import { useChat, type Message } from "@ai-sdk/react";
 import { Citation } from "@/components/citation";
 import { Icon } from "@/components/icon";
-import { TrackChip } from "@/components/track-chip";
+import { ModeMenu } from "@/components/mode-menu";
+import { SitePhoto } from "@/components/site-photo";
 import { NextPlaceCards, NextPlaces } from "@/components/next-places";
 import { RouteCard } from "@/components/route-card";
 import { OverviewFallback } from "@/components/overview-fallback";
@@ -14,7 +15,8 @@ import { arrivalStoryPrompt } from "@/lib/agent/system-prompts";
 import type { AgentAnnotation } from "@/lib/agent/types";
 import type { Recommendation } from "@/lib/recommend";
 import type { Itinerary } from "@/lib/route";
-import { TRACKS, TRACK_COLOR, TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
+import { TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
+import { useLang } from "@/lib/use-lang";
 import { defaultVoice } from "@/lib/voice/config";
 import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
 import { SentenceBuffer } from "@/lib/voice/sentences";
@@ -28,7 +30,13 @@ interface Props {
   /** If false, prefer the track saved in localStorage over `initialTrack`. */
   trackFromUrl: boolean;
   initialLang: Lang;
-  site: { slug: string; name_vi: string; name_en: string } | null;
+  site: {
+    slug: string;
+    name_vi: string;
+    name_en: string;
+    hero_gradient: string;
+    photo?: { file: string; alt_en: string; alt_vi: string };
+  } | null;
   intent?: "arrival_story";
   initialQuestion?: string;
 }
@@ -46,7 +54,9 @@ const COPY = {
     retry: "Try again",
     readInstead: "Read the curated page instead",
     emptyTitle: "Ask your guide",
-    emptyBody: "History, culture, opening hours, what to see next. War and religious topics are answered only from cited sources.",
+    emptyBody: "History, customs, opening hours, what to see next. Answers about war and religion come only from cited sources.",
+    tryAsking: "Try asking",
+    micHint: "Or hold the mic button and speak",
     context: "Asking about",
     back: "Back",
     newChat: "New chat",
@@ -83,7 +93,9 @@ const COPY = {
     retry: "Thử lại",
     readInstead: "Đọc trang thông tin thay thế",
     emptyTitle: "Hỏi hướng dẫn viên",
-    emptyBody: "Lịch sử, văn hóa, giờ mở cửa, nên đi đâu tiếp. Chủ đề chiến tranh và tôn giáo chỉ được trả lời từ nguồn có dẫn chứng.",
+    emptyBody: "Lịch sử, phong tục, giờ mở cửa, nên đi đâu tiếp. Câu trả lời về chiến tranh và tôn giáo chỉ dựa trên nguồn có dẫn chứng.",
+    tryAsking: "Gợi ý câu hỏi",
+    micHint: "Hoặc giữ nút micro và nói",
     context: "Đang hỏi về",
     back: "Quay lại",
     newChat: "Hỏi mới",
@@ -125,11 +137,36 @@ function quickReplies(lang: Lang, track: TrackKey, siteName: string | null): str
   ];
 }
 
+type StarterIcon = "book" | "route" | "clock" | "pin";
+
+/** First-visit suggestions: one per kind of question the guide handles well. */
+function starterQuestions(lang: Lang, track: TrackKey, siteName: string | null): { icon: StarterIcon; text: string }[] {
+  const vi = lang === "vi";
+  if (siteName) {
+    return [
+      { icon: "book", text: vi ? `Kể cho tôi câu chuyện của ${siteName}` : `Tell me the story of ${siteName}` },
+      { icon: "clock", text: vi ? "Giờ mở cửa, giá vé và nên dành bao lâu?" : "Opening hours, tickets, and how long to stay?" },
+      { icon: "pin", text: vi ? "Khi tham quan cần lưu ý gì?" : "What should I know before visiting?" },
+      { icon: "route", text: vi ? "Sau đây nên đi đâu tiếp?" : "Where should I go next?" },
+    ];
+  }
+  const history =
+    track === "war"
+      ? vi ? "Vĩ tuyến 17 chia cắt đất nước như thế nào?" : "How did the 17th parallel divide the country?"
+      : vi ? "Quảng Trị có những điểm nào nên đến?" : "What are the must-see places in Quảng Trị?";
+  return [
+    { icon: "book", text: history },
+    { icon: "route", text: vi ? "Lên lịch trình một ngày cho tôi" : "Plan a day for me" },
+    { icon: "clock", text: vi ? "Địa đạo Vĩnh Mốc mở cửa lúc mấy giờ?" : "When are the Vinh Moc tunnels open?" },
+    { icon: "pin", text: vi ? "Ở Đông Hà nên ăn món gì?" : "What should I eat in Đông Hà?" },
+  ];
+}
+
 const NEARBY_RE = /near(by| me)|gần (đây|tôi|mình)/i;
 
 export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, intent, initialQuestion }: Props) {
   const [track, setTrack] = useState<TrackKey>(initialTrack);
-  const [lang, setLang] = useState<Lang>(initialLang);
+  const { lang, toggle: toggleLang } = useLang(initialLang);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const t = COPY[lang];
   const siteName = site ? (lang === "vi" ? site.name_vi : site.name_en) : null;
@@ -335,21 +372,6 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, status]);
 
-  const cycleTrack = () => {
-    const next = TRACKS[(TRACKS.indexOf(track) + 1) % TRACKS.length];
-    setTrack(next);
-    try {
-      window.localStorage.setItem(TRACK_STORAGE_KEY, next);
-    } catch {
-      /* private mode */
-    }
-  };
-
-  const toggleLang = () => {
-    const next = lang === "en" ? "vi" : "en";
-    setLang(next);
-    document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000; samesite=lax`;
-  };
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -378,7 +400,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         >
           <Icon name="back" size={18} />
         </Link>
-        <TrackChip track={track} lang={lang} onClick={cycleTrack} />
+        <ModeMenu track={track} lang={lang} onChange={setTrack} />
         <span className="flex-1" />
         {messages.length > 0 && !busy && (
           <button
@@ -404,24 +426,80 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         </button>
       </header>
 
-      {site && (
-        <div
-          className="mx-3.5 mt-3 rounded-[10px] border border-border bg-paper-card px-3 py-2"
-          style={{ borderLeft: `3px solid ${TRACK_COLOR[track]}` }}
+      {site && messages.length > 0 && (
+        <Link
+          href={`/site/${site.slug}`}
+          className="mx-3.5 mt-3 flex items-center gap-2.5 rounded-[12px] border border-border bg-paper-card p-1.5 pr-3"
         >
-          <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.context}</p>
-          <p className="truncate font-display text-[15px] leading-tight">
-            {site.name_vi} <span className="italic text-fg-muted">· {site.name_en}</span>
-          </p>
-        </div>
+          <SitePhoto
+            photo={site.photo}
+            gradient={site.hero_gradient}
+            lang={lang}
+            width={120}
+            decorative
+            className="size-10 shrink-0 rounded-[8px]"
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.context}</span>
+            <span className="block truncate font-display text-[15px] leading-tight">
+              {lang === "vi" ? site.name_vi : site.name_en}
+            </span>
+          </span>
+          <Icon name="arrow" size={16} className="text-fg-muted" />
+        </Link>
       )}
 
       {/* thread */}
       <div className="flex-1 overflow-y-auto px-3.5 py-4" aria-live="polite">
         {messages.length === 0 && (
-          <div className="mt-8 px-2 text-center">
-            <p className="font-display text-2xl">{t.emptyTitle}</p>
-            <p className="mt-2 text-sm text-fg-muted">{t.emptyBody}</p>
+          <div className="flex flex-col gap-4">
+            {site ? (
+              <div className="overflow-hidden rounded-[16px] border border-border bg-paper-card">
+                <SitePhoto
+                  photo={site.photo}
+                  gradient={site.hero_gradient}
+                  lang={lang}
+                  width={700}
+                  credit
+                  className="h-32 w-full"
+                />
+                <div className="p-3.5">
+                  <p className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.context}</p>
+                  <p className="font-display text-[20px] leading-tight">{lang === "vi" ? site.name_vi : site.name_en}</p>
+                  <p className="mt-1.5 text-[13px] leading-snug text-fg-muted">{t.emptyBody}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="px-1 pt-2">
+                <p className="font-display text-[26px] leading-tight">{t.emptyTitle}</p>
+                <p className="mt-1.5 text-[14px] leading-snug text-fg-muted">{t.emptyBody}</p>
+              </div>
+            )}
+
+            <div>
+              <p className="mb-2 px-1 text-[11px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.tryAsking}</p>
+              <ul className="flex flex-col gap-2">
+                {starterQuestions(lang, track, siteName).map((q) => (
+                  <li key={q.text}>
+                    <button
+                      type="button"
+                      onClick={() => void send(q.text)}
+                      className="flex w-full items-center gap-3 rounded-[12px] border border-border bg-paper-card px-3 py-2.5 text-left text-[14px] text-fg hover:border-border-strong"
+                    >
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-paper-sunk text-primary">
+                        <Icon name={q.icon} size={15} />
+                      </span>
+                      <span className="flex-1">{q.text}</span>
+                      <Icon name="arrowUp" size={14} className="rotate-45 text-fg-muted" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p className="flex items-center justify-center gap-1.5 text-[12.5px] text-fg-muted">
+              <Icon name="mic" size={13} />
+              {t.micHint}
+            </p>
           </div>
         )}
 
@@ -487,14 +565,14 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
 
       {/* composer */}
       <div className="border-t border-border bg-paper px-3.5 pb-4 pt-2.5">
-        {!busy && (
-          <div className="-mx-3.5 mb-2.5 flex gap-2 overflow-x-auto px-3.5 pb-0.5">
+        {!busy && messages.length > 0 && (
+          <div className="mb-2.5 flex flex-wrap gap-2">
             {quickReplies(lang, track, siteName).map((q) => (
               <button
                 key={q}
                 type="button"
                 onClick={() => void send(q)}
-                className="shrink-0 rounded-full border border-border bg-paper-card px-3 py-1.5 text-[13px] text-fg"
+                className="rounded-full border border-border bg-paper-card px-3 py-1.5 text-[13px] text-fg"
               >
                 {q}
               </button>

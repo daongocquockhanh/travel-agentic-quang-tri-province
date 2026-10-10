@@ -29,7 +29,7 @@ jobs:
         run: bunx eslint app components lib scripts tests
       - name: Content checks
         run: bun run content:check
-      # Unit, component, offline agent eval (180 cases) and RLS tests.
+      # Unit, component, offline agent eval (216 cases) and RLS tests.
       # The runner image ships Postgres 16, which the RLS suite starts on its own port.
       - name: Tests
         run: bun run test

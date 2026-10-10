@@ -34,9 +34,13 @@ export default async function MapPage({ searchParams }: Props) {
     slug: s.slug,
     name_vi: s.name_vi,
     name_en: s.name_en,
+    type: s.type,
+    tracks: s.tracks,
     distance_km: s.distance_from_dong_ha_km,
     hours: s.hours,
     primary_track: primaryTrack(s.tracks),
+    hero_gradient: s.hero_gradient,
+    photo: s.photo,
   }));
 
   // Optional demo banner: /map?demo=vinh-moc shows the "you're here" banner.

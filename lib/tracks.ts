@@ -9,35 +9,46 @@ export const TRACK_COLOR: Record<TrackKey, string> = {
 
 export const TRACK_LABEL_EN: Record<TrackKey, string> = {
   war: "War history",
-  foreign: "Foreign tourist",
-  domestic: "Domestic traveller",
+  foreign: "First visit",
+  domestic: "Family trip",
 };
 
 export const TRACK_LABEL_VI: Record<TrackKey, string> = {
   war: "Lịch sử chiến tranh",
-  foreign: "Khách quốc tế",
-  domestic: "Khách trong nước",
+  foreign: "Lần đầu đến",
+  domestic: "Du lịch gia đình",
 };
 
-export const TRACK_HEADLINE: Record<TrackKey, { en: string; vi: string }> = {
+/** What choosing a mode actually changes, in plain words (shown on the picker and the mode menu). */
+export const TRACK_DESCRIPTION: Record<TrackKey, { en: string; vi: string }> = {
   war: {
-    en: "Walk the DMZ. Solemn, with sources.",
-    vi: "Đi qua vĩ tuyến 17. Trang nghiêm, có dẫn nguồn.",
+    en: "For veterans, families and history lovers. A solemn guide, and every answer about the war cites its source.",
+    vi: "Dành cho cựu chiến binh, thân nhân và người yêu lịch sử. Giọng kể trang nghiêm, mọi câu trả lời về chiến tranh đều có dẫn nguồn.",
   },
   foreign: {
-    en: "One day, three places worth slowing down for.",
-    vi: "Một ngày, ba điểm đáng dừng chân.",
+    en: "New to Quảng Trị? The essentials in a day or two: what to see, why it matters, how long it takes.",
+    vi: "Lần đầu đến Quảng Trị? Những điểm chính trong một, hai ngày: xem gì, vì sao đáng đến, mất bao lâu.",
   },
   domestic: {
-    en: "Logistics, giờ mở cửa, bãi tắm vắng.",
-    vi: "Lộ trình, giờ mở cửa, bãi tắm vắng người.",
+    en: "Travelling with family? Straight to opening hours, tickets, beaches, food and driving times.",
+    vi: "Đi cùng gia đình? Đi thẳng vào giờ mở cửa, giá vé, bãi biển, ăn uống và thời gian lái xe.",
   },
 };
 
-export const TRACK_SUPPORT: Record<TrackKey, string> = {
-  war: "Vĩnh Mốc · Hiền Lương · Khe Sanh · Trường Sơn",
-  foreign: "Bilingual VI/EN · curated overview",
-  domestic: "Tiếng Việt · gia đình · đường ven biển",
+/** The site whose photo represents each mode on the picker. */
+export const TRACK_PHOTO_SITE: Record<TrackKey, string> = {
+  war: "vinh-moc",
+  foreign: "hien-luong",
+  domestic: "cua-viet",
+};
+
+export const SITE_TYPE_LABEL: Record<string, { en: string; vi: string }> = {
+  war: { en: "War history", vi: "Di tích chiến tranh" },
+  religious: { en: "Pilgrimage", vi: "Hành hương" },
+  cultural: { en: "Culture", vi: "Văn hóa" },
+  nature: { en: "Nature & sea", vi: "Thiên nhiên & biển" },
+  food: { en: "Food", vi: "Ẩm thực" },
+  city: { en: "Town", vi: "Đô thị" },
 };
 
 export const TRACK_STORAGE_KEY = "qt.track";
