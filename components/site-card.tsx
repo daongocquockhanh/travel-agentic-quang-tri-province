@@ -22,14 +22,22 @@ export function formatDistance(km: number) {
 }
 
 /** A place in the list: photo, name in the reader's language first, what kind of place, how far, when open. */
-export function SiteCard({ site, lang }: { site: SiteCardData; lang: "vi" | "en" }) {
+export function SiteCard({
+  site,
+  lang,
+  onSelect,
+}: {
+  site: SiteCardData;
+  lang: "vi" | "en";
+  /** On the map, a row previews the place there instead of opening its page. */
+  onSelect?: (slug: string) => void;
+}) {
   const primary = lang === "vi" ? site.name_vi : site.name_en;
   const secondary = lang === "vi" ? site.name_en : site.name_vi;
-  return (
-    <Link
-      href={`/site/${site.slug}`}
-      className="group flex items-stretch gap-3 rounded-[12px] border border-border bg-paper-card p-2 pr-3 transition hover:border-border-strong"
-    >
+  const className =
+    "group flex w-full items-stretch gap-3 rounded-[12px] border border-border bg-paper-card p-2 pr-3 text-left transition hover:border-border-strong";
+  const body = (
+    <>
       <SitePhoto
         photo={site.photo}
         gradient={site.hero_gradient}
@@ -39,12 +47,15 @@ export function SiteCard({ site, lang }: { site: SiteCardData; lang: "vi" | "en"
         className="size-[72px] shrink-0 rounded-[8px]"
       />
       <div className="min-w-0 flex-1 py-0.5">
-        <p className="text-[10.5px] font-medium uppercase tracking-[0.06em]" style={{ color: TRACK_COLOR[site.primary_track] }}>
+        <p
+          className="text-[10.5px] font-medium tracking-[0.06em] uppercase"
+          style={{ color: TRACK_COLOR[site.primary_track] }}
+        >
           {SITE_TYPE_LABEL[site.type]?.[lang] ?? site.type}
         </p>
-        <p className="truncate font-display text-[17px] leading-tight text-fg">{primary}</p>
-        <p className="truncate font-display text-[12.5px] italic text-fg-muted">{secondary}</p>
-        <p className="mt-0.5 flex items-center gap-1 text-[12px] text-fg-muted">
+        <p className="font-display text-fg truncate text-[17px] leading-tight">{primary}</p>
+        <p className="font-display text-fg-muted truncate text-[12.5px] italic">{secondary}</p>
+        <p className="text-fg-muted mt-0.5 flex items-center gap-1 text-[12px]">
           {site.distance_km != null && <span>{formatDistance(site.distance_km)}</span>}
           {site.distance_km != null && site.hours && <span aria-hidden>·</span>}
           {site.hours && (
@@ -55,9 +66,18 @@ export function SiteCard({ site, lang }: { site: SiteCardData; lang: "vi" | "en"
           )}
         </p>
       </div>
-      <div className="self-center text-fg-muted transition group-hover:translate-x-0.5" aria-hidden>
+      <div className="text-fg-muted self-center transition group-hover:translate-x-0.5" aria-hidden>
         <Icon name="arrow" size={18} />
       </div>
+    </>
+  );
+  return onSelect ? (
+    <button type="button" onClick={() => onSelect(site.slug)} className={className}>
+      {body}
+    </button>
+  ) : (
+    <Link href={`/site/${site.slug}`} className={className}>
+      {body}
     </Link>
   );
 }

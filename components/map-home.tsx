@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MapView, type MapRoute, type MapSite } from "@/components/map-view";
+import { BottomSheet, sheetInset, type SheetSnap } from "@/components/bottom-sheet";
+import { PlacePreview } from "@/components/place-preview";
 import { PlanPanel } from "@/components/plan-panel";
 import { ModeMenu } from "@/components/mode-menu";
 import { SiteCard, type SiteCardData } from "@/components/site-card";
@@ -29,6 +31,10 @@ interface Props {
 
 /** "You're here" radius (SYSTEM_DESIGN §7.1) and the "nearby" radius before we fall back to nearest. */
 const GEOFENCE_M = 300;
+/** Room kept above the full-height sheet for the top chrome. */
+const TOP_GAP = 72;
+/** The pin preview card's sheet height. */
+const PREVIEW_HEIGHT = 268;
 const NEARBY_M = 2000;
 
 export function MapHome({
@@ -94,16 +100,50 @@ export function MapHome({
     !filteredCards.some((c) => (c.distance_km ?? Infinity) * 1000 <= NEARBY_M);
   const vi = lang === "vi";
 
+  // The sheet's height, and the place a tapped pin (or list row) is previewing.
+  const [snap, setSnap] = useState<SheetSnap>("half");
+  const [viewport, setViewport] = useState(0);
+  useEffect(() => {
+    const measure = () => setViewport(window.innerHeight);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+  const [selected, setSelected] = useState<string | null>(null);
+  // A new preview opens at its own height until the traveller drags the sheet.
+  const [previewFit, setPreviewFit] = useState(true);
+  const select = useCallback((slug: string) => {
+    setSelected(slug);
+    setPreviewFit(true);
+  }, []);
+  const onSnap = (next: SheetSnap) => {
+    if (selected && previewFit && next === "peek") {
+      setSelected(null); // dragged down: put the preview away
+    }
+    setPreviewFit(false);
+    setSnap(next);
+  };
+  const selectedCard = selected
+    ? (filteredCards.find((c) => c.slug === selected) ??
+      cards.find((c) => c.slug === selected) ??
+      null)
+    : null;
+
   return (
     <div className="relative h-screen overflow-hidden bg-[#2F4549]">
       <MapView
         sites={sites}
         activeTrack={track}
-        onSitePick={(slug) => router.push(`/site/${slug}`)}
+        onSitePick={select}
+        selected={selected}
         route={planned.length ? route : null}
         you={position}
         lang={lang}
-        bottomInset={0.55}
+        bottomInset={
+          selectedCard && previewFit && viewport
+            ? PREVIEW_HEIGHT / viewport
+            : sheetInset(snap, viewport, TOP_GAP)
+        }
       />
 
       {/* top chrome */}
@@ -161,96 +201,114 @@ export function MapHome({
         </div>
       )}
 
-      {/* bottom sheet (half height) */}
-      <section
-        className="bg-paper absolute inset-x-0 bottom-0 z-10 flex h-[55vh] flex-col overflow-hidden rounded-t-3xl shadow-[0_-16px_40px_-12px_rgba(31,36,40,.18)]"
-        aria-label={vi ? "Địa điểm" : "Places"}
-      >
-        <button type="button" aria-label="Drag handle" className="pt-2.5 pb-1.5" tabIndex={-1}>
-          <span className="bg-ink/20 mx-auto block h-1 w-9 rounded-full" />
-        </button>
-
-        <div className="px-4 pt-1 pb-3">
-          <Link
-            href={`/chat?track=${track}`}
-            className="bg-primary text-paper shadow-soft flex cursor-pointer items-center gap-3 rounded-2xl px-3.5 py-3"
-          >
-            <span className="bg-paper/15 grid size-9 shrink-0 place-items-center rounded-full">
-              <Icon name="mic" size={18} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-medium">
-                {vi ? "Hỏi hướng dẫn viên" : "Ask the guide"}
-              </span>
-              <span className="block truncate text-[12.5px] opacity-80">
-                {vi
-                  ? "Lịch sử, lộ trình, giờ mở cửa — gõ hoặc nói"
-                  : "History, routes, opening hours — type or talk"}
-              </span>
-            </span>
-            <Icon name="arrow" size={18} />
-          </Link>
-        </div>
-
-        <div
-          role="tablist"
-          className="bg-paper-sunk mx-4 mb-2 grid grid-cols-2 gap-1 rounded-full p-1"
-        >
-          {(["nearby", "plan"] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={tab === key}
-              onClick={() => setTab(key)}
-              className={
-                "rounded-full py-1.5 text-[13px] font-medium transition " +
-                (tab === key
-                  ? "bg-paper-card text-fg shadow-[0_1px_3px_rgba(31,36,40,.12)]"
-                  : "text-fg-muted")
-              }
-            >
-              {key === "nearby"
-                ? `${vi ? "Địa điểm" : "Places"} · ${filteredCards.length}`
-                : `${lang === "vi" ? "Lộ trình" : "My plan"}${planned.length ? ` · ${planned.length}` : ""}`}
-            </button>
-          ))}
-        </div>
-
-        <div
-          className="flex-1 overflow-y-auto px-4 pb-[calc(1.5rem+var(--safe-bottom))]"
-          role="tabpanel"
-        >
-          {tab === "nearby" ? (
+      {/* bottom sheet: drag between peek, half and full; a tapped pin opens its preview here */}
+      <BottomSheet
+        snap={snap}
+        onSnap={onSnap}
+        viewport={viewport}
+        topGap={TOP_GAP}
+        label={vi ? "Địa điểm" : "Places"}
+        fitHeight={selectedCard && previewFit ? PREVIEW_HEIGHT : null}
+        header={
+          selectedCard ? null : (
             <>
-              <LocationNote
-                status={locStatus}
-                nothingClose={nothingClose}
-                vi={vi}
-                onRetry={startLocation}
-              />
-              <p className="text-fg-muted mb-2 text-[11px] font-medium tracking-[0.08em] uppercase">
-                {distanceTo
-                  ? vi
-                    ? "Gần bạn nhất trước"
-                    : "Nearest to you first"
-                  : vi
-                    ? "Khoảng cách tính từ Đông Hà"
-                    : "Distances from Đông Hà"}
-              </p>
-              <ul className="flex flex-col gap-2">
-                {filteredCards.map((card) => (
-                  <li key={card.slug}>
-                    <SiteCard site={card} lang={lang} />
-                  </li>
+              <div className="px-4 pt-1 pb-3">
+                <Link
+                  href={`/chat?track=${track}`}
+                  className="bg-primary text-paper shadow-soft flex cursor-pointer items-center gap-3 rounded-2xl px-3.5 py-3"
+                >
+                  <span className="bg-paper/15 grid size-9 shrink-0 place-items-center rounded-full">
+                    <Icon name="mic" size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-medium">
+                      {vi ? "Hỏi hướng dẫn viên" : "Ask the guide"}
+                    </span>
+                    <span className="block truncate text-[12.5px] opacity-80">
+                      {vi
+                        ? "Lịch sử, lộ trình, giờ mở cửa — gõ hoặc nói"
+                        : "History, routes, opening hours — type or talk"}
+                    </span>
+                  </span>
+                  <Icon name="arrow" size={18} />
+                </Link>
+              </div>
+              <div
+                role="tablist"
+                className="bg-paper-sunk mx-4 mb-2 grid grid-cols-2 gap-1 rounded-full p-1"
+              >
+                {(["nearby", "plan"] as const).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === key}
+                    onClick={() => setTab(key)}
+                    className={
+                      "rounded-full py-1.5 text-[13px] font-medium transition " +
+                      (tab === key
+                        ? "bg-paper-card text-fg shadow-[0_1px_3px_rgba(31,36,40,.12)]"
+                        : "text-fg-muted")
+                    }
+                  >
+                    {key === "nearby"
+                      ? `${vi ? "Địa điểm" : "Places"} · ${filteredCards.length}`
+                      : `${lang === "vi" ? "Lộ trình" : "My plan"}${planned.length ? ` · ${planned.length}` : ""}`}
+                  </button>
                 ))}
-              </ul>
+              </div>
             </>
-          ) : (
-            <PlanPanel lang={lang} track={track} names={names} onRoute={onRoute} />
-          )}
-        </div>
-      </section>
+          )
+        }
+      >
+        {selectedCard ? (
+          <div className="flex-1 overflow-y-auto">
+            <PlacePreview
+              site={selectedCard}
+              lang={lang}
+              distanceBasis={distanceTo ? "you" : "dong-ha"}
+              onClose={() => {
+                setSelected(null);
+                setSnap("half");
+              }}
+            />
+          </div>
+        ) : (
+          <div
+            className="flex-1 overflow-y-auto px-4 pb-[calc(1.5rem+var(--safe-bottom))]"
+            role="tabpanel"
+          >
+            {tab === "nearby" ? (
+              <>
+                <LocationNote
+                  status={locStatus}
+                  nothingClose={nothingClose}
+                  vi={vi}
+                  onRetry={startLocation}
+                />
+                <p className="text-fg-muted mb-2 text-[11px] font-medium tracking-[0.08em] uppercase">
+                  {distanceTo
+                    ? vi
+                      ? "Gần bạn nhất trước"
+                      : "Nearest to you first"
+                    : vi
+                      ? "Khoảng cách tính từ Đông Hà"
+                      : "Distances from Đông Hà"}
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {filteredCards.map((card) => (
+                    <li key={card.slug}>
+                      <SiteCard site={card} lang={lang} onSelect={select} />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <PlanPanel lang={lang} track={track} names={names} onRoute={onRoute} />
+            )}
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }

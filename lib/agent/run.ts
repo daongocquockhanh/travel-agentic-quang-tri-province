@@ -38,9 +38,23 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
   const target = mentioned && mentioned !== site?.slug ? await getSite(mentioned) : site;
   // Follow-ups like "why is it painted in two colours?" are searched with the question they follow.
   const query = retrievalQuery(question, history);
+  // "Plan a day with war sites" is answered with recommendation cards, not history:
+  // without a place to scope to, a curated search would only attach unrelated citations.
+  const planningOnly = isPlanningIntent(question) && !target;
   const strict =
-    requiresCuratedGrounding({ track: req.track, siteType: target?.type, query: question, hasSite: Boolean(target) }) ||
-    requiresCuratedGrounding({ track: req.track, siteType: site?.type, query: question, hasSite: Boolean(site) });
+    !planningOnly &&
+    (requiresCuratedGrounding({
+      track: req.track,
+      siteType: target?.type,
+      query: question,
+      hasSite: Boolean(target),
+    }) ||
+      requiresCuratedGrounding({
+        track: req.track,
+        siteType: site?.type,
+        query: question,
+        hasSite: Boolean(site),
+      }));
 
   const registry = new CitationRegistry((ref) =>
     stream.writeMessageAnnotation({ type: "citation", ...ref } satisfies AgentAnnotation),
@@ -59,7 +73,12 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
       minCoverage: target ? undefined : 0.5,
     });
     if (!chunks.length) {
-      await logContentGap({ query: question, track: req.track, lang: req.lang, site_slug: target?.slug });
+      await logContentGap({
+        query: question,
+        track: req.track,
+        lang: req.lang,
+        site_slug: target?.slug,
+      });
       writeMode(stream, { grounded: true, offline: false, refused: true });
       writeText(stream, refusalText(req.lang, siteName(target, req.lang)));
       return;
@@ -134,7 +153,11 @@ async function answerOffline(args: {
     writeMode(stream, { grounded: false, offline: true, refused: false });
     const toolCallId = "offline-recommend";
     stream.write(
-      formatDataStreamPart("tool_call", { toolCallId, toolName: "recommend_next", args: { from_slug: site?.slug } }),
+      formatDataStreamPart("tool_call", {
+        toolCallId,
+        toolName: "recommend_next",
+        args: { from_slug: site?.slug },
+      }),
     );
     stream.write(formatDataStreamPart("tool_result", { toolCallId, result: { recommendations } }));
     writeText(
@@ -208,7 +231,8 @@ export function retrievalQuery(question: string, history: Turn[]): string {
   const prevUser = [...history.slice(0, -1)].reverse().find((t) => t.role === "user")?.content;
   if (!prevUser) return question;
   const words = question.trim().split(/\s+/).length;
-  const followUp = words <= 6 || ANAPHORA_RE.test(question) || CONTINUATION_RE.test(question.trim());
+  const followUp =
+    words <= 6 || ANAPHORA_RE.test(question) || CONTINUATION_RE.test(question.trim());
   return followUp ? `${prevUser} ${question}` : question;
 }
 
@@ -217,7 +241,10 @@ function siteName(site: Site | null, lang: Lang) {
   return lang === "vi" ? site.name_vi : site.name_en;
 }
 
-function writeMode(stream: DataStreamWriter, mode: Omit<Extract<AgentAnnotation, { type: "mode" }>, "type">) {
+function writeMode(
+  stream: DataStreamWriter,
+  mode: Omit<Extract<AgentAnnotation, { type: "mode" }>, "type">,
+) {
   stream.writeMessageAnnotation({ type: "mode", ...mode } satisfies AgentAnnotation);
 }
 

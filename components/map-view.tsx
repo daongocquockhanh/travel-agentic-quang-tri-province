@@ -31,6 +31,8 @@ interface Props {
   lang?: "vi" | "en";
   /** Share of the map's height covered by a bottom sheet; pins and fits stay above it. */
   bottomInset?: number;
+  /** The place being previewed: its pin is drawn larger and the map centres on it. */
+  selected?: string | null;
 }
 
 function pinLabel(s: MapSite, lang: "vi" | "en") {
@@ -68,7 +70,16 @@ export function MapView(props: Props) {
 }
 
 // ── Mapbox path ───────────────────────────────────────────────────
-function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en", bottomInset = 0 }: Props) {
+function MapboxMapView({
+  sites,
+  activeTrack,
+  onSitePick,
+  route,
+  you,
+  lang = "en",
+  bottomInset = 0,
+  selected = null,
+}: Props) {
   const container = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const markers = useRef<Marker[]>([]);
@@ -109,7 +120,12 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en"
         map.setTerrain({ source: "mapbox-dem", exaggeration: 1.4 });
         // Keep every site in the part of the map the bottom sheet doesn't cover.
         const { sites: all, bottomInset: inset } = initial.current;
-        const pad = { top: 80, bottom: Math.round(window.innerHeight * inset) + 24, left: 32, right: 32 };
+        const pad = {
+          top: 80,
+          bottom: Math.round(window.innerHeight * inset) + 24,
+          left: 32,
+          right: 32,
+        };
         map.setPadding(pad);
         if (all.length > 1) {
           map.fitBounds(
@@ -165,7 +181,13 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en"
         el.style.boxShadow = "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)";
         el.style.position = "absolute";
         el.style.left = el.style.top = "0";
-        el.style.transform = `translate(-50%,-50%) scale(${s.primary_track === activeTrack ? 1.4 : 1})`;
+        const isSelected = s.slug === selected;
+        el.style.transform = `translate(-50%,-50%) scale(${isSelected ? 1.8 : s.primary_track === activeTrack ? 1.4 : 1})`;
+        if (isSelected) {
+          el.style.boxShadow =
+            "0 0 0 2px #fff, 0 0 0 5px rgba(15,76,92,.45), 0 2px 6px rgba(31,36,40,.3)";
+          wrap.style.zIndex = "3";
+        }
         el.style.transition = "transform 240ms cubic-bezier(.32,.72,0,1)";
         el.onclick = () => onSitePick?.(s.slug);
         if (n) {
@@ -219,7 +241,25 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en"
     return () => {
       map.off("moveend", relayout);
     };
-  }, [sites, activeTrack, ready, onSitePick, route, lang]);
+  }, [sites, activeTrack, ready, onSitePick, route, lang, selected]);
+
+  // Follow the bottom sheet, and bring the previewed place into view above it.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const padding = {
+      top: 80,
+      bottom: Math.round(window.innerHeight * bottomInset) + 24,
+      left: 32,
+      right: 32,
+    };
+    const site = selected ? sites.find((x) => x.slug === selected) : null;
+    map.easeTo({
+      padding,
+      ...(site ? { center: [site.lng, site.lat] as [number, number] } : {}),
+      duration: 450,
+    });
+  }, [bottomInset, selected, ready, sites]);
 
   // "You" marker.
   const youMarker = useRef<Marker | null>(null);
@@ -237,7 +277,9 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en"
         const el = document.createElement("div");
         el.setAttribute("aria-label", "Your position");
         el.style.cssText = `width:14px;height:14px;border-radius:999px;background:${YOU_COLOR};box-shadow:0 0 0 3px #fff,0 0 0 9px rgba(46,125,209,.25)`;
-        youMarker.current = new mapbox.default.Marker({ element: el }).setLngLat([you.lng, you.lat]).addTo(map);
+        youMarker.current = new mapbox.default.Marker({ element: el })
+          .setLngLat([you.lng, you.lat])
+          .addTo(map);
       } else {
         youMarker.current.setLngLat([you.lng, you.lat]);
       }
@@ -285,7 +327,10 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en"
           [Math.min(...lngs), Math.min(...lats)],
           [Math.max(...lngs), Math.max(...lats)],
         ],
-        { padding: { top: 90, bottom: window.innerHeight * 0.55 + 20, left: 40, right: 40 }, duration: 800 },
+        {
+          padding: { top: 90, bottom: window.innerHeight * 0.55 + 20, left: 40, right: 40 },
+          duration: 800,
+        },
       );
     }
   }, [route, ready]);
@@ -294,7 +339,16 @@ function MapboxMapView({ sites, activeTrack, onSitePick, route, you, lang = "en"
 }
 
 // ── Fallback (no Mapbox token) ───────────────────────────────────
-function FallbackMapView({ sites, activeTrack, onSitePick, route, you, lang = "en", bottomInset = 0 }: Props) {
+function FallbackMapView({
+  sites,
+  activeTrack,
+  onSitePick,
+  route,
+  you,
+  lang = "en",
+  bottomInset = 0,
+  selected = null,
+}: Props) {
   // Project lat/lng into the visible band: below the top chrome, above the bottom sheet.
   const BBOX = { minLat: 16.6, maxLat: 17.2, minLng: 106.68, maxLng: 107.38 };
   const top = 13;
@@ -319,7 +373,12 @@ function FallbackMapView({ sites, activeTrack, onSitePick, route, you, lang = "e
   const placement = layoutLabels(
     sites.map((s) => {
       const { x, y } = project(s.lat, s.lng);
-      return { id: s.slug, x: (x / 100) * size.width, y: (y / 100) * size.height, text: pinLabel(s, lang) };
+      return {
+        id: s.slug,
+        x: (x / 100) * size.width,
+        y: (y / 100) * size.height,
+        text: pinLabel(s, lang),
+      };
     }),
     { width: size.width, height: size.height * (1 - bottomInset) },
   );
@@ -356,15 +415,22 @@ function FallbackMapView({ sites, activeTrack, onSitePick, route, you, lang = "e
       </svg>
 
       {route && route.legs.length > 0 && (
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full" aria-hidden>
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="absolute inset-0 size-full"
+          aria-hidden
+        >
           {(["drive", "boat"] as const).map((kind) =>
             legSegments(route)[kind].map((line, i) => (
               <polyline
                 key={`${kind}-${i}`}
-                points={line.map(([lng, lat]) => {
-                  const p = project(lat, lng);
-                  return `${p.x},${p.y}`;
-                }).join(" ")}
+                points={line
+                  .map(([lng, lat]) => {
+                    const p = project(lat, lng);
+                    return `${p.x},${p.y}`;
+                  })
+                  .join(" ")}
                 fill="none"
                 stroke={ROUTE_COLOR}
                 strokeWidth={3.5}
@@ -397,25 +463,34 @@ function FallbackMapView({ sites, activeTrack, onSitePick, route, you, lang = "e
           >
             {n ? (
               <span
-                className="absolute left-0 top-0 grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full font-sans text-[12px] font-semibold text-paper"
-                style={{ background: ROUTE_COLOR, boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)" }}
+                className="text-paper absolute top-0 left-0 grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full font-sans text-[12px] font-semibold"
+                style={{
+                  background: ROUTE_COLOR,
+                  boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)",
+                }}
               >
                 {n}
               </span>
             ) : (
               <span
-                className="absolute left-0 top-0 block rounded-full transition-transform"
+                className="absolute top-0 left-0 block rounded-full transition-transform"
                 style={{
                   width: 14,
                   height: 14,
                   background: TRACK_COLOR[s.primary_track],
                   boxShadow: "0 0 0 2px #fff, 0 2px 6px rgba(31,36,40,.3)",
-                  transform: `translate(-50%,-50%) scale(${active ? 1.25 : 1})`,
+                  transform: `translate(-50%,-50%) scale(${s.slug === selected ? 1.7 : active ? 1.25 : 1})`,
+                  ...(s.slug === selected
+                    ? {
+                        boxShadow:
+                          "0 0 0 2px #fff, 0 0 0 5px rgba(15,76,92,.45), 0 2px 6px rgba(31,36,40,.3)",
+                      }
+                    : {}),
                 }}
               />
             )}
             <span
-              className="absolute whitespace-nowrap rounded-full bg-[rgba(247,244,238,0.92)] px-1.5 py-px font-sans text-[11px] font-medium text-ink shadow-[0_1px_3px_rgba(31,36,40,.2)]"
+              className="text-ink absolute rounded-full bg-[rgba(247,244,238,0.92)] px-1.5 py-px font-sans text-[11px] font-medium whitespace-nowrap shadow-[0_1px_3px_rgba(31,36,40,.2)]"
               style={labelStyle(placement[s.slug] ?? "below")}
             >
               {pinLabel(s, lang)}
@@ -439,12 +514,11 @@ function FallbackMapView({ sites, activeTrack, onSitePick, route, you, lang = "e
         />
       )}
 
-      <p
-        className="absolute bottom-3 left-0 right-0 text-center font-mono text-[11px] text-paper/70"
-        aria-live="polite"
-      >
-        Map fallback · add NEXT_PUBLIC_MAPBOX_TOKEN for 3D terrain
-      </p>
+      {process.env.NODE_ENV === "development" && (
+        <p className="text-paper/70 absolute right-0 bottom-3 left-0 text-center font-mono text-[11px]">
+          Map fallback · add NEXT_PUBLIC_MAPBOX_TOKEN for 3D terrain
+        </p>
+      )}
     </div>
   );
 }

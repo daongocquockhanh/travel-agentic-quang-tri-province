@@ -172,4 +172,11 @@ describe("runAgent planning (offline)", () => {
     expect(recs.length).toBeGreaterThan(0);
     expect(recs[0].slug).toBe("vinh-moc"); // same 17th-parallel story, minutes away
   });
+
+  it("doesn't attach unrelated citations to a plan with no place in context", async () => {
+    const s = fakeStream();
+    await runAgent(ask("Plan a day for me with war history sites", { track: "war" }), s.writer);
+    expect(s.annotations.find((a) => a.type === "mode")).toMatchObject({ refused: false });
+    expect(s.annotations.filter((a) => a.type === "citation")).toEqual([]);
+  });
 });

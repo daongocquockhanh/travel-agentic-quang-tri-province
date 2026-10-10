@@ -125,6 +125,15 @@ describe("recommendNext", () => {
     expect(recs.every((r) => site(r.slug).tracks.includes("war"))).toBe(true);
   });
 
+  it("shows no travel time without a starting point", () => {
+    const recs = recommendNext({ sites, from: null, track: "war", piers });
+    expect(recs.length).toBeGreaterThan(0);
+    for (const r of recs) {
+      expect(r.reason.en).not.toMatch(/\bmin\b|drive/);
+      expect(r.reason.vi).not.toMatch(/phút/);
+    }
+  });
+
   it("never suggests excluded (visited or planned) sites", () => {
     const recs = recommendNext({
       sites,
@@ -137,7 +146,14 @@ describe("recommendNext", () => {
   });
 
   it("pushes down places that will be closed on arrival", () => {
-    const evening = recommendNext({ sites, from: site("dong-ha"), track: "foreign", now_min: 18 * 60, piers, k: 10 });
+    const evening = recommendNext({
+      sites,
+      from: site("dong-ha"),
+      track: "foreign",
+      now_min: 18 * 60,
+      piers,
+      k: 10,
+    });
     const laVang = evening.find((r) => r.slug === "la-vang")!; // open to 20:00
     const vinhMoc = evening.find((r) => r.slug === "vinh-moc")!; // closes 16:30
     expect(laVang.score).toBeGreaterThan(vinhMoc.score);
@@ -145,7 +161,13 @@ describe("recommendNext", () => {
   });
 
   it("respects the time budget", () => {
-    const recs = recommendNext({ sites, from: site("dong-ha"), track: "foreign", time_left_min: 60, piers });
+    const recs = recommendNext({
+      sites,
+      from: site("dong-ha"),
+      track: "foreign",
+      time_left_min: 60,
+      piers,
+    });
     expect(recs.map((r) => r.slug)).not.toContain("con-co");
   });
 
@@ -157,7 +179,9 @@ describe("recommendNext", () => {
 
 describe("planRoute (server)", () => {
   it("skips unknown slugs and de-duplicates", async () => {
-    const { itinerary, unknown } = await planRoute({ slugs: ["vinh-moc", "nowhere", "vinh-moc", "hien-luong"] });
+    const { itinerary, unknown } = await planRoute({
+      slugs: ["vinh-moc", "nowhere", "vinh-moc", "hien-luong"],
+    });
     expect(unknown).toEqual(["nowhere"]);
     expect(itinerary.stops.map((s) => s.slug)).toEqual(["vinh-moc", "hien-luong"]);
     expect(itinerary.legs.every((l) => l.estimated)).toBe(true);
@@ -170,7 +194,11 @@ describe("planner APIs", () => {
     const res = await POST(
       new Request("http://x/api/route", {
         method: "POST",
-        body: JSON.stringify({ slugs: ["vinh-moc", "dong-ha", "hien-luong"], optimize: true, start_time: "08:30" }),
+        body: JSON.stringify({
+          slugs: ["vinh-moc", "dong-ha", "hien-luong"],
+          optimize: true,
+          start_time: "08:30",
+        }),
       }),
     );
     expect(res.status).toBe(200);
@@ -185,16 +213,22 @@ describe("planner APIs", () => {
 
   it("POST /api/route validates input", async () => {
     const { POST } = await import("@/app/api/route/route");
-    const bad = await POST(new Request("http://x", { method: "POST", body: JSON.stringify({ slugs: [] }) }));
+    const bad = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ slugs: [] }) }),
+    );
     expect(bad.status).toBe(400);
-    const missing = await POST(new Request("http://x", { method: "POST", body: JSON.stringify({ slugs: ["atlantis"] }) }));
+    const missing = await POST(
+      new Request("http://x", { method: "POST", body: JSON.stringify({ slugs: ["atlantis"] }) }),
+    );
     expect(missing.status).toBe(404);
   });
 
   it("GET /api/recommend requires a track and returns ranked suggestions", async () => {
     const { GET } = await import("@/app/api/recommend/route");
     expect((await GET(new Request("http://x/api/recommend"))).status).toBe(400);
-    const res = await GET(new Request("http://x/api/recommend?track=war&from=vinh-moc&exclude=hien-luong&k=2"));
+    const res = await GET(
+      new Request("http://x/api/recommend?track=war&from=vinh-moc&exclude=hien-luong&k=2"),
+    );
     const { recommendations } = await res.json();
     expect(recommendations).toHaveLength(2);
     expect(recommendations.map((r: { slug: string }) => r.slug)).not.toContain("hien-luong");
@@ -208,7 +242,10 @@ describe("itinerary details", () => {
   });
 
   it("starts an optimised day from the end nearer Dong Ha, not on the island", async () => {
-    const { itinerary } = await planRoute({ slugs: ["con-co", "dong-ha", "cua-viet", "la-vang"], optimize: true });
+    const { itinerary } = await planRoute({
+      slugs: ["con-co", "dong-ha", "cua-viet", "la-vang"],
+      optimize: true,
+    });
     const order = itinerary.stops.map((s) => s.slug);
     expect(order[0]).not.toBe("con-co");
     expect(order.at(-1)).toBe("con-co");

@@ -51,7 +51,10 @@ const TYPE_REASON: Record<SiteType, { en: string; vi: string }> = {
 };
 
 function formatTravel(min: number, mode: Recommendation["mode"], lang: "vi" | "en") {
-  const t = min < 60 ? `${min} ${lang === "vi" ? "phút" : "min"}` : `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")}`;
+  const t =
+    min < 60
+      ? `${min} ${lang === "vi" ? "phút" : "min"}`
+      : `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")}`;
   if (mode === "drive+boat") return lang === "vi" ? `${t} (gồm tàu ra đảo)` : `${t} incl. boat`;
   return lang === "vi" ? `${t} lái xe` : `${t} drive`;
 }
@@ -85,7 +88,9 @@ export function recommendNext(args: {
   const k = args.k ?? 3;
   const exclude = new Set([...(args.exclude ?? []), ...(args.from?.slug ? [args.from.slug] : [])]);
   const seenTypes = new Set(args.visitedTypes ?? []);
-  const fromGroup = args.from?.slug ? STORY_GROUPS.find((g) => g.slugs.includes(args.from!.slug!)) : undefined;
+  const fromGroup = args.from?.slug
+    ? STORY_GROUPS.find((g) => g.slugs.includes(args.from!.slug!))
+    : undefined;
 
   const scored = args.sites
     .filter((s) => !exclude.has(s.slug) && s.tracks.includes(args.track))
@@ -93,8 +98,9 @@ export function recommendNext(args: {
       const leg = args.from
         ? legBetween({ slug: args.from.slug ?? "__from", ...args.from }, s, args.piers)
         : { distance_km: 0, travel_min: 0, mode: "drive" as const };
-      const en: string[] = [formatTravel(leg.travel_min, leg.mode, "en")];
-      const vi: string[] = [formatTravel(leg.travel_min, leg.mode, "vi")];
+      // No starting point: no travel time to show (not "0 min drive").
+      const en: string[] = args.from ? [formatTravel(leg.travel_min, leg.mode, "en")] : [];
+      const vi: string[] = args.from ? [formatTravel(leg.travel_min, leg.mode, "vi")] : [];
       let score = s.tracks[0] === args.track ? 2 : 1;
 
       // theme
@@ -118,7 +124,8 @@ export function recommendNext(args: {
       score -= leg.travel_min / 30;
 
       // time budget
-      if (args.time_left_min != null && leg.travel_min + s.visit_min > args.time_left_min) score -= 6;
+      if (args.time_left_min != null && leg.travel_min + s.visit_min > args.time_left_min)
+        score -= 6;
 
       // opening hours at arrival
       if (args.now_min != null) {

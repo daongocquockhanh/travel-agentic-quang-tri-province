@@ -93,7 +93,8 @@ describe("tour scripts", () => {
   });
 
   it("estimates listening time", () => {
-    expect(listenSeconds(Array(150).fill("word").join(" "), "en")).toBe(60);
+    // 130 words ≈ a minute of narration, plus the pause before the next stop.
+    expect(listenSeconds(Array(130).fill("word").join(" "), "en")).toBe(65);
   });
 });
 

@@ -154,10 +154,15 @@ export function speechPieces(body: string, minChars = 80): string[] {
   return out;
 }
 
-/** Rough listening time: ~150 words a minute in English, ~190 syllables in Vietnamese. */
+/**
+ * Rough listening time for one stop: narration runs at about 130 words a
+ * minute in English and 160 syllables in Vietnamese, plus a short pause
+ * between sentences and before the next stop.
+ */
 export function listenSeconds(text: string, lang: "vi" | "en"): number {
   const words = text.split(/\s+/).filter(Boolean).length;
-  return Math.round((words / (lang === "vi" ? 190 : 150)) * 60);
+  const sentences = text.split(/[.!?…]+\s/).length;
+  return Math.round((words / (lang === "vi" ? 160 : 130)) * 60 + sentences * 0.6 + 4);
 }
 
 export function formatMinutes(seconds: number, lang: "vi" | "en"): string {
