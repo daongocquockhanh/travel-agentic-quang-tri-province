@@ -93,9 +93,10 @@ Built with [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare); confi
 
 `/site/<slug>/tour` plays a place's story as short narrated stops: chapters, a transcript that follows the voice, auto-advance, lock-screen controls where the browser supports them (Media Session), and resume where you left off. The arrival banner on the map and the place page both open it.
 
-- **Narrated scripts:** six heritage sites have `content/sites/<slug>/<lang>/tour.md`. These retell the facts of the cited sections and stay drafts until an editor reviews them.
-- **Other sites:** the tour is built from their sections.
+- **Narrated scripts:** every site has `content/sites/<slug>/<lang>/tour.md`. These retell the facts of the cited sections and stay drafts until an editor reviews them.
+- **Fallback:** a site without a script gets a tour built from its sections.
 - **Voices:** server TTS (OpenAI) when configured, otherwise the browser's voice.
+- **Offline:** "Download for offline" on a tour saves its pages, photo and narration in the `qt-downloads` cache (`lib/offline.ts`). The service worker serves them without signal, and the player uses saved audio first. Without server TTS, the saved tour plays with the device's voice.
 - **Format and review rules:** see [docs/CONTENT_GUIDE.md](docs/CONTENT_GUIDE.md#audio-tours).
 
 ## Mobile apps (App Store / Google Play)

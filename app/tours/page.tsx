@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale } from "next-intl/server";
+import { DownloadedBadge } from "@/components/downloaded-badge";
 import { Icon } from "@/components/icon";
 import { SitePhoto } from "@/components/site-photo";
 import { TAB_BAR_PX, TabBar } from "@/components/tab-bar";
@@ -79,6 +80,7 @@ export default async function ToursPage() {
                     {vi ? `${tour.stops.length} điểm dừng` : `${tour.stops.length} stops`} ·{" "}
                     {formatMinutes(seconds, lang)}
                   </span>
+                  <DownloadedBadge slug={site.slug} lang={lang} />
                   <span className="bg-primary text-paper absolute right-3 bottom-3 grid size-11 place-items-center rounded-full shadow-[0_4px_14px_rgba(15,76,92,.45)] transition group-hover:scale-105">
                     <Icon name="play" size={18} />
                   </span>

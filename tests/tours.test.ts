@@ -114,15 +114,8 @@ describe("tour content", () => {
     }
   });
 
-  it("has narrated scripts for the main heritage sites, matching across languages", async () => {
-    for (const slug of [
-      "vinh-moc",
-      "hien-luong",
-      "khe-sanh",
-      "truong-son",
-      "thach-han",
-      "la-vang",
-    ]) {
+  it("has a narrated script for every site, matching across languages", async () => {
+    for (const { slug } of SAMPLE_SITES) {
       const [vi, en] = await Promise.all([getTour(slug, "vi"), getTour(slug, "en")]);
       expect(vi?.authored && en?.authored, slug).toBe(true);
       expect(vi!.stops.length, slug).toBe(en!.stops.length);

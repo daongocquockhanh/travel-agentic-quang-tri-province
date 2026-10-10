@@ -1,5 +1,6 @@
 "use client";
 
+import { savedSpeech } from "@/lib/offline";
 import { toSpeakable, type TtsVoice } from "@/lib/voice/config";
 
 type Lang = "vi" | "en";
@@ -89,6 +90,9 @@ export class SpeechPlayer {
   }
 
   private async fetchSpeech(text: string): Promise<Blob | null> {
+    // A downloaded tour plays its saved narration, with or without a network.
+    const saved = await savedSpeech(text, this.opts.lang(), this.opts.voice());
+    if (saved) return saved;
     if (this.browserFallback) return null;
     try {
       const res = await fetch("/api/agent/tts", {

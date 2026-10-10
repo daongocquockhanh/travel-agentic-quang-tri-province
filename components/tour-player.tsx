@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DownloadTour } from "@/components/download-tour";
 import { Icon } from "@/components/icon";
 import { SitePhoto } from "@/components/site-photo";
 import { commonsImageUrl } from "@/lib/photos";
@@ -267,7 +268,7 @@ export function TourPlayer({
           credit
           creditAt="top-right"
           priority
-          className="h-52 w-full"
+          className="h-60 w-full"
         />
         <div
           aria-hidden
@@ -298,6 +299,15 @@ export function TourPlayer({
           <p className="mt-1 text-[13px] opacity-85">
             {t.stops(stops.length)} · {formatMinutes(total, lang)}
           </p>
+          <div className="mt-2">
+            <DownloadTour
+              slug={site.slug}
+              lang={lang}
+              voice={voice}
+              pieces={pieces.flat()}
+              photoUrl={site.photo ? commonsImageUrl(site.photo.file, 900) : null}
+            />
+          </div>
         </div>
       </header>
 

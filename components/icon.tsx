@@ -25,7 +25,8 @@ type IconName =
   | "skipBack"
   | "skipForward"
   | "headphones"
-  | "grip";
+  | "grip"
+  | "download";
 
 interface Props {
   name: IconName;
@@ -191,6 +192,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="15" cy="12" r="1" />
       <circle cx="9" cy="18" r="1" />
       <circle cx="15" cy="18" r="1" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 4v11" />
+      <polyline points="7 10 12 15 17 10" />
+      <path d="M5 20h14" />
     </>
   ),
 };
