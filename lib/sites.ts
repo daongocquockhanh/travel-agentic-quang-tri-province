@@ -1,6 +1,7 @@
 import "server-only";
 import { SAMPLE_SITES, type SampleSite } from "@/lib/sample-sites";
 import { haversineMeters } from "@/lib/geo";
+import { buildTour, type Tour } from "@/lib/tours";
 import type { TrackKey } from "@/lib/tracks";
 
 export interface Site {
@@ -85,4 +86,11 @@ export async function getSiteWithContent(slug: string): Promise<SiteWithContent 
 
   const { readSiteContent } = await import("@/lib/content");
   return { ...site, content: await readSiteContent(slug) };
+}
+
+/** The site's audio tour in one language: the editor's script, else built from the sections. */
+export async function getTour(slug: string, lang: "vi" | "en"): Promise<Tour | null> {
+  const { readSiteContent, readTourScripts } = await import("@/lib/content");
+  const [content, scripts] = await Promise.all([readSiteContent(slug), readTourScripts(slug)]);
+  return buildTour(content[lang], scripts[lang], lang);
 }

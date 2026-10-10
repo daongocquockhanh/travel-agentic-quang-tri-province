@@ -20,7 +20,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const PG_BIN = "/usr/lib/postgresql/16/bin";
 /** Run commands as the postgres OS user: runuser as root (containers), passwordless sudo otherwise (CI). */
 const AS_POSTGRES =
-  process.getuid?.() === 0 ? ["runuser", "-u", "postgres", "--"] : ["sudo", "-n", "-u", "postgres", "--"];
+  process.getuid?.() === 0
+    ? ["runuser", "-u", "postgres", "--"]
+    : ["sudo", "-n", "-u", "postgres", "--"];
 const canRun =
   existsSync(join(PG_BIN, "initdb")) &&
   spawnSync("id", ["postgres"]).status === 0 &&
@@ -31,11 +33,17 @@ const PORT = String(55_000 + Math.floor(Math.random() * 1000));
 let dir = "";
 
 function asPostgres(cmd: string, args: string[], input?: string) {
-  return spawnSync(AS_POSTGRES[0], [...AS_POSTGRES.slice(1), cmd, ...args], { input, encoding: "utf8" });
+  return spawnSync(AS_POSTGRES[0], [...AS_POSTGRES.slice(1), cmd, ...args], {
+    input,
+    encoding: "utf8",
+  });
 }
 
 /** Runs SQL as a Supabase role, optionally as a signed-in user (auth.uid()). */
-function sql(statements: string, opts: { role?: "anon" | "authenticated" | "service_role"; uid?: string } = {}) {
+function sql(
+  statements: string,
+  opts: { role?: "anon" | "authenticated" | "service_role"; uid?: string } = {},
+) {
   const prelude = [
     opts.uid ? `set request.jwt.claim.sub = '${opts.uid}';` : "",
     opts.role ? `set role ${opts.role};` : "",
@@ -45,7 +53,11 @@ function sql(statements: string, opts: { role?: "anon" | "authenticated" | "serv
     ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", dir, "-p", PORT, "-d", "app"],
     `${prelude}\n${statements}`,
   );
-  return { out: r.stdout.trim().split("\n").filter(Boolean).at(-1) ?? "", err: r.stderr, ok: r.status === 0 };
+  return {
+    out: r.stdout.trim().split("\n").filter(Boolean).at(-1) ?? "",
+    err: r.stderr,
+    ok: r.status === 0,
+  };
 }
 
 /** Migration SQL with PostGIS/pgvector stubbed out (see file comment). */
@@ -55,7 +67,10 @@ function stubbed(file: string) {
     .replace(/geography\(Point,\s*4326\)/g, "text")
     .replace(/vector\(1536\)/g, "real[]")
     .replace(/\(vector,/g, "(real[],")
-    .replace(/create index if not exists \w+\s+on public\.\w+\s+using (gist|ivfflat)[\s\S]*?;/gi, "")
+    .replace(
+      /create index if not exists \w+\s+on public\.\w+\s+using (gist|ivfflat)[\s\S]*?;/gi,
+      "",
+    )
     .replace(/create index if not exists \w+ on public\.\w+ using gist \(geom\);/gi, "");
 }
 
@@ -113,7 +128,11 @@ function applyMigrations(files: string[]) {
 function resetDb() {
   asPostgres("dropdb", ["-h", dir, "-p", PORT, "--if-exists", "app"]);
   asPostgres("createdb", ["-h", dir, "-p", PORT, "app"]);
-  const r = asPostgres("psql", ["-X", "-q", "-v", "ON_ERROR_STOP=1", "-h", dir, "-p", PORT, "-d", "app"], SUPABASE_STUBS);
+  const r = asPostgres(
+    "psql",
+    ["-X", "-q", "-v", "ON_ERROR_STOP=1", "-h", dir, "-p", PORT, "-d", "app"],
+    SUPABASE_STUBS,
+  );
   if (r.status !== 0) throw new Error(r.stderr);
 }
 
@@ -121,14 +140,43 @@ describe.skipIf(!canRun)("row-level security (real Postgres)", () => {
   beforeAll(() => {
     dir = mkdtempSync(join(tmpdir(), "qt-pg-"));
     chmodSync(dir, 0o777);
-    execFileSync(AS_POSTGRES[0], [...AS_POSTGRES.slice(1), join(PG_BIN, "initdb"), "-D", join(dir, "data"), "-A", "trust", "-U", "postgres"], {
-      stdio: "ignore",
-    });
+    execFileSync(
+      AS_POSTGRES[0],
+      [
+        ...AS_POSTGRES.slice(1),
+        join(PG_BIN, "initdb"),
+        "-D",
+        join(dir, "data"),
+        "-A",
+        "trust",
+        "-U",
+        "postgres",
+      ],
+      {
+        stdio: "ignore",
+      },
+    );
     // The data dir belongs to postgres, so write the config through it too.
-    asPostgres("sh", ["-c", `printf "port = ${PORT}\\nunix_socket_directories = '${dir}'\\nlisten_addresses = ''\\n" >> ${join(dir, "data", "postgresql.auto.conf")}`]);
-    execFileSync(AS_POSTGRES[0], [...AS_POSTGRES.slice(1), join(PG_BIN, "pg_ctl"), "-D", join(dir, "data"), "-w", "start", "-l", join(dir, "log")], {
-      stdio: "ignore",
-    });
+    asPostgres("sh", [
+      "-c",
+      `printf "port = ${PORT}\\nunix_socket_directories = '${dir}'\\nlisten_addresses = ''\\n" >> ${join(dir, "data", "postgresql.auto.conf")}`,
+    ]);
+    execFileSync(
+      AS_POSTGRES[0],
+      [
+        ...AS_POSTGRES.slice(1),
+        join(PG_BIN, "pg_ctl"),
+        "-D",
+        join(dir, "data"),
+        "-w",
+        "start",
+        "-l",
+        join(dir, "log"),
+      ],
+      {
+        stdio: "ignore",
+      },
+    );
   }, 60_000);
 
   afterAll(() => {
@@ -144,13 +192,21 @@ describe.skipIf(!canRun)("row-level security (real Postgres)", () => {
     applyMigrations(["0001_init.sql", "0002_content_review.sql"]);
     seed();
     expect(sql("select count(*) from public.agent_sessions;", { role: "anon" }).out).toBe("1");
-    expect(sql("select count(*) from public.agent_messages;", { role: "authenticated", uid: USER_B }).out).toBe("1");
+    expect(
+      sql("select count(*) from public.agent_messages;", { role: "authenticated", uid: USER_B })
+        .out,
+    ).toBe("1");
   });
 
   describe("after 0003", () => {
     beforeAll(() => {
       resetDb();
-      applyMigrations(["0001_init.sql", "0002_content_review.sql", "0003_rls_hardening.sql"]);
+      applyMigrations([
+        "0001_init.sql",
+        "0002_content_review.sql",
+        "0003_rls_hardening.sql",
+        "0004_answer_reports.sql",
+      ]);
       seed();
     });
 
@@ -158,28 +214,47 @@ describe.skipIf(!canRun)("row-level security (real Postgres)", () => {
       expect(sql("select count(*) from public.agent_sessions;", { role: "anon" }).out).toBe("0");
       expect(sql("select count(*) from public.agent_messages;", { role: "anon" }).out).toBe("0");
       expect(
-        sql(`insert into public.agent_sessions (track, lang) values ('war', 'en');`, { role: "anon" }).ok,
+        sql(`insert into public.agent_sessions (track, lang) values ('war', 'en');`, {
+          role: "anon",
+        }).ok,
       ).toBe(false);
     });
 
     it("shows a signed-in user only their own sessions and messages", () => {
-      expect(sql("select count(*) from public.agent_sessions;", { role: "authenticated", uid: USER_A }).out).toBe("1");
-      expect(sql("select content from public.agent_messages;", { role: "authenticated", uid: USER_A }).out).toBe(
-        "question from A",
-      );
-      expect(sql("select count(*) from public.agent_sessions;", { role: "authenticated", uid: USER_B }).out).toBe("0");
+      expect(
+        sql("select count(*) from public.agent_sessions;", { role: "authenticated", uid: USER_A })
+          .out,
+      ).toBe("1");
+      expect(
+        sql("select content from public.agent_messages;", { role: "authenticated", uid: USER_A })
+          .out,
+      ).toBe("question from A");
+      expect(
+        sql("select count(*) from public.agent_sessions;", { role: "authenticated", uid: USER_B })
+          .out,
+      ).toBe("0");
     });
 
     it("stops users writing into other people's or anonymous sessions", () => {
       const asA = { role: "authenticated" as const, uid: USER_A };
-      expect(sql(`insert into public.agent_sessions (user_id, track, lang) values ('${USER_B}', 'war', 'en');`, asA).ok).toBe(false);
+      expect(
+        sql(
+          `insert into public.agent_sessions (user_id, track, lang) values ('${USER_B}', 'war', 'en');`,
+          asA,
+        ).ok,
+      ).toBe(false);
       expect(
         sql(
           `insert into public.agent_messages (session_id, role, content) values ('aaaaaaaa-0000-0000-0000-000000000001', 'user', 'x');`,
           asA,
         ).ok,
       ).toBe(false);
-      expect(sql(`insert into public.agent_sessions (user_id, track, lang) values ('${USER_A}', 'war', 'en');`, asA).ok).toBe(true);
+      expect(
+        sql(
+          `insert into public.agent_sessions (user_id, track, lang) values ('${USER_A}', 'war', 'en');`,
+          asA,
+        ).ok,
+      ).toBe(true);
     });
 
     it("lets a user delete their own sessions, and only those", () => {
@@ -198,16 +273,36 @@ describe.skipIf(!canRun)("row-level security (real Postgres)", () => {
     it("keeps the catalogue public-read and server-write", () => {
       expect(sql("select count(*) from public.sites;", { role: "anon" }).ok).toBe(true);
       expect(
-        sql(`insert into public.sites (slug, name_vi, name_en, type, geom) values ('x', 'x', 'x', 'war', 'p');`, {
-          role: "anon",
-        }).ok,
+        sql(
+          `insert into public.sites (slug, name_vi, name_en, type, geom) values ('x', 'x', 'x', 'war', 'p');`,
+          {
+            role: "anon",
+          },
+        ).ok,
       ).toBe(false);
-      expect(sql("delete from public.site_content;", { role: "authenticated", uid: USER_A }).out).toBe("");
+      expect(
+        sql("delete from public.site_content;", { role: "authenticated", uid: USER_A }).out,
+      ).toBe("");
     });
 
     it("keeps content_gaps server-only", () => {
       expect(sql("select count(*) from public.content_gaps;", { role: "anon" }).out).toBe("0");
-      expect(sql("select count(*) from public.content_gaps;", { role: "service_role" }).out).toBe("1");
+      expect(sql("select count(*) from public.content_gaps;", { role: "service_role" }).out).toBe(
+        "1",
+      );
+    });
+
+    it("keeps answer_reports server-only", () => {
+      const seeded =
+        "insert into public.answer_reports (reason, question, answer) values ('wrong', 'q', 'a');";
+      expect(sql(seeded, { role: "service_role" }).ok).toBe(true);
+      expect(sql("select count(*) from public.answer_reports;", { role: "anon" }).out).toBe("0");
+      const insert =
+        "insert into public.answer_reports (reason, question, answer) values ('other', 'q', 'a');";
+      expect(sql(insert, { role: "anon" }).ok).toBe(false);
+      expect(sql("select count(*) from public.answer_reports;", { role: "service_role" }).out).toBe(
+        "1",
+      );
     });
 
     it("makes the write helpers service-role only", () => {

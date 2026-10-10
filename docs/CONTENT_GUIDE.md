@@ -12,6 +12,7 @@ content/sites/<slug>/
   vi/history.md       required
   vi/visit_tips.md    required
   vi/culture_notes.md optional (etiquette, rituals, food)
+  vi/tour.md          optional audio tour script (see "Audio tours")
   en/…                the same sections as vi/
 ```
 
@@ -19,13 +20,13 @@ content/sites/<slug>/
 
 ```yaml
 ---
-section: history            # must match the file name
-lang: en                    # must match the folder
+section: history # must match the file name
+lang: en # must match the folder
 source_citation: "Human-readable citation shown on the citation chip."
-sources:                    # the URLs behind the citation (first one is linked)
+sources: # the URLs behind the citation (first one is linked)
   - https://…
-review_status: draft        # draft | reviewed
-last_verified: 2026-10-06   # when the facts were last checked against the sources
+review_status: draft # draft | reviewed
+last_verified: 2026-10-06 # when the facts were last checked against the sources
 ---
 ```
 
@@ -59,6 +60,41 @@ citations drawn from them are marked "draft" in chat.
   ("the former Vĩnh Linh district").
 - Where sources disagree (e.g. the length of Hiền Lương Bridge), leave the detail out
   or give a rounded figure.
+
+## Audio tours
+
+Every place has an audio tour (`/site/<slug>/tour`). Without a script, the tour
+reads the sections aloud: overview, history one paragraph at a time, customs,
+then visit tips. A `tour.md` script replaces that with narration written for
+listening on the spot:
+
+```markdown
+---
+section: tour
+lang: en
+review_status: draft
+based_on: [overview, history, visit_tips] # the sections this script retells
+---
+
+## A village that moved underground
+
+> At the entrance, by the small museum
+
+You are standing on a low bluff above the East Sea…
+```
+
+- Each `## ` heading is a stop. The optional `>` line under it says where to
+  stand, and the app shows it with a pin.
+- Aim for 4–6 stops of 60–120 words each. Write for the ear: short sentences,
+  "you", and the present tense.
+- **Retell only what the `based_on` sections say.** The script has no sources of
+  its own. The tour shows the citations of the sections it is based on, so a new
+  fact belongs in those sections first, with its source.
+- Write the script in both languages, with the same number of stops.
+- A tour counts as reviewed only when the script and every section it is based
+  on are reviewed. Check the script against those sections, not just for tone.
+- Scripts are not embedded for the chat agent (ingest skips `tour.md`), because
+  their facts are already in the sections.
 
 ## Status (M6)
 

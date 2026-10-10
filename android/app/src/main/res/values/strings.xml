@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Quảng Trị</string>
+    <string name="title_activity_main">Quảng Trị</string>
+    <string name="package_name">com.quangtri.travelguide</string>
+    <string name="custom_url_scheme">com.quangtri.travelguide</string>
+</resources>

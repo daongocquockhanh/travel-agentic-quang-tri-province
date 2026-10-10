@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import YAML from "yaml";
 import { haversineMeters } from "./geo";
 import { SAMPLE_SITES } from "./sample-sites";
+import { parseTourScript } from "./tours";
 
 /**
  * Editorial checks for content/sites. Run by `bun run content:check`, by the
@@ -51,7 +52,10 @@ const exists = (p: string) =>
     () => false,
   );
 
-export async function checkContent(contentDir: string, opts: { strict?: boolean } = {}): Promise<ContentReport> {
+export async function checkContent(
+  contentDir: string,
+  opts: { strict?: boolean } = {},
+): Promise<ContentReport> {
   const report: ContentReport = { errors: [], warnings: [], status: {} };
   const err = (m: string) => report.errors.push(m);
   const warn = (m: string) => report.warnings.push(m);
@@ -61,7 +65,8 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
     .map((d) => d.name);
 
   for (const site of SAMPLE_SITES) {
-    if (!dirs.includes(site.slug)) err(`${site.slug}: no content directory (every catalogue site needs one)`);
+    if (!dirs.includes(site.slug))
+      err(`${site.slug}: no content directory (every catalogue site needs one)`);
   }
 
   for (const slug of dirs) {
@@ -80,10 +85,17 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
       continue;
     }
 
-    if (meta.slug !== slug) err(`${where("meta.yml")}: slug "${meta.slug}" does not match directory`);
-    if (!meta.name_vi || !meta.name_en) err(`${where("meta.yml")}: name_vi and name_en are required`);
-    if (!TYPES.includes(meta.type)) err(`${where("meta.yml")}: type must be one of ${TYPES.join(", ")}`);
-    if (!Array.isArray(meta.tracks) || !meta.tracks.length || meta.tracks.some((t) => !TRACKS.includes(t))) {
+    if (meta.slug !== slug)
+      err(`${where("meta.yml")}: slug "${meta.slug}" does not match directory`);
+    if (!meta.name_vi || !meta.name_en)
+      err(`${where("meta.yml")}: name_vi and name_en are required`);
+    if (!TYPES.includes(meta.type))
+      err(`${where("meta.yml")}: type must be one of ${TYPES.join(", ")}`);
+    if (
+      !Array.isArray(meta.tracks) ||
+      !meta.tracks.length ||
+      meta.tracks.some((t) => !TRACKS.includes(t))
+    ) {
       err(`${where("meta.yml")}: tracks must be a non-empty subset of ${TRACKS.join(", ")}`);
     }
     const { lat, lng } = meta.geom ?? ({} as SiteMeta["geom"]);
@@ -97,9 +109,12 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
       err(`${slug}: not in lib/sample-sites.ts (the app catalogue)`);
     } else {
       if (cat.name_vi !== meta.name_vi || cat.name_en !== meta.name_en) {
-        err(`${where("meta.yml")}: names differ from the catalogue ("${cat.name_vi}" / "${cat.name_en}")`);
+        err(
+          `${where("meta.yml")}: names differ from the catalogue ("${cat.name_vi}" / "${cat.name_en}")`,
+        );
       }
-      if (cat.type !== meta.type) err(`${where("meta.yml")}: type differs from the catalogue (${cat.type})`);
+      if (cat.type !== meta.type)
+        err(`${where("meta.yml")}: type differs from the catalogue (${cat.type})`);
       if ([...cat.tracks].sort().join() !== [...(meta.tracks ?? [])].sort().join()) {
         err(`${where("meta.yml")}: tracks differ from the catalogue (${cat.tracks.join(", ")})`);
       }
@@ -114,15 +129,19 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
 
     for (const lang of LANGS) {
       const langDir = join(contentDir, slug, lang);
-      const files = (await exists(langDir)) ? (await readdir(langDir)).filter((f) => f.endsWith(".md")) : [];
+      const files = (await exists(langDir))
+        ? (await readdir(langDir)).filter((f) => f.endsWith(".md"))
+        : [];
       sectionsByLang[lang] = [];
       report.status[slug][lang] = {};
 
       for (const required of REQUIRED_SECTIONS) {
-        if (!files.includes(`${required}.md`)) err(`${where(`${lang}/${required}.md`)}: missing (required)`);
+        if (!files.includes(`${required}.md`))
+          err(`${where(`${lang}/${required}.md`)}: missing (required)`);
       }
 
       for (const file of files) {
+        if (file === "tour.md") continue; // checked below, once the sections are known
         const section = file.replace(/\.md$/, "");
         const p = where(`${lang}/${file}`);
         if (!(SECTIONS as readonly string[]).includes(section)) {
@@ -135,7 +154,8 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
         const data = fm.data as Record<string, unknown>;
         const body = fm.content.trim();
 
-        if (data.section !== section) err(`${p}: frontmatter section "${data.section}" should be "${section}"`);
+        if (data.section !== section)
+          err(`${p}: frontmatter section "${data.section}" should be "${section}"`);
         if (data.lang !== lang) err(`${p}: frontmatter lang "${data.lang}" should be "${lang}"`);
 
         const status = data.review_status;
@@ -152,7 +172,10 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
         }
         if (data.sources !== undefined) {
           const urls = Array.isArray(data.sources) ? data.sources : [];
-          if (!Array.isArray(data.sources) || urls.some((u) => typeof u !== "string" || !/^https?:\/\//.test(u))) {
+          if (
+            !Array.isArray(data.sources) ||
+            urls.some((u) => typeof u !== "string" || !/^https?:\/\//.test(u))
+          ) {
             err(`${p}: sources must be a list of http(s) URLs`);
           }
         } else if (sensitive && CITED_SECTIONS.has(section)) {
@@ -160,13 +183,56 @@ export async function checkContent(contentDir: string, opts: { strict?: boolean 
         }
 
         if (body.length < MIN_BODY_CHARS) warn(`${p}: only ${body.length} characters`);
-        if (/\b(TODO|TBD|FIXME|lorem ipsum)\b/i.test(body)) err(`${p}: contains a placeholder (TODO/TBD/FIXME)`);
+        if (/\b(TODO|TBD|FIXME|lorem ipsum)\b/i.test(body))
+          err(`${p}: contains a placeholder (TODO/TBD/FIXME)`);
       }
+    }
+
+    // Audio tour scripts (lib/tours.ts): optional, but in both languages if at all.
+    const stopsByLang: Record<string, number> = {};
+    for (const lang of LANGS) {
+      const path = join(contentDir, slug, lang, "tour.md");
+      if (!(await exists(path))) continue;
+      const p = where(`${lang}/tour.md`);
+      const fm = matter(await readFile(path, "utf8"));
+      const data = fm.data as Record<string, unknown>;
+      if (data.section !== "tour")
+        err(`${p}: frontmatter section "${data.section}" should be "tour"`);
+      if (data.lang !== lang) err(`${p}: frontmatter lang "${data.lang}" should be "${lang}"`);
+      if (data.review_status !== "draft" && data.review_status !== "reviewed") {
+        err(`${p}: review_status must be "draft" or "reviewed"`);
+      } else if (data.review_status !== "reviewed") {
+        (opts.strict ? err : warn)(`${p}: not yet reviewed`);
+      }
+      // A script retells its sections; their citations are the tour's sources.
+      const basedOn = Array.isArray(data.based_on) ? (data.based_on as unknown[]) : [];
+      if (!basedOn.length) err(`${p}: based_on must list the sections the script retells`);
+      for (const b of basedOn) {
+        if (!sectionsByLang[lang].includes(String(b)))
+          err(`${p}: based_on "${String(b)}" is not a section of this site`);
+      }
+      const stops = parseTourScript(fm.content);
+      stopsByLang[lang] = stops.length;
+      if (stops.length < 2) err(`${p}: needs at least two "## " stops`);
+      for (const stop of stops) {
+        if (stop.body.length < 80)
+          warn(`${p}: stop "${stop.title}" is only ${stop.body.length} characters`);
+      }
+      if (/\b(TODO|TBD|FIXME|lorem ipsum)\b/i.test(fm.content))
+        err(`${p}: contains a placeholder (TODO/TBD/FIXME)`);
+    }
+    if (Object.keys(stopsByLang).length === 1) {
+      err(
+        `${slug}: tour.md exists in ${Object.keys(stopsByLang)[0]} only; write it in both languages`,
+      );
+    } else if (stopsByLang.vi !== undefined && stopsByLang.vi !== stopsByLang.en) {
+      warn(`${slug}: tour has ${stopsByLang.vi} stops in vi but ${stopsByLang.en} in en`);
     }
 
     const vi = [...sectionsByLang.vi].sort().join();
     const en = [...sectionsByLang.en].sort().join();
-    if (vi !== en) err(`${slug}: vi has [${vi}] but en has [${en}]; both languages need the same sections`);
+    if (vi !== en)
+      err(`${slug}: vi has [${vi}] but en has [${en}]; both languages need the same sections`);
   }
 
   return report;

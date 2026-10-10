@@ -62,3 +62,10 @@
   /* motion */
   --ease-brand: var(--ease);
 }
+
+/* Notch / home-indicator insets. 0 in browsers; set inside the iOS and
+   Android app shells, which draw the page edge to edge (viewport-fit=cover). */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}

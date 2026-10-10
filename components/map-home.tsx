@@ -107,7 +107,7 @@ export function MapHome({
       />
 
       {/* top chrome */}
-      <div className="absolute inset-x-3.5 top-3.5 z-30 flex items-start justify-between gap-2">
+      <div className="absolute inset-x-3.5 top-[calc(0.875rem+var(--safe-top))] z-30 flex items-start justify-between gap-2">
         <ModeMenu track={track} lang={lang} onChange={setTrack} glass />
         <span className="flex-1" />
         <button
@@ -137,18 +137,24 @@ export function MapHome({
           <Icon name="globe" size={14} />
           {vi ? "EN" : "VI"}
         </button>
+        <Link
+          href="/about"
+          aria-label={vi ? "Giới thiệu và quyền riêng tư" : "About and privacy"}
+          className="border-border text-fg grid size-[34px] place-items-center rounded-full border bg-[rgba(247,244,238,0.86)] backdrop-blur-md"
+        >
+          <Icon name="info" size={16} />
+        </Link>
       </div>
 
       {/* geofence banner */}
       {banner && !dismissed.has(banner.slug) && (
-        <div className="absolute inset-x-3.5 top-16 z-20">
+        <div className="absolute inset-x-3.5 top-[calc(4rem+var(--safe-top))] z-20">
           <GeofenceBanner
             track={banner.track}
             nameVi={banner.name_vi}
             nameEn={banner.name_en}
-            onPlay={() =>
-              router.push(`/chat?site=${banner.slug}&intent=arrival_story&track=${track}`)
-            }
+            lang={lang}
+            onPlay={() => router.push(`/site/${banner.slug}/tour`)}
             onRead={() => router.push(`/site/${banner.slug}`)}
             onDismiss={() => setDismissed((d) => new Set(d).add(banner.slug))}
           />
@@ -211,7 +217,10 @@ export function MapHome({
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6" role="tabpanel">
+        <div
+          className="flex-1 overflow-y-auto px-4 pb-[calc(1.5rem+var(--safe-bottom))]"
+          role="tabpanel"
+        >
           {tab === "nearby" ? (
             <>
               <LocationNote

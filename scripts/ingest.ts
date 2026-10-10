@@ -118,7 +118,8 @@ async function ingestSite(slug: string) {
     if (clearErr) throw clearErr;
 
     for (const file of entries) {
-      if (!file.endsWith(".md")) continue;
+      // tour.md is narration retelling the sections below; nothing new to embed.
+      if (!file.endsWith(".md") || file === "tour.md") continue;
       const section = file.replace(/\.md$/, "") as Section;
       if (!SECTIONS.includes(section)) {
         console.warn(`   skip unknown section: ${file}`);
