@@ -42,7 +42,7 @@ export function PlacePreview({
       : null;
 
   return (
-    <div className="px-4 pb-[calc(1rem+var(--safe-bottom))]">
+    <div className="px-4 pb-4">
       <div className="flex items-start gap-3">
         <SitePhoto
           photo={site.photo}

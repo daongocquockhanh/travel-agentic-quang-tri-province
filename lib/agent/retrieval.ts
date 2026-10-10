@@ -32,9 +32,7 @@ const allowed = (c: CuratedChunk) =>
 
 const hasVectorBackend = () =>
   Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-      hasAiKey(),
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && hasAiKey(),
   );
 
 /**
@@ -63,32 +61,13 @@ export async function searchCurated(args: SearchArgs): Promise<CuratedChunk[]> {
   };
 
   const primary = (await search(args.lang)).filter(allowed);
-  const chunks = primary.length ? primary : (await search(args.lang === "vi" ? "en" : "vi")).filter(allowed);
+  const chunks = primary.length
+    ? primary
+    : (await search(args.lang === "vi" ? "en" : "vi")).filter(allowed);
   return chunks.map((c) => ({ ...c, body: scrubChunk(c.body) }));
 }
 
-/**
- * Slug of a site the text names explicitly, e.g. "cầu Hiền Lương" → "hien-luong".
- * Matches on the slug words, which are the diacritic-free core of each name.
- */
-export function siteMentionedIn(text: string): string | null {
-  const norm = ` ${normalizeForMatch(text).replace(/[^a-z0-9]+/g, " ")} `;
-  const hit = SAMPLE_SITES.find((s) =>
-    [s.slug.replace(/-/g, " "), ...(SITE_ALIASES[s.slug] ?? [])].some((name) => norm.includes(` ${name} `)),
-  );
-  return hit?.slug ?? null;
-}
-
-/**
- * Other names travellers use for places whose story lives in a site's content
- * (diacritic-free, lowercase). The Quảng Trị Citadel is told under Thạch Hãn.
- */
-const SITE_ALIASES: Record<string, string[]> = {
-  "thach-han": ["citadel", "thanh co", "quang tri citadel"],
-  "hien-luong": ["ben hai", "17th parallel bridge", "cau hien luong"],
-  "truong-son": ["truong son cemetery", "nghia trang truong son"],
-  "con-co": ["hero island", "dao anh hung"],
-};
+export { siteMentionedIn } from "@/lib/site-mentions";
 
 /**
  * Reciprocal rank fusion: each list contributes 1 / (60 + rank) per passage.
@@ -166,12 +145,72 @@ interface IndexedChunk extends Omit<CuratedChunk, "score"> {
 
 const STOPWORDS = new Set([
   // en
-  "the", "a", "an", "and", "or", "of", "to", "in", "on", "at", "is", "are", "was", "were", "it",
-  "this", "that", "for", "with", "about", "me", "my", "you", "your", "tell", "what", "how",
-  "when", "where", "why", "who", "can", "do", "does", "did", "i", "we", "here", "there", "please",
+  "the",
+  "a",
+  "an",
+  "and",
+  "or",
+  "of",
+  "to",
+  "in",
+  "on",
+  "at",
+  "is",
+  "are",
+  "was",
+  "were",
+  "it",
+  "this",
+  "that",
+  "for",
+  "with",
+  "about",
+  "me",
+  "my",
+  "you",
+  "your",
+  "tell",
+  "what",
+  "how",
+  "when",
+  "where",
+  "why",
+  "who",
+  "can",
+  "do",
+  "does",
+  "did",
+  "i",
+  "we",
+  "here",
+  "there",
+  "please",
   // vi (diacritic-stripped)
-  "la", "va", "cua", "co", "khong", "nhung", "cac", "mot", "toi", "minh", "ban", "o", "day",
-  "do", "nay", "gi", "nao", "the", "ve", "cho", "voi", "duoc", "trong", "hay", "ke",
+  "la",
+  "va",
+  "cua",
+  "co",
+  "khong",
+  "nhung",
+  "cac",
+  "mot",
+  "toi",
+  "minh",
+  "ban",
+  "o",
+  "day",
+  "do",
+  "nay",
+  "gi",
+  "nao",
+  "the",
+  "ve",
+  "cho",
+  "voi",
+  "duoc",
+  "trong",
+  "hay",
+  "ke",
 ]);
 
 export function tokenize(text: string): string[] {
@@ -195,7 +234,7 @@ const count = (tokens: string[]) => {
   const m = new Map<string, number>();
   for (const t of tokens) m.set(t, (m.get(t) ?? 0) + 1);
   return m;
-}
+};
 
 let indexPromise: Promise<IndexedChunk[]> | null = null;
 
@@ -279,7 +318,11 @@ export async function searchLocal(args: SearchArgs): Promise<CuratedChunk[]> {
       // Coverage weighted by rarity: missing "massacre" counts far more than missing "people".
       return { c, score, coverage: totalIdf ? matchedIdf / totalIdf : 0 };
     })
-    .filter((x) => x.score > 0 && (!args.minCoverage || queryTerms.length < 2 || x.coverage >= args.minCoverage))
+    .filter(
+      (x) =>
+        x.score > 0 &&
+        (!args.minCoverage || queryTerms.length < 2 || x.coverage >= args.minCoverage),
+    )
     .sort((a, b) => b.score - a.score);
 
   // Scoped to a site but the query has no lexical overlap ("tell me the story"):

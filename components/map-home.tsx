@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MapView, type MapRoute, type MapSite } from "@/components/map-view";
 import { BottomSheet, sheetInset, type SheetSnap } from "@/components/bottom-sheet";
+import { TAB_BAR_PX, TabBar } from "@/components/tab-bar";
 import { PlacePreview } from "@/components/place-preview";
 import { PlanPanel } from "@/components/plan-panel";
 import { ModeMenu } from "@/components/mode-menu";
@@ -14,7 +15,7 @@ import { Icon } from "@/components/icon";
 import { haversineMeters } from "@/lib/geo";
 import { plan, usePlan } from "@/lib/plan-store";
 import { useLocation } from "@/lib/use-location";
-import { type TrackKey } from "@/lib/tracks";
+import { TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
 import { useLang } from "@/lib/use-lang";
 
 interface Props {
@@ -25,6 +26,8 @@ interface Props {
   demoBanner?: { slug: string; name_vi: string; name_en: string; track: TrackKey } | null;
   initialLang?: "vi" | "en";
   initialTab?: "nearby" | "plan";
+  /** False when /map has no ?track=: then the mode saved on this device wins. */
+  trackFromUrl?: boolean;
   /** From `/map?plan=a,b,c` (e.g. a route card in chat): replaces the saved plan. */
   sharedPlan?: string[] | null;
 }
@@ -44,12 +47,27 @@ export function MapHome({
   demoBanner,
   initialLang = "en",
   initialTab = "nearby",
+  trackFromUrl = false,
   sharedPlan,
 }: Props) {
   const router = useRouter();
   const [track, setTrack] = useState<TrackKey>(initialTrack);
+  // Reached from the tab bar (no ?track=): keep the mode the traveller chose.
+  useEffect(() => {
+    if (trackFromUrl) return;
+    try {
+      const saved = window.localStorage.getItem(TRACK_STORAGE_KEY);
+      if (isTrackKey(saved)) setTrack(saved);
+    } catch {
+      /* storage unavailable */
+    }
+  }, [trackFromUrl]);
   const { lang, toggle: toggleLang } = useLang(initialLang);
   const [tab, setTab] = useState<"nearby" | "plan">(sharedPlan?.length ? "plan" : initialTab);
+  // The tab bar switches Explore / Plan by URL (/map, /map?tab=plan) without remounting.
+  useEffect(() => {
+    if (!sharedPlan?.length) setTab(initialTab);
+  }, [initialTab, sharedPlan]);
   const [route, setRoute] = useState<MapRoute | null>(null);
   const planned = usePlan();
   const onRoute = useCallback((r: MapRoute | null) => setRoute(r), []);
@@ -110,6 +128,7 @@ export function MapHome({
     return () => window.removeEventListener("resize", measure);
   }, []);
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => setSelected(null), [tab]);
   // A new preview opens at its own height until the traveller drags the sheet.
   const [previewFit, setPreviewFit] = useState(true);
   const select = useCallback((slug: string) => {
@@ -141,8 +160,8 @@ export function MapHome({
         lang={lang}
         bottomInset={
           selectedCard && previewFit && viewport
-            ? PREVIEW_HEIGHT / viewport
-            : sheetInset(snap, viewport, TOP_GAP)
+            ? (PREVIEW_HEIGHT + TAB_BAR_PX) / viewport
+            : sheetInset(snap, viewport, TOP_GAP, TAB_BAR_PX)
         }
       />
 
@@ -203,6 +222,7 @@ export function MapHome({
 
       {/* bottom sheet: drag between peek, half and full; a tapped pin opens its preview here */}
       <BottomSheet
+        bottom={TAB_BAR_PX}
         snap={snap}
         onSnap={onSnap}
         viewport={viewport}
@@ -233,29 +253,24 @@ export function MapHome({
                   <Icon name="arrow" size={18} />
                 </Link>
               </div>
-              <div
-                role="tablist"
-                className="bg-paper-sunk mx-4 mb-2 grid grid-cols-2 gap-1 rounded-full p-1"
-              >
-                {(["nearby", "plan"] as const).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === key}
-                    onClick={() => setTab(key)}
-                    className={
-                      "rounded-full py-1.5 text-[13px] font-medium transition " +
-                      (tab === key
-                        ? "bg-paper-card text-fg shadow-[0_1px_3px_rgba(31,36,40,.12)]"
-                        : "text-fg-muted")
-                    }
-                  >
-                    {key === "nearby"
-                      ? `${vi ? "Địa điểm" : "Places"} · ${filteredCards.length}`
-                      : `${lang === "vi" ? "Lộ trình" : "My plan"}${planned.length ? ` · ${planned.length}` : ""}`}
-                  </button>
-                ))}
+              {/* Places / Plan are switched from the tab bar; this names what the sheet shows */}
+              <div className="mx-4 mb-2 flex items-baseline justify-between">
+                <h2 className="font-display text-fg text-[19px] leading-tight">
+                  {tab === "nearby"
+                    ? vi
+                      ? "Địa điểm"
+                      : "Places"
+                    : vi
+                      ? "Lộ trình của bạn"
+                      : "Your plan"}
+                </h2>
+                <span className="text-fg-muted text-[12.5px]">
+                  {tab === "nearby"
+                    ? `${filteredCards.length} ${vi ? "nơi" : "places"}`
+                    : planned.length
+                      ? `${planned.length} ${vi ? "điểm dừng" : planned.length === 1 ? "stop" : "stops"}`
+                      : ""}
+                </span>
               </div>
             </>
           )
@@ -274,10 +289,7 @@ export function MapHome({
             />
           </div>
         ) : (
-          <div
-            className="flex-1 overflow-y-auto px-4 pb-[calc(1.5rem+var(--safe-bottom))]"
-            role="tabpanel"
-          >
+          <div className="flex-1 overflow-y-auto px-4 pb-6" role="tabpanel">
             {tab === "nearby" ? (
               <>
                 <LocationNote
@@ -309,6 +321,8 @@ export function MapHome({
           </div>
         )}
       </BottomSheet>
+
+      <TabBar lang={lang} className="absolute inset-x-0 bottom-0" />
     </div>
   );
 }

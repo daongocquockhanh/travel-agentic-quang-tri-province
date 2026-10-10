@@ -16,8 +16,7 @@ function primaryTrack(tracks: TrackKey[]): TrackKey {
 export default async function MapPage({ searchParams }: Props) {
   const { track: trackParam, demo, plan: planParam, tab } = await searchParams;
   const lang = (await getLocale()) === "vi" ? "vi" : "en";
-  const initialTrack: TrackKey =
-    trackParam && isTrackKey(trackParam) ? trackParam : "foreign";
+  const initialTrack: TrackKey = trackParam && isTrackKey(trackParam) ? trackParam : "foreign";
 
   const sites = await listSites();
 
@@ -65,6 +64,7 @@ export default async function MapPage({ searchParams }: Props) {
       demoBanner={demoBanner}
       initialLang={lang}
       initialTab={tab === "plan" ? "plan" : "nearby"}
+      trackFromUrl={Boolean(trackParam && isTrackKey(trackParam))}
       sharedPlan={
         planParam
           ? planParam

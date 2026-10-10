@@ -10,8 +10,10 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useChat, type Message } from "@ai-sdk/react";
+import { AnswerPlaces } from "@/components/answer-places";
 import { Citation } from "@/components/citation";
 import { ReportAnswer } from "@/components/report-answer";
+import { TabBar } from "@/components/tab-bar";
 import { Icon } from "@/components/icon";
 import { ModeMenu } from "@/components/mode-menu";
 import { SitePhoto } from "@/components/site-photo";
@@ -25,6 +27,7 @@ import type { Recommendation } from "@/lib/recommend";
 import type { Itinerary } from "@/lib/route";
 import { TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
 import { currentPosition, locationPermission } from "@/lib/location";
+import { placesInAnswer } from "@/lib/site-mentions";
 import { useLang } from "@/lib/use-lang";
 import { defaultVoice } from "@/lib/voice/config";
 import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
@@ -621,7 +624,7 @@ export function ChatScreen({
       </div>
 
       {/* composer */}
-      <div className="border-border bg-paper border-t px-3.5 pt-2.5 pb-[calc(1rem+var(--safe-bottom))]">
+      <div className="border-border bg-paper border-t px-3.5 pt-2.5 pb-2.5">
         {!busy && messages.length > 0 && (
           <div className="mb-2.5 flex flex-wrap gap-2">
             {quickReplies(lang, track, siteName).map((q) => (
@@ -701,6 +704,7 @@ export function ChatScreen({
           )}
         </form>
       </div>
+      <TabBar lang={lang} />
     </main>
   );
 }
@@ -789,6 +793,16 @@ function AssistantBubble({
       ) : null}
       {searching && <p className="text-fg-muted text-[13px]">{t.searching}</p>}
       <ToolCards message={message} lang={lang} track={track} />
+      {/* once the answer is complete: cards for the places it talks about */}
+      {onListen && message.content && (
+        <AnswerPlaces
+          slugs={placesInAnswer(message.content, [
+            ...toolSlugs(message),
+            ...(siteSlug ? [siteSlug] : []),
+          ])}
+          lang={lang}
+        />
+      )}
       {chips.length > 0 && (
         <div className="flex max-w-[92%] flex-wrap gap-1.5">
           {chips.map((c) => (
@@ -842,6 +856,18 @@ function WithRefs({ text, known }: { text: string; known: Set<number> }) {
       })}
     </>
   );
+}
+
+/** Places already shown by planner tool cards, so the answer doesn't card them twice. */
+function toolSlugs(message: Message): string[] {
+  return (message.parts ?? []).flatMap((p) => {
+    if (p.type !== "tool-invocation" || p.toolInvocation.state !== "result") return [];
+    const r = p.toolInvocation.result as {
+      recommendations?: { slug: string }[];
+      stops?: { slug: string }[];
+    };
+    return [...(r?.recommendations ?? []), ...(r?.stops ?? [])].map((x) => x.slug);
+  });
 }
 
 /** Planner tool results render as cards under the answer. */

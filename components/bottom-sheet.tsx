@@ -1,25 +1,10 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import { snapHeights, type SheetSnap } from "@/lib/sheet";
 
-export type SheetSnap = "peek" | "half" | "full";
-
-/** Sheet heights in px for a given viewport height. */
-export function snapHeights(viewport: number, topGap: number) {
-  return {
-    peek: Math.min(196, viewport * 0.4),
-    half: Math.round(viewport * 0.55),
-    full: viewport - topGap,
-  };
-}
-
-/** Fraction of the screen the sheet covers, for keeping map pins above it. */
-export function sheetInset(snap: SheetSnap, viewport: number, topGap: number) {
-  if (!viewport) return snap === "peek" ? 0.25 : 0.55;
-  // At full height the map is hidden anyway; keep the half layout behind it.
-  const h = snapHeights(viewport, topGap)[snap === "full" ? "half" : snap];
-  return h / viewport;
-}
+export type { SheetSnap } from "@/lib/sheet";
+export { sheetInset } from "@/lib/sheet";
 
 /**
  * A map bottom sheet (Google Maps style) with three heights: peek, half and
@@ -35,6 +20,7 @@ export function BottomSheet({
   children,
   label,
   fitHeight,
+  bottom = 0,
 }: {
   snap: SheetSnap;
   onSnap: (s: SheetSnap) => void;
@@ -47,11 +33,13 @@ export function BottomSheet({
   label: string;
   /** Overrides the snap heights (e.g. a short preview card); dragging still works from it. */
   fitHeight?: number | null;
+  /** Height of a tab bar below the sheet (plus the safe-area inset, added here). */
+  bottom?: number;
 }) {
   const [drag, setDrag] = useState<number | null>(null);
   const start = useRef<{ y: number; h: number; t: number } | null>(null);
   const sheet = useRef<HTMLElement | null>(null);
-  const heights = snapHeights(viewport || 800, topGap);
+  const heights = snapHeights(viewport || 800, topGap, bottom);
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!sheet.current || e.button > 0) return;
@@ -97,10 +85,11 @@ export function BottomSheet({
       ref={sheet}
       aria-label={label}
       className={
-        "bg-paper absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden rounded-t-3xl shadow-[0_-16px_40px_-12px_rgba(31,36,40,.18)] " +
+        "bg-paper absolute inset-x-0 z-10 flex flex-col overflow-hidden rounded-t-3xl shadow-[0_-16px_40px_-12px_rgba(31,36,40,.18)] " +
         (drag == null ? "transition-[height] duration-300 ease-[cubic-bezier(.32,.72,0,1)]" : "")
       }
       style={{
+        bottom: `calc(${bottom}px + var(--safe-bottom))`,
         height: drag ?? fitHeight ?? (viewport ? heights[snap] : snap === "peek" ? 196 : "55dvh"),
       }}
     >

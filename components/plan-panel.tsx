@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { NextPlaceCards } from "@/components/next-places";
+import { SitePhoto } from "@/components/site-photo";
 import type { MapRoute } from "@/components/map-view";
 import { plan, usePlan } from "@/lib/plan-store";
 import type { Recommendation } from "@/lib/recommend";
+import { SAMPLE_SITES } from "@/lib/sample-sites";
 import type { Itinerary, Leg, Stop } from "@/lib/route";
 import type { TrackKey } from "@/lib/tracks";
 
@@ -27,8 +29,7 @@ const COPY = {
     closed: "Likely closed on arrival",
     closes: "Closes during your visit",
     visit: "visit",
-    up: "Move earlier",
-    down: "Move later",
+    reorder: "Drag to reorder, or use the arrow keys",
     remove: "Remove",
     error: "Couldn't build the route. Check your connection and try again.",
     suggestions: "Suggestions for your track",
@@ -48,8 +49,7 @@ const COPY = {
     closed: "Có thể đã đóng cửa khi tới",
     closes: "Đóng cửa trong lúc tham quan",
     visit: "tham quan",
-    up: "Lên trước",
-    down: "Xuống sau",
+    reorder: "Kéo để đổi thứ tự, hoặc dùng phím mũi tên",
     remove: "Bỏ",
     error: "Không tạo được lộ trình. Kiểm tra kết nối rồi thử lại.",
     suggestions: "Gợi ý theo hành trình của bạn",
@@ -146,20 +146,66 @@ export function PlanPanel({
   };
 
   const nameOf = (slug: string) => names[slug]?.[lang] ?? slug;
+
+  // Drag-to-reorder by a stop's grip: the lifted card follows the finger and the
+  // others slide aside; the new order is saved on release.
+  const listRef = useRef<HTMLOListElement | null>(null);
+  const [drag, setDrag] = useState<{
+    slug: string;
+    from: number;
+    startY: number;
+    dy: number;
+    to: number;
+    mids: number[];
+    height: number;
+  } | null>(null);
+  const beginDrag = (slug: string, from: number, e: React.PointerEvent) => {
+    const items = [...(listRef.current?.children ?? [])].map((li) => li.getBoundingClientRect());
+    if (!items[from]) return;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    setDrag({
+      slug,
+      from,
+      startY: e.clientY,
+      dy: 0,
+      to: from,
+      mids: items.map((r) => r.top + r.height / 2),
+      height: items[from].height,
+    });
+  };
+  const moveDrag = (e: React.PointerEvent) => {
+    if (!drag) return;
+    const dy = e.clientY - drag.startY;
+    const y = drag.mids[drag.from] + dy;
+    const to = drag.mids.filter((m, i) => i !== drag.from && m < y).length;
+    setDrag({ ...drag, dy, to });
+  };
+  const endDrag = () => {
+    if (drag && drag.to !== drag.from) plan.moveTo(drag.slug, drag.to);
+    setDrag(null);
+  };
+  const dragOffset = (i: number) => {
+    if (!drag) return 0;
+    if (i === drag.from) return drag.dy;
+    if (drag.from < drag.to && i > drag.from && i <= drag.to) return -drag.height;
+    if (drag.from > drag.to && i >= drag.to && i < drag.from) return drag.height;
+    return 0;
+  };
   // While a changed plan is refetching, show the new list without stale times.
-  const current = itinerary && itinerary.stops.map((s) => s.slug).join(",") === key ? itinerary : null;
+  const current =
+    itinerary && itinerary.stops.map((s) => s.slug).join(",") === key ? itinerary : null;
 
   return (
     <div className="flex flex-col gap-4">
       {slugs.length === 0 ? (
-        <div className="rounded-[10px] border border-dashed border-border bg-paper-card p-4 text-center">
-          <p className="font-display text-lg text-fg">{t.empty}</p>
-          <p className="mt-1 text-sm text-fg-muted">{t.emptyHint}</p>
+        <div className="border-border bg-paper-card rounded-[10px] border border-dashed p-4 text-center">
+          <p className="font-display text-fg text-lg">{t.empty}</p>
+          <p className="text-fg-muted mt-1 text-sm">{t.emptyHint}</p>
         </div>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="inline-flex items-center gap-1.5 rounded-full border border-border bg-paper-card px-3 py-1.5 text-[13px] text-fg">
+            <label className="border-border bg-paper-card text-fg inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px]">
               <Icon name="clock" size={14} className="text-fg-muted" />
               {t.start}
               <input
@@ -174,7 +220,7 @@ export function PlanPanel({
                 type="button"
                 onClick={optimize}
                 disabled={optimizing}
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[13px] font-medium text-paper disabled:opacity-60"
+                className="bg-primary text-paper inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium disabled:opacity-60"
               >
                 <Icon name="route" size={14} />
                 {optimizing ? t.optimizing : t.optimize}
@@ -183,37 +229,50 @@ export function PlanPanel({
             <button
               type="button"
               onClick={() => plan.clear()}
-              className="ml-auto rounded-full px-2 py-1.5 text-[13px] text-fg-muted hover:text-fg"
+              className="text-fg-muted hover:text-fg ml-auto rounded-full px-2 py-1.5 text-[13px]"
             >
               {t.clear}
             </button>
           </div>
 
           {current && (
-            <p className="text-[12px] text-fg-muted">
+            <p className="text-fg-muted text-[12px]">
               {t.total(duration(current.total_travel_min), current.total_distance_km)} · {t.finish}{" "}
               <span className="font-mono">{current.end_time}</span>
             </p>
           )}
           {error && (
-            <p className="text-sm text-fg-muted" role="alert">
+            <p className="text-fg-muted text-sm" role="alert">
               {t.error}
             </p>
           )}
 
-          <ol className="flex flex-col">
-            {(current?.stops ?? slugs.map((slug) => ({ slug }) as Partial<Stop> & { slug: string })).map((stop, i) => {
+          <ol ref={listRef} className="flex flex-col">
+            {(
+              current?.stops ?? slugs.map((slug) => ({ slug }) as Partial<Stop> & { slug: string })
+            ).map((stop, i) => {
               const leg: Leg | undefined = current?.legs[i - 1];
               return (
-                <li key={stop.slug}>
-                  {leg && <LegRow leg={leg} t={t} />}
+                <li
+                  key={stop.slug}
+                  className={drag?.slug === stop.slug ? "relative z-10" : "relative"}
+                  style={{
+                    transform: `translateY(${dragOffset(i)}px)`,
+                    transition: drag?.slug === stop.slug ? "none" : "transform 200ms ease",
+                  }}
+                >
+                  {/* travel times are stale while dragging; they come back with the new order */}
+                  {leg && !drag && <LegRow leg={leg} t={t} />}
                   <StopCard
                     n={i + 1}
                     stop={stop}
                     name={nameOf(stop.slug)}
                     altName={names[stop.slug]?.[lang === "vi" ? "en" : "vi"]}
-                    first={i === 0}
-                    last={i === slugs.length - 1}
+                    lang={lang}
+                    lifted={drag?.slug === stop.slug}
+                    onGripDown={(e) => beginDrag(stop.slug, i, e)}
+                    onGripMove={moveDrag}
+                    onGripUp={endDrag}
                     t={t}
                   />
                 </li>
@@ -225,7 +284,9 @@ export function PlanPanel({
 
       {suggestions.length > 0 && (
         <section className="flex flex-col gap-2">
-          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.suggestions}</p>
+          <p className="text-fg-muted text-[11px] font-medium tracking-[0.08em] uppercase">
+            {t.suggestions}
+          </p>
           <NextPlaceCards items={suggestions} lang={lang} track={track} showViewPlan={false} />
         </section>
       )}
@@ -235,10 +296,11 @@ export function PlanPanel({
 
 function LegRow({ leg, t }: { leg: Leg; t: (typeof COPY)[Lang] }) {
   return (
-    <div className="ml-[15px] flex items-center gap-2 border-l-2 border-dashed border-border py-2 pl-5 text-[12px] text-fg-muted">
+    <div className="border-border text-fg-muted ml-[15px] flex items-center gap-2 border-l-2 border-dashed py-2 pl-5 text-[12px]">
       <Icon name={leg.mode === "drive+boat" ? "boat" : "car"} size={14} />
       <span>
-        {duration(leg.travel_min)} {leg.mode === "drive+boat" ? t.boat : t.drive} · {leg.distance_km} km
+        {duration(leg.travel_min)} {leg.mode === "drive+boat" ? t.boat : t.drive} ·{" "}
+        {leg.distance_km} km
         {leg.estimated && <span className="text-fg-subtle"> ({t.est})</span>}
       </span>
     </div>
@@ -250,35 +312,67 @@ function StopCard({
   stop,
   name,
   altName,
-  first,
-  last,
+  lang,
+  lifted,
+  onGripDown,
+  onGripMove,
+  onGripUp,
   t,
 }: {
   n: number;
   stop: Partial<Stop> & { slug: string };
   name: string;
   altName?: string;
-  first: boolean;
-  last: boolean;
+  lang: Lang;
+  lifted: boolean;
+  onGripDown: (e: React.PointerEvent) => void;
+  onGripMove: (e: React.PointerEvent) => void;
+  onGripUp: () => void;
   t: (typeof COPY)[Lang];
 }) {
-  const warn = stop.hours_warning === "closed_on_arrival" ? t.closed : stop.hours_warning === "closes_during_visit" ? t.closes : null;
+  const site = SAMPLE_SITES.find((x) => x.slug === stop.slug);
+  const warn =
+    stop.hours_warning === "closed_on_arrival"
+      ? t.closed
+      : stop.hours_warning === "closes_during_visit"
+        ? t.closes
+        : null;
   return (
-    <div className="flex items-start gap-3 rounded-[10px] border border-border bg-paper-card p-3">
-      <span
-        aria-hidden
-        className="grid size-[30px] shrink-0 place-items-center rounded-full bg-primary font-sans text-[13px] font-semibold text-paper"
-      >
-        {n}
-      </span>
+    <div
+      className={
+        "bg-paper-card flex items-start gap-3 rounded-[12px] border p-2.5 transition-shadow " +
+        (lifted ? "border-primary shadow-lift" : "border-border")
+      }
+    >
+      <div className="relative shrink-0">
+        <SitePhoto
+          photo={site?.photo}
+          gradient={site?.hero_gradient ?? "var(--primary)"}
+          lang={lang}
+          width={160}
+          decorative
+          className="size-14 rounded-[8px]"
+        />
+        <span
+          aria-hidden
+          className="bg-primary text-paper ring-paper absolute -top-1.5 -left-1.5 grid size-6 place-items-center rounded-full font-sans text-[12px] font-semibold ring-2"
+        >
+          {n}
+        </span>
+      </div>
       <div className="min-w-0 flex-1">
-        <Link href={`/site/${stop.slug}`} className="block truncate font-display text-[17px] leading-tight text-fg">
+        <Link
+          href={`/site/${stop.slug}`}
+          className="font-display text-fg block truncate text-[17px] leading-tight"
+        >
           {name}
         </Link>
-        {altName && <p className="truncate font-display text-[12px] italic text-fg-muted">{altName}</p>}
+        {altName && (
+          <p className="font-display text-fg-muted truncate text-[12px] italic">{altName}</p>
+        )}
         {stop.arrive && (
-          <p className="mt-1 text-[12px] text-fg-muted">
-            <span className="font-mono text-fg">
+          <p className="text-fg-muted mt-1 text-[12px]">
+            <span className="text-fg font-mono">
               {stop.arrive}–{stop.depart}
             </span>{" "}
             · {duration(stop.visit_min ?? 0)} {t.visit}
@@ -290,11 +384,25 @@ function StopCard({
           </p>
         )}
       </div>
-      <div className="flex shrink-0 flex-col items-center gap-0.5">
-        <IconButton label={t.up} icon="chevronUp" disabled={first} onClick={() => plan.move(stop.slug, -1)} />
-        <IconButton label={t.down} icon="chevronDown" disabled={last} onClick={() => plan.move(stop.slug, 1)} />
-      </div>
       <IconButton label={t.remove} icon="x" onClick={() => plan.remove(stop.slug)} />
+      <button
+        type="button"
+        aria-label={`${t.reorder}: ${name}`}
+        title={t.reorder}
+        onPointerDown={onGripDown}
+        onPointerMove={onGripMove}
+        onPointerUp={onGripUp}
+        onPointerCancel={onGripUp}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            e.preventDefault();
+            plan.move(stop.slug, e.key === "ArrowUp" ? -1 : 1);
+          }
+        }}
+        className="text-fg-muted hover:bg-paper-sunk hover:text-fg -mr-1 grid h-14 w-7 shrink-0 cursor-grab touch-none place-items-center rounded-md active:cursor-grabbing"
+      >
+        <Icon name="grip" size={18} />
+      </button>
     </div>
   );
 }
@@ -306,7 +414,7 @@ function IconButton({
   disabled,
 }: {
   label: string;
-  icon: "chevronUp" | "chevronDown" | "x";
+  icon: "x";
   onClick: () => void;
   disabled?: boolean;
 }) {
@@ -317,7 +425,7 @@ function IconButton({
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className="grid size-7 place-items-center rounded-full text-fg-muted hover:bg-paper-sunk hover:text-fg disabled:opacity-25"
+      className="text-fg-muted hover:bg-paper-sunk hover:text-fg grid size-7 place-items-center rounded-full disabled:opacity-25"
     >
       <Icon name={icon} size={16} />
     </button>

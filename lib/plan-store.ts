@@ -18,7 +18,9 @@ function read(): string[] {
   try {
     const raw = window.localStorage.getItem(KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
-    cache = Array.isArray(parsed) ? parsed.filter((s): s is string => typeof s === "string").slice(0, MAX_STOPS) : [];
+    cache = Array.isArray(parsed)
+      ? parsed.filter((s): s is string => typeof s === "string").slice(0, MAX_STOPS)
+      : [];
   } catch {
     cache = [];
   }
@@ -62,6 +64,13 @@ export const plan = {
     const j = i + delta;
     if (i < 0 || j < 0 || j >= list.length) return;
     [list[i], list[j]] = [list[j], list[i]];
+    write(list);
+  },
+  /** Moves a stop to position `index` (drag-to-reorder). */
+  moveTo: (slug: string, index: number) => {
+    const list = read().filter((s) => s !== slug);
+    if (list.length === read().length) return;
+    list.splice(Math.max(0, Math.min(list.length, index)), 0, slug);
     write(list);
   },
   clear: () => write([]),
