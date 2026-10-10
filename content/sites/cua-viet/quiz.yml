@@ -1,0 +1,62 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+review_status: draft
+questions:
+  - id: river
+    answer: 2
+    source: overview
+    vi:
+      q: "Cửa Việt là nơi con sông nào đổ ra biển?"
+      options: ["Sông Bến Hải", "Sông Hiếu", "Sông Thạch Hãn", "Sông Gianh"]
+      explain: "Cửa Việt là nơi sông Thạch Hãn gặp biển, phía đông bắc Đông Hà."
+    en:
+      q: "Cửa Việt is where which river meets the sea?"
+      options: ["The Bến Hải", "The Hiếu", "The Thạch Hãn", "The Gianh"]
+      explain: "Cửa Việt is where the Thạch Hãn river meets the sea, northeast of Đông Hà."
+
+  - id: boats
+    answer: 0
+    source: overview
+    vi:
+      q: "Từ Cửa Việt có thể đi tàu ra đâu?"
+      options: ["Đảo Cồn Cỏ", "Cù Lao Chàm", "Lý Sơn", "Côn Đảo"]
+      explain: "Cửa Việt là điểm xuất phát của tàu ra đảo Cồn Cỏ."
+    en:
+      q: "Boats leave Cửa Việt for which island?"
+      options: ["Cồn Cỏ", "Cù Lao Chàm", "Lý Sơn", "Côn Đảo"]
+      explain: "Cửa Việt is the departure point for boats to Cồn Cỏ island."
+
+  - id: base-year
+    answer: 1
+    source: history
+    vi:
+      q: "Căn cứ hậu cần của lính thủy đánh bộ Mỹ được lập ở Cửa Việt vào năm nào?"
+      options: ["1962", "1966", "1972", "1975"]
+      explain: "Năm 1966, một căn cứ hậu cần của lính thủy đánh bộ Mỹ được lập ở Cửa Việt; hàng tiếp tế đi ngược sông lên Đông Hà."
+    en:
+      q: "In which year was a US Marine logistics base established at Cửa Việt?"
+      options: ["1962", "1966", "1972", "1975"]
+      explain: "A US Marine logistics base was established at Cửa Việt in 1966; supplies moved up the river to Đông Hà."
+
+  - id: gateway
+    answer: 3
+    source: history
+    vi:
+      q: "Từ lâu, cửa sông Cửa Việt được xem là gì?"
+      options: ["Biên giới phía bắc của tỉnh", "Một khu bảo tồn rừng", "Một trung tâm tôn giáo", "Cửa ngõ ra biển của vùng trung tâm Quảng Trị"]
+      explain: "Cửa sông từ lâu là cửa ngõ ra biển của vùng trung tâm Quảng Trị."
+    en:
+      q: "What has the river mouth long been?"
+      options: ["The province's northern border", "A forest reserve", "A religious centre", "The sea gateway to central Quảng Trị"]
+      explain: "The river mouth has long been the sea gateway to central Quảng Trị."
+
+  - id: today
+    answer: 2
+    source: overview
+    vi:
+      q: "Ngày nay Cửa Việt chủ yếu là gì?"
+      options: ["Một khu công nghiệp lớn", "Một căn cứ quân sự", "Cảng cá đang hoạt động và bãi biển dài", "Một khu nghỉ dưỡng của người Pháp"]
+      explain: "Cửa Việt là cảng cá đang hoạt động và bãi cát dài, được các gia đình Đông Hà ưa chuộng vào cuối tuần mùa hè."
+    en:
+      q: "What is Cửa Việt mainly today?"
+      options: ["A large industrial zone", "A military base", "A working fishing port and long sandy beach", "A French resort"]
+      explain: "It is a working fishing port and a long sandy beach, popular with families from Đông Hà on summer weekends."

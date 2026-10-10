@@ -1,0 +1,75 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Religious site: questions follow the content's "according to Catholic tradition" framing.
+review_status: draft
+questions:
+  - id: tradition-year
+    answer: 1
+    source: history
+    vi:
+      q: "Theo truyền thống Công giáo, cuộc hiện ra của Đức Mẹ tại La Vang diễn ra vào năm nào?"
+      options: ["1698", "1798", "1885", "1961"]
+      explain: "Theo truyền thống Công giáo, năm 1798 các giáo dân lánh nạn trong rừng La Vang đã thấy Đức Trinh Nữ Maria hiện ra."
+    en:
+      q: "According to Catholic tradition, in which year did the Marian apparition at La Vang take place?"
+      options: ["1698", "1798", "1885", "1961"]
+      explain: "According to Catholic tradition, in 1798 Catholics hiding in the forest at La Vang saw a vision of the Virgin Mary."
+
+  - id: leaves
+    answer: 3
+    source: history
+    vi:
+      q: "Theo truyền thống, Đức Mẹ đã chỉ cho giáo dân chữa bệnh bằng gì?"
+      options: ["Nước suối", "Muối biển", "Mật ong rừng", "Lá cây quanh đó"]
+      explain: "Theo truyền thống, Đức Mẹ an ủi họ và chỉ cách chữa bệnh bằng lá của những cây xung quanh."
+    en:
+      q: "According to tradition, what did the Virgin Mary tell them to treat the sick with?"
+      options: ["Spring water", "Sea salt", "Wild honey", "Leaves from the surrounding trees"]
+      explain: "She comforted them and told them how to treat the sick with leaves from the surrounding trees."
+
+  - id: basilica
+    answer: 0
+    source: history
+    vi:
+      q: "Năm 1961, Giáo hoàng Gioan XXIII nâng nhà thờ La Vang lên bậc nào?"
+      options: ["Tiểu vương cung thánh đường", "Nhà thờ chính tòa", "Đền thánh quốc tế", "Tu viện"]
+      explain: "Ngày 22/8/1961, Giáo hoàng Gioan XXIII nâng nhà thờ lên bậc tiểu vương cung thánh đường."
+    en:
+      q: "In 1961, what rank did Pope John XXIII give the church at La Vang?"
+      options: ["Minor basilica", "Cathedral", "International shrine", "Monastery"]
+      explain: "On 22 August 1961 Pope John XXIII designated the church a minor basilica."
+
+  - id: survived
+    answer: 2
+    source: history
+    vi:
+      q: "Phần nào của vương cung thánh đường cũ còn lại sau năm 1972?"
+      options: ["Cổng chính", "Bàn thờ", "Tháp chuông", "Mái vòm"]
+      explain: "Thánh đường bị phá hủy trong giao tranh năm 1972, chỉ còn lại tháp chuông và được giữ gìn đến nay."
+    en:
+      q: "What part of the old basilica survived 1972?"
+      options: ["The main gate", "The altar", "The bell tower", "The dome"]
+      explain: "The basilica was destroyed in the fighting of 1972, leaving only the bell tower, which has been preserved."
+
+  - id: new-basilica
+    answer: 1
+    source: history
+    vi:
+      q: "Vương cung thánh đường mới được đặt viên đá đầu tiên vào năm nào?"
+      options: ["1999", "2012", "2018", "2025"]
+      explain: "Ngày 15/8/2012, viên đá đầu tiên của vương cung thánh đường mới được đặt, công trình lớn nhất của Giáo hội Công giáo Việt Nam."
+    en:
+      q: "When was the first stone laid for the new basilica?"
+      options: ["1999", "2012", "2018", "2025"]
+      explain: "On 15 August 2012 the first stone was laid, the largest construction project of the Catholic Church in Vietnam."
+
+  - id: feast
+    answer: 3
+    source: culture_notes
+    vi:
+      q: "Dịp nào La Vang đón đông khách hành hương nhất?"
+      options: ["Tết Nguyên đán", "Lễ Giáng sinh", "Ngày 27 tháng 7", "Quanh lễ Đức Mẹ Lên Trời, 15 tháng 8"]
+      explain: "Đông nhất là các ngày lễ kính Đức Mẹ, đặc biệt quanh lễ Đức Mẹ Lên Trời ngày 15 tháng 8, khi hàng chục nghìn người hành hương tụ về."
+    en:
+      q: "When does La Vang receive the most pilgrims?"
+      options: ["Lunar New Year", "Christmas", "27 July", "Around the Assumption, 15 August"]
+      explain: "The busiest times are the Marian feasts, especially around the Assumption on 15 August, when tens of thousands gather."

@@ -5,6 +5,7 @@ import YAML from "yaml";
 import { haversineMeters } from "./geo";
 import { SAMPLE_SITES } from "./sample-sites";
 import { parseTourScript } from "./tours";
+import { checkQuiz } from "./quiz-check";
 
 /**
  * Editorial checks for content/sites. Run by `bun run content:check`, by the
@@ -233,6 +234,23 @@ export async function checkContent(
     const en = [...sectionsByLang.en].sort().join();
     if (vi !== en)
       err(`${slug}: vi has [${vi}] but en has [${en}]; both languages need the same sections`);
+
+    // Post-visit quiz (lib/quiz-check.ts): optional; both languages share one file.
+    const quizPath = join(contentDir, slug, "quiz.yml");
+    if (await exists(quizPath)) {
+      let quiz: unknown;
+      try {
+        quiz = YAML.parse(await readFile(quizPath, "utf8"));
+      } catch (e) {
+        err(`${where("quiz.yml")}: invalid YAML (${(e as Error).message})`);
+      }
+      if (quiz !== undefined) {
+        const shared = sectionsByLang.vi.filter((s) => sectionsByLang.en.includes(s));
+        const r = checkQuiz(slug, quiz, shared, opts);
+        r.errors.forEach(err);
+        r.warnings.forEach(warn);
+      }
+    }
   }
 
   return report;

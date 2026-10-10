@@ -1,0 +1,83 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Checked by `bun run content:check`; drafts stay hidden in production.
+review_status: draft
+questions:
+  - id: depth
+    answer: 2
+    source: history
+    vi:
+      q: "Tầng sâu nhất của địa đạo Vĩnh Mốc nằm sâu khoảng bao nhiêu mét?"
+      options: ["Khoảng 8 mét", "Khoảng 12 mét", "Khoảng 23 mét", "Khoảng 40 mét"]
+      explain: "Địa đạo được đào qua ba giai đoạn, sâu khoảng 12 m, 15 m rồi 23 m."
+    en:
+      q: "About how deep is the lowest level of the Vinh Moc tunnels?"
+      options: ["About 8 metres", "About 12 metres", "About 23 metres", "About 40 metres"]
+      explain: "The tunnels were dug in three phases, reaching about 12 m, 15 m and finally 23 m."
+
+  - id: years-dug
+    answer: 1
+    source: overview
+    vi:
+      q: "Người dân Vĩnh Mốc đào địa đạo trong khoảng thời gian nào?"
+      options: ["1954–1956", "1965–1967", "1972–1973", "1975–1976"]
+      explain: "Địa đạo được người dân đào thủ công trong những năm 1965–1967."
+    en:
+      q: "When did the villagers of Vinh Moc dig the tunnels?"
+      options: ["1954–1956", "1965–1967", "1972–1973", "1975–1976"]
+      explain: "The villagers dug the tunnels by hand between 1965 and 1967."
+
+  - id: why-stay
+    answer: 0
+    source: history
+    vi:
+      q: "Vì sao người dân chọn đào địa đạo thay vì di tản vào đất liền?"
+      options:
+        - "Để ở lại gần ruộng đồng và ngư trường"
+        - "Để cất giữ vũ khí"
+        - "Vì đường vào đất liền bị cắt đứt hoàn toàn"
+        - "Để khai thác khoáng sản"
+      explain: "Người dân không di tản mà chọn ở lại gần ruộng và biển, nên bắt đầu đào địa đạo."
+    en:
+      q: "Why did residents dig tunnels instead of evacuating inland?"
+      options:
+        - "To stay near their farms and fishing grounds"
+        - "To store weapons"
+        - "Because every road inland was cut"
+        - "To mine minerals"
+      explain: "Rather than evacuate, residents chose to stay near their farms and fishing grounds, and began to dig."
+
+  - id: children-born
+    answer: 3
+    source: history
+    vi:
+      q: "Có bao nhiêu em bé đã chào đời dưới lòng địa đạo?"
+      options: ["3", "7", "12", "17"]
+      explain: "Trong khoảng sáu năm sống dưới lòng đất, 17 em bé đã chào đời trong địa đạo."
+    en:
+      q: "How many children were born inside the tunnels?"
+      options: ["3", "7", "12", "17"]
+      explain: "During about six years underground, seventeen children were born in the tunnels."
+
+  - id: entrances
+    answer: 2
+    source: history
+    vi:
+      q: "Hệ thống địa đạo có tất cả bao nhiêu cửa ra vào?"
+      options: ["5", "9", "13", "21"]
+      explain: "Có 13 cửa: 7 cửa hướng ra biển Đông và 6 cửa hướng vào đất liền."
+    en:
+      q: "How many entrances does the tunnel system have?"
+      options: ["5", "9", "13", "21"]
+      explain: "There are thirteen entrances: seven facing the East Sea and six facing the hills."
+
+  - id: households
+    answer: 1
+    source: history
+    vi:
+      q: "Khoảng bao nhiêu hộ dân đã sống trong địa đạo?"
+      options: ["Khoảng 10 hộ", "Khoảng 60 hộ", "Khoảng 300 hộ", "Khoảng 1.000 hộ"]
+      explain: "Khoảng 60 hộ dân, tổng cộng vài trăm người, đã sống trong địa đạo khoảng sáu năm."
+    en:
+      q: "About how many households lived in the tunnels?"
+      options: ["About 10", "About 60", "About 300", "About 1,000"]
+      explain: "Approximately sixty households, several hundred people in total, lived there for about six years."

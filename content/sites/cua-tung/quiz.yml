@@ -1,0 +1,62 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+review_status: draft
+questions:
+  - id: river-mouth
+    answer: 1
+    source: overview
+    vi:
+      q: "Bãi biển Cửa Tùng nằm ở cửa sông nào?"
+      options: ["Sông Thạch Hãn", "Sông Bến Hải", "Sông Hiếu", "Sông Ô Lâu"]
+      explain: "Cửa Tùng là bãi biển cát mịn, thoải dài ở cửa sông Bến Hải."
+    en:
+      q: "Cửa Tùng beach lies at the mouth of which river?"
+      options: ["The Thạch Hãn", "The Bến Hải", "The Hiếu", "The Ô Lâu"]
+      explain: "Cửa Tùng is a long, gently sloping beach at the mouth of the Bến Hải River."
+
+  - id: queen
+    answer: 0
+    source: history
+    vi:
+      q: "Người Pháp từng gọi Cửa Tùng là gì?"
+      options: ["Nữ hoàng của các bãi tắm", "Hòn ngọc Viễn Đông", "Vịnh của rồng", "Bãi biển vàng"]
+      explain: "Đầu thế kỷ 20, Cửa Tùng là khu nghỉ dưỡng nổi tiếng và được người Pháp gọi là “nữ hoàng của các bãi tắm”."
+    en:
+      q: "What did the French call Cửa Tùng?"
+      options: ["The queen of beaches", "The pearl of the Orient", "The dragon's bay", "The golden beach"]
+      explain: "In the early twentieth century it was a well-known resort that the French called the “queen of beaches”."
+
+  - id: headlands
+    answer: 2
+    source: overview
+    vi:
+      q: "Những mũi đất nhô ra biển dọc bờ Cửa Tùng được tạo nên từ gì?"
+      options: ["Đá vôi trắng", "Cát vàng", "Đá bazan đỏ", "Đá granite xám"]
+      explain: "Dọc bờ biển có những mũi đá bazan đỏ thấp nhô ra biển, phía sau bãi cát là hàng phi lao."
+    en:
+      q: "What are the headlands along Cửa Tùng made of?"
+      options: ["White limestone", "Yellow sand", "Red basalt", "Grey granite"]
+      explain: "Low red basalt headlands run out into the sea, with casuarina trees behind the sand."
+
+  - id: demarcation
+    answer: 3
+    source: history
+    vi:
+      q: "Từ năm 1954, con sông ở Cửa Tùng có vai trò gì?"
+      options: ["Biên giới với Lào", "Ranh giới giữa hai tỉnh", "Tuyến vận tải chính", "Giới tuyến tạm thời giữa hai miền Nam – Bắc"]
+      explain: "Cửa sông nằm trên sông Bến Hải, từ năm 1954 là giới tuyến tạm thời giữa hai miền."
+    en:
+      q: "From 1954, what role did the river at Cửa Tùng play?"
+      options: ["The border with Laos", "A boundary between two provinces", "The main shipping route", "The temporary demarcation line between North and South"]
+      explain: "The estuary lies on the Bến Hải, which from 1954 formed the temporary demarcation line between North and South."
+
+  - id: nearby
+    answer: 1
+    source: overview
+    vi:
+      q: "Cửa Tùng chỉ cách vài cây số đến hai di tích nào?"
+      options: ["Thành cổ Quảng Trị và La Vang", "Cầu Hiền Lương và địa đạo Vĩnh Mốc", "Khe Sanh và Lao Bảo", "Đảo Cồn Cỏ và Cửa Việt"]
+      explain: "Cửa Tùng cách cầu Hiền Lương và địa đạo Vĩnh Mốc chỉ vài cây số, tiện nghỉ ngơi sau buổi sáng thăm các di tích vĩ tuyến 17."
+    en:
+      q: "Which two sites are only a few kilometres from Cửa Tùng?"
+      options: ["The Citadel and La Vang", "Hiền Lương Bridge and the Vĩnh Mốc Tunnels", "Khe Sanh and Lao Bảo", "Cồn Cỏ and Cửa Việt"]
+      explain: "It sits only a few kilometres from Hiền Lương Bridge and the Vĩnh Mốc Tunnels."

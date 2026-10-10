@@ -2,8 +2,10 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
+import YAML from "yaml";
 import type { SiteContentSection } from "@/lib/sites";
 import type { TourScript, TourSection } from "@/lib/tours";
+import type { SiteQuiz } from "@/lib/quiz-types";
 
 export type SiteContent = Record<"vi" | "en", SiteContentSection[]>;
 
@@ -83,4 +85,21 @@ export async function readTourScriptsFromDisk(dir: string, slug: string): Promis
     }
   }
   return out;
+}
+
+/**
+ * The site's quiz.yml, or null. Shape is enforced by `bun run content:check`
+ * (lib/quiz-check.ts); here a missing or malformed file just reads as no quiz.
+ */
+export async function readQuizFromDisk(dir: string, slug: string): Promise<SiteQuiz | null> {
+  try {
+    const data = YAML.parse(await readFile(join(dir, slug, "quiz.yml"), "utf8")) as Partial<SiteQuiz> | null;
+    if (!data || !Array.isArray(data.questions)) return null;
+    return {
+      review_status: data.review_status === "reviewed" ? "reviewed" : "draft",
+      questions: data.questions,
+    };
+  } catch {
+    return null;
+  }
 }

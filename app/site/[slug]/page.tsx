@@ -6,6 +6,8 @@ import { Icon } from "@/components/icon";
 import { NextPlaces } from "@/components/next-places";
 import { SitePhoto } from "@/components/site-photo";
 import { SiteSections } from "@/components/site-sections";
+import { VisitButton } from "@/components/visit-button";
+import { getQuiz } from "@/lib/content";
 import { formatHours } from "@/lib/format";
 import { getSiteWithContent, getTour } from "@/lib/sites";
 import { formatMinutes, listenSeconds } from "@/lib/tours";
@@ -33,7 +35,7 @@ export default async function SiteDetailPage({ params }: Props) {
   if (!site) notFound();
 
   const lang = (await getLocale()) === "vi" ? "vi" : "en";
-  const tour = await getTour(slug, lang);
+  const [tour, quiz] = await Promise.all([getTour(slug, lang), getQuiz(slug)]);
   const sections = site.content[lang];
   const primaryTrack: TrackKey = site.tracks[0] ?? "foreign";
   const isDraft = sections.some((s) => s.review_status === "draft");
@@ -132,9 +134,36 @@ export default async function SiteDetailPage({ params }: Props) {
             <Icon name="play" size={18} />
           </Link>
         )}
+        {/* after the visit: test what you learned, for the passport stamp */}
+        {quiz && quiz.questions.length > 0 && (
+          <Link
+            href={`/site/${site.slug}/quiz`}
+            className="border-border bg-paper-card mt-2 flex items-center gap-3 rounded-2xl border px-3.5 py-3"
+          >
+            <span className="bg-paper-sunk grid size-10 shrink-0 place-items-center rounded-full">
+              <Icon name="flag" size={18} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium">
+                {lang === "vi" ? "Ôn lại những gì bạn đã biết" : "Test what you learned"}
+              </span>
+              <span className="text-fg-muted block text-[12.5px]">
+                {lang === "vi"
+                  ? `${quiz.questions.length} câu hỏi · đóng dấu hộ chiếu`
+                  : `${quiz.questions.length} questions · earns a passport stamp`}
+              </span>
+            </span>
+            <Icon name="arrow" size={18} />
+          </Link>
+        )}
         <div className="mt-2">
           <AddToPlanButton slug={site.slug} lang={lang} />
         </div>
+        {quiz && quiz.questions.length > 0 && (
+          <div className="mt-3">
+            <VisitButton slug={site.slug} lang={lang} />
+          </div>
+        )}
 
         {isDraft && (
           <p className="bg-paper-sunk text-fg-muted mt-4 flex gap-2 rounded-[10px] px-3 py-2 text-[12.5px]">
