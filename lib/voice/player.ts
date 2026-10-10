@@ -8,11 +8,18 @@ type Lang = "vi" | "en";
 const SILENT_WAV =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
 
-export type PlayerState = { speaking: boolean; key: string | null; error: string | null };
+export type PlayerState = {
+  speaking: boolean;
+  key: string | null;
+  error: string | null;
+  /** Index of the piece now playing within the current group (as enqueued since begin()). */
+  item: number;
+};
 
 interface QueueItem {
   text: string;
   audio: Promise<Blob | null>;
+  index: number;
 }
 
 /**
@@ -28,7 +35,8 @@ export class SpeechPlayer {
   private draining = false;
   private interruptCurrent: (() => void) | null = null;
   private browserFallback = false;
-  private state: PlayerState = { speaking: false, key: null, error: null };
+  private state: PlayerState = { speaking: false, key: null, error: null, item: 0 };
+  private enqueued = 0;
 
   constructor(
     private opts: { lang: () => Lang; voice: () => TtsVoice; onChange: (s: PlayerState) => void },
@@ -49,14 +57,15 @@ export class SpeechPlayer {
   /** Start a new utterance group (e.g. one assistant message). Stops anything playing. */
   begin(key: string): void {
     this.stop();
-    this.set({ key, error: null });
+    this.enqueued = 0;
+    this.set({ key, error: null, item: 0 });
   }
 
   enqueue(text: string): void {
     // A lone "[2]" left at the end of a stream has nothing to say.
     const clean = toSpeakable(text);
     if (!/[\p{L}\p{N}]/u.test(clean)) return;
-    this.queue.push({ text: clean, audio: this.fetchSpeech(clean) });
+    this.queue.push({ text: clean, audio: this.fetchSpeech(clean), index: this.enqueued++ });
     if (!this.draining) void this.drain();
   }
 
@@ -69,7 +78,8 @@ export class SpeechPlayer {
       this.el.pause();
       this.el.removeAttribute("src");
     }
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (typeof window !== "undefined" && "speechSynthesis" in window)
+      window.speechSynthesis.cancel();
     this.set({ speaking: false, key: null });
   }
 
@@ -104,6 +114,7 @@ export class SpeechPlayer {
         const item = this.queue.shift()!;
         const blob = await item.audio;
         if (gen !== this.generation) break;
+        this.set({ item: item.index });
         if (blob) {
           if (!(await this.playBlob(blob))) {
             // Autoplay blocked (no recent gesture). Surface it so the UI offers "Listen".
@@ -152,7 +163,9 @@ export class SpeechPlayer {
     return new Promise<void>((resolve) => {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = this.opts.lang() === "vi" ? "vi-VN" : "en-US";
-      const voice = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith(u.lang.slice(0, 2)));
+      const voice = window.speechSynthesis
+        .getVoices()
+        .find((v) => v.lang.startsWith(u.lang.slice(0, 2)));
       if (voice) u.voice = voice;
       const done = () => {
         this.interruptCurrent = null;

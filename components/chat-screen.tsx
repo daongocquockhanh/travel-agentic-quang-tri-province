@@ -269,6 +269,7 @@ export function ChatScreen({
     speaking: false,
     key: null,
     error: null,
+    item: 0,
   });
   const [notice, setNotice] = useState<string | null>(null);
   const voiceCtx = useRef({ lang, track });

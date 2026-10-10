@@ -7,7 +7,8 @@ import { NextPlaces } from "@/components/next-places";
 import { SitePhoto } from "@/components/site-photo";
 import { SiteSections } from "@/components/site-sections";
 import { formatHours } from "@/lib/format";
-import { getSiteWithContent } from "@/lib/sites";
+import { getSiteWithContent, getTour } from "@/lib/sites";
+import { formatMinutes, listenSeconds } from "@/lib/tours";
 import { SITE_TYPE_LABEL, type TrackKey } from "@/lib/tracks";
 
 function formatTicket(vnd: number | null, lang: "vi" | "en") {
@@ -32,6 +33,7 @@ export default async function SiteDetailPage({ params }: Props) {
   if (!site) notFound();
 
   const lang = (await getLocale()) === "vi" ? "vi" : "en";
+  const tour = await getTour(slug, lang);
   const sections = site.content[lang];
   const primaryTrack: TrackKey = site.tracks[0] ?? "foreign";
   const isDraft = sections.some((s) => s.review_status === "draft");
@@ -106,15 +108,31 @@ export default async function SiteDetailPage({ params }: Props) {
             : `About ${site.distance_from_dong_ha_km} km from Đông Hà`}
         </p>
 
-        {/* what you can do here */}
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        {/* the audio tour leads: it is what travellers use on the spot */}
+        {tour && (
           <Link
-            href={`/chat?site=${site.slug}&intent=arrival_story&track=${primaryTrack}`}
-            className="border-border bg-paper-card text-fg flex items-center justify-center gap-2 rounded-full border px-3 py-2.5 text-[14px] font-medium"
+            href={`/site/${site.slug}/tour`}
+            className="bg-primary text-paper shadow-soft mt-4 flex items-center gap-3 rounded-2xl px-3.5 py-3"
           >
-            <Icon name="play" size={14} />
-            {lang === "vi" ? "Nghe câu chuyện" : "Hear the story"}
+            <span className="bg-paper/15 grid size-10 shrink-0 place-items-center rounded-full">
+              <Icon name="headphones" size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium">
+                {lang === "vi" ? "Nghe thuyết minh" : "Audio tour"}
+              </span>
+              <span className="block text-[12.5px] opacity-85">
+                {lang === "vi" ? `${tour.stops.length} điểm dừng` : `${tour.stops.length} stops`} ·{" "}
+                {formatMinutes(
+                  tour.stops.reduce((sum, s) => sum + listenSeconds(s.body, lang), 0),
+                  lang,
+                )}
+              </span>
+            </span>
+            <Icon name="play" size={18} />
           </Link>
+        )}
+        <div className="mt-2">
           <AddToPlanButton slug={site.slug} lang={lang} />
         </div>
 

@@ -89,6 +89,15 @@ Built with [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare); confi
 3. `NEXT_PUBLIC_*` values are inlined at build time: put them in `.env.local` (or the CI environment) before building.
 4. `bun run preview` runs the Worker locally (reads secrets from `.dev.vars`); `bun run deploy` builds and deploys.
 
+## Audio tours
+
+`/site/<slug>/tour` plays a place's story as short narrated stops: chapters, a transcript that follows the voice, auto-advance, lock-screen controls where the browser supports them (Media Session), and resume where you left off. The arrival banner on the map and the place page both open it.
+
+- **Narrated scripts:** six heritage sites have `content/sites/<slug>/<lang>/tour.md`. These retell the facts of the cited sections and stay drafts until an editor reviews them.
+- **Other sites:** the tour is built from their sections.
+- **Voices:** server TTS (OpenAI) when configured, otherwise the browser's voice.
+- **Format and review rules:** see [docs/CONTENT_GUIDE.md](docs/CONTENT_GUIDE.md#audio-tours).
+
 ## Mobile apps (App Store / Google Play)
 
 `ios/` and `android/` are Capacitor shells that load the deployed site and add native location, microphone access, an icon, a splash screen and an offline screen. Web deploys update both apps without a store review.

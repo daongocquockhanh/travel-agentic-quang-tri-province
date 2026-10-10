@@ -153,9 +153,8 @@ export function MapHome({
             track={banner.track}
             nameVi={banner.name_vi}
             nameEn={banner.name_en}
-            onPlay={() =>
-              router.push(`/chat?site=${banner.slug}&intent=arrival_story&track=${track}`)
-            }
+            lang={lang}
+            onPlay={() => router.push(`/site/${banner.slug}/tour`)}
             onRead={() => router.push(`/site/${banner.slug}`)}
             onDismiss={() => setDismissed((d) => new Set(d).add(banner.slug))}
           />
