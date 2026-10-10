@@ -22,11 +22,14 @@ export function ModeMenu({
   lang,
   onChange,
   glass = false,
+  compact = false,
 }: {
   track: TrackKey;
   lang: "vi" | "en";
   onChange: (t: TrackKey) => void;
   glass?: boolean;
+  /** Drop the "Mode:" prefix where the header is tight (chat). */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -67,7 +70,7 @@ export function ModeMenu({
         aria-controls={menuId}
         onClick={() => setOpen((o) => !o)}
         className={
-          "text-fg inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium " +
+          "text-fg inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap " +
           (glass
             ? "border-border bg-[rgba(247,244,238,0.9)] backdrop-blur-md"
             : "border-border bg-paper-card")
@@ -77,7 +80,7 @@ export function ModeMenu({
         <span className="inline-flex" style={{ color: TRACK_COLOR[track] }}>
           <TrackIcon track={track} size={14} />
         </span>
-        <span className="text-fg-muted">{lang === "vi" ? "Chế độ:" : "Mode:"}</span>
+        {!compact && <span className="text-fg-muted">{lang === "vi" ? "Chế độ:" : "Mode:"}</span>}
         {label(track)}
         <Icon name="chevronDown" size={14} className="text-fg-muted" />
       </button>

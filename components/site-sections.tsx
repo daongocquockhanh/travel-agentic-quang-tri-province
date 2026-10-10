@@ -39,7 +39,7 @@ export function SiteSections({
       <div
         role="tablist"
         aria-label={lang === "vi" ? "Nội dung" : "Sections"}
-        className="border-border bg-paper/95 sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto border-b px-4 backdrop-blur-md"
+        className="border-border bg-paper/95 before:bg-paper/95 sticky top-[var(--safe-top)] z-10 -mx-4 flex gap-1 overflow-x-auto border-b px-4 backdrop-blur-md before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-[var(--safe-top)]"
       >
         {sections.map((s) => (
           <button

@@ -55,3 +55,6 @@ lib/generated/
 .open-next/
 .wrangler/
 .dev.vars
+
+# store screenshots (scripts/store-screenshots.ts)
+store/screenshots/

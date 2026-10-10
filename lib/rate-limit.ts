@@ -14,6 +14,7 @@ export const LIMITS = {
   // Cheap, read-only endpoints still get a ceiling against scraping loops.
   route: { requests: 60, windowSec: 60 },
   recommend: { requests: 120, windowSec: 60 },
+  report: { requests: 10, windowSec: 60 },
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

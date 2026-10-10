@@ -18,7 +18,9 @@ type IconName =
   | "boat"
   | "chevronUp"
   | "chevronDown"
-  | "route";
+  | "route"
+  | "flag"
+  | "info";
 
 interface Props {
   name: IconName;
@@ -136,6 +138,19 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="6" cy="19" r="2" />
       <circle cx="18" cy="5" r="2" />
       <path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16" />
+    </>
+  ),
+  flag: (
+    <>
+      <path d="M5 21V4" />
+      <path d="M5 4h11l-2 4 2 4H5" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5" />
+      <path d="M12 8h.01" />
     </>
   ),
 };

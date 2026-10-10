@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { useChat, type Message } from "@ai-sdk/react";
 import { Citation } from "@/components/citation";
+import { ReportAnswer } from "@/components/report-answer";
 import { Icon } from "@/components/icon";
 import { ModeMenu } from "@/components/mode-menu";
 import { SitePhoto } from "@/components/site-photo";
@@ -16,6 +24,7 @@ import type { AgentAnnotation } from "@/lib/agent/types";
 import type { Recommendation } from "@/lib/recommend";
 import type { Itinerary } from "@/lib/route";
 import { TRACK_STORAGE_KEY, isTrackKey, type TrackKey } from "@/lib/tracks";
+import { currentPosition, locationPermission } from "@/lib/location";
 import { useLang } from "@/lib/use-lang";
 import { defaultVoice } from "@/lib/voice/config";
 import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
@@ -50,11 +59,13 @@ const COPY = {
     grounded: "Answered from curated, cited sources",
     offline: "Offline mode",
     error: "Something went wrong.",
-    rateLimited: "You're asking faster than the guide can answer. Please wait a minute and try again.",
+    rateLimited:
+      "You're asking faster than the guide can answer. Please wait a minute and try again.",
     retry: "Try again",
     readInstead: "Read the curated page instead",
     emptyTitle: "Ask your guide",
-    emptyBody: "History, customs, opening hours, what to see next. Answers about war and religion come only from cited sources.",
+    emptyBody:
+      "History, customs, opening hours, what to see next. Answers about war and religion come only from cited sources.",
     tryAsking: "Try asking",
     micHint: "Or hold the mic button and speak",
     context: "Asking about",
@@ -93,7 +104,8 @@ const COPY = {
     retry: "Thử lại",
     readInstead: "Đọc trang thông tin thay thế",
     emptyTitle: "Hỏi hướng dẫn viên",
-    emptyBody: "Lịch sử, phong tục, giờ mở cửa, nên đi đâu tiếp. Câu trả lời về chiến tranh và tôn giáo chỉ dựa trên nguồn có dẫn chứng.",
+    emptyBody:
+      "Lịch sử, phong tục, giờ mở cửa, nên đi đâu tiếp. Câu trả lời về chiến tranh và tôn giáo chỉ dựa trên nguồn có dẫn chứng.",
     tryAsking: "Gợi ý câu hỏi",
     micHint: "Hoặc giữ nút micro và nói",
     context: "Đang hỏi về",
@@ -117,7 +129,8 @@ const COPY = {
       stt_failed: "Mình chưa nghe rõ. Thử lại hoặc nhập bằng chữ nhé.",
       blocked: "Nhấn Nghe để nghe câu trả lời.",
       tts_failed: "Không phát được giọng đọc. Nội dung ở phía trên.",
-      rate_limited: "Bạn đã hỏi bằng giọng nói nhiều lần liên tiếp. Vui lòng đợi một phút hoặc nhập bằng chữ.",
+      rate_limited:
+        "Bạn đã hỏi bằng giọng nói nhiều lần liên tiếp. Vui lòng đợi một phút hoặc nhập bằng chữ.",
     },
   },
 } as const;
@@ -140,31 +153,60 @@ function quickReplies(lang: Lang, track: TrackKey, siteName: string | null): str
 type StarterIcon = "book" | "route" | "clock" | "pin";
 
 /** First-visit suggestions: one per kind of question the guide handles well. */
-function starterQuestions(lang: Lang, track: TrackKey, siteName: string | null): { icon: StarterIcon; text: string }[] {
+function starterQuestions(
+  lang: Lang,
+  track: TrackKey,
+  siteName: string | null,
+): { icon: StarterIcon; text: string }[] {
   const vi = lang === "vi";
   if (siteName) {
     return [
-      { icon: "book", text: vi ? `Kể cho tôi câu chuyện của ${siteName}` : `Tell me the story of ${siteName}` },
-      { icon: "clock", text: vi ? "Giờ mở cửa, giá vé và nên dành bao lâu?" : "Opening hours, tickets, and how long to stay?" },
-      { icon: "pin", text: vi ? "Khi tham quan cần lưu ý gì?" : "What should I know before visiting?" },
+      {
+        icon: "book",
+        text: vi ? `Kể cho tôi câu chuyện của ${siteName}` : `Tell me the story of ${siteName}`,
+      },
+      {
+        icon: "clock",
+        text: vi
+          ? "Giờ mở cửa, giá vé và nên dành bao lâu?"
+          : "Opening hours, tickets, and how long to stay?",
+      },
+      {
+        icon: "pin",
+        text: vi ? "Khi tham quan cần lưu ý gì?" : "What should I know before visiting?",
+      },
       { icon: "route", text: vi ? "Sau đây nên đi đâu tiếp?" : "Where should I go next?" },
     ];
   }
   const history =
     track === "war"
-      ? vi ? "Vĩ tuyến 17 chia cắt đất nước như thế nào?" : "How did the 17th parallel divide the country?"
-      : vi ? "Quảng Trị có những điểm nào nên đến?" : "What are the must-see places in Quảng Trị?";
+      ? vi
+        ? "Vĩ tuyến 17 chia cắt đất nước như thế nào?"
+        : "How did the 17th parallel divide the country?"
+      : vi
+        ? "Quảng Trị có những điểm nào nên đến?"
+        : "What are the must-see places in Quảng Trị?";
   return [
     { icon: "book", text: history },
     { icon: "route", text: vi ? "Lên lịch trình một ngày cho tôi" : "Plan a day for me" },
-    { icon: "clock", text: vi ? "Địa đạo Vĩnh Mốc mở cửa lúc mấy giờ?" : "When are the Vinh Moc tunnels open?" },
+    {
+      icon: "clock",
+      text: vi ? "Địa đạo Vĩnh Mốc mở cửa lúc mấy giờ?" : "When are the Vinh Moc tunnels open?",
+    },
     { icon: "pin", text: vi ? "Ở Đông Hà nên ăn món gì?" : "What should I eat in Đông Hà?" },
   ];
 }
 
 const NEARBY_RE = /near(by| me)|gần (đây|tôi|mình)/i;
 
-export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, intent, initialQuestion }: Props) {
+export function ChatScreen({
+  initialTrack,
+  trackFromUrl,
+  initialLang,
+  site,
+  intent,
+  initialQuestion,
+}: Props) {
   const [track, setTrack] = useState<TrackKey>(initialTrack);
   const { lang, toggle: toggleLang } = useLang(initialLang);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -184,28 +226,15 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
 
   // Use location only if the user already granted it — never prompt on page load.
   useEffect(() => {
-    if (!("geolocation" in navigator) || !navigator.permissions) return;
-    navigator.permissions
-      .query({ name: "geolocation" })
-      .then((status) => {
-        if (status.state === "granted") requestLocation();
-      })
-      .catch(() => {});
+    locationPermission().then((state) => {
+      if (state === "granted") requestLocation();
+    });
   }, []);
 
-  function requestLocation(): Promise<{ lat: number; lng: number } | null> {
-    return new Promise((resolve) => {
-      if (!("geolocation" in navigator)) return resolve(null);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setCoords(c);
-          resolve(c);
-        },
-        () => resolve(null),
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-      );
-    });
+  async function requestLocation(): Promise<{ lat: number; lng: number } | null> {
+    const c = await currentPosition();
+    if (c) setCoords(c);
+    return c;
   }
 
   const { messages, setMessages, input, setInput, append, status, error, reload, stop } = useChat({
@@ -236,7 +265,11 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
   }, [status, messages, threadContext]);
 
   // ── voice: playback ─────────────────────────────────────────────
-  const [playerState, setPlayerState] = useState<PlayerState>({ speaking: false, key: null, error: null });
+  const [playerState, setPlayerState] = useState<PlayerState>({
+    speaking: false,
+    key: null,
+    error: null,
+  });
   const [notice, setNotice] = useState<string | null>(null);
   const voiceCtx = useRef({ lang, track });
   voiceCtx.current = { lang, track };
@@ -265,7 +298,11 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
    * When a turn should be spoken (voice question, arrival story), speak the
    * answer sentence by sentence as it streams instead of waiting for the end.
    */
-  const autoSpeak = useRef<{ armed: boolean; messageId: string | null; buffer: SentenceBuffer } | null>(null);
+  const autoSpeak = useRef<{
+    armed: boolean;
+    messageId: string | null;
+    buffer: SentenceBuffer;
+  } | null>(null);
   const armAutoSpeak = () => {
     autoSpeak.current = { armed: true, messageId: null, buffer: new SentenceBuffer() };
   };
@@ -314,7 +351,11 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
       setTranscribing(true);
       try {
         const form = new FormData();
-        const ext = audio.type.includes("mp4") ? "mp4" : audio.type.includes("ogg") ? "ogg" : "webm";
+        const ext = audio.type.includes("mp4")
+          ? "mp4"
+          : audio.type.includes("ogg")
+            ? "ogg"
+            : "webm";
         form.append("audio", audio, `speech.${ext}`);
         form.append("lang", voiceCtx.current.lang);
         const res = await fetch("/api/agent/voice", { method: "POST", body: form });
@@ -372,7 +413,6 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, status]);
 
-
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     void send(input);
@@ -387,20 +427,21 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
 
   const backHref = site ? `/site/${site.slug}` : `/map?track=${track}`;
   const last = messages[messages.length - 1];
-  const waitingForFirstToken = status === "submitted" || (status === "streaming" && last?.role === "user");
+  const waitingForFirstToken =
+    status === "submitted" || (status === "streaming" && last?.role === "user");
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-[420px] flex-col bg-paper text-fg">
+    <main className="bg-paper text-fg mx-auto flex h-dvh w-full max-w-[420px] flex-col">
       {/* top chrome */}
-      <header className="flex items-center gap-2 border-b border-border px-3.5 pb-3 pt-3.5">
+      <header className="border-border flex items-center gap-2 border-b px-3.5 pt-[calc(0.875rem+var(--safe-top))] pb-3">
         <Link
           href={backHref}
           aria-label={t.back}
-          className="grid size-9 shrink-0 place-items-center rounded-full border border-border bg-paper-card text-fg"
+          className="border-border bg-paper-card text-fg grid size-9 shrink-0 place-items-center rounded-full border"
         >
           <Icon name="back" size={18} />
         </Link>
-        <ModeMenu track={track} lang={lang} onChange={setTrack} />
+        <ModeMenu track={track} lang={lang} onChange={setTrack} compact />
         <span className="flex-1" />
         {messages.length > 0 && !busy && (
           <button
@@ -410,7 +451,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
               setMessages([]);
               clearThread();
             }}
-            className="rounded-full px-2.5 py-1.5 text-[13px] font-medium text-fg-muted hover:text-fg"
+            className="text-fg-muted hover:text-fg rounded-full px-2.5 py-1.5 text-[13px] font-medium whitespace-nowrap"
           >
             {t.newChat}
           </button>
@@ -419,7 +460,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
           type="button"
           onClick={toggleLang}
           aria-label={t.language}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-paper-card px-3 py-1.5 text-[13px] font-medium text-fg"
+          className="border-border bg-paper-card text-fg inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium"
         >
           <Icon name="globe" size={14} />
           {lang.toUpperCase()}
@@ -429,7 +470,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
       {site && messages.length > 0 && (
         <Link
           href={`/site/${site.slug}`}
-          className="mx-3.5 mt-3 flex items-center gap-2.5 rounded-[12px] border border-border bg-paper-card p-1.5 pr-3"
+          className="border-border bg-paper-card mx-3.5 mt-3 flex items-center gap-2.5 rounded-[12px] border p-1.5 pr-3"
         >
           <SitePhoto
             photo={site.photo}
@@ -440,8 +481,10 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
             className="size-10 shrink-0 rounded-[8px]"
           />
           <span className="min-w-0 flex-1">
-            <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.context}</span>
-            <span className="block truncate font-display text-[15px] leading-tight">
+            <span className="text-fg-muted block text-[10px] font-medium tracking-[0.08em] uppercase">
+              {t.context}
+            </span>
+            <span className="font-display block truncate text-[15px] leading-tight">
               {lang === "vi" ? site.name_vi : site.name_en}
             </span>
           </span>
@@ -454,7 +497,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         {messages.length === 0 && (
           <div className="flex flex-col gap-4">
             {site ? (
-              <div className="overflow-hidden rounded-[16px] border border-border bg-paper-card">
+              <div className="border-border bg-paper-card overflow-hidden rounded-[16px] border">
                 <SitePhoto
                   photo={site.photo}
                   gradient={site.hero_gradient}
@@ -464,39 +507,45 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
                   className="h-32 w-full"
                 />
                 <div className="p-3.5">
-                  <p className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.context}</p>
-                  <p className="font-display text-[20px] leading-tight">{lang === "vi" ? site.name_vi : site.name_en}</p>
-                  <p className="mt-1.5 text-[13px] leading-snug text-fg-muted">{t.emptyBody}</p>
+                  <p className="text-fg-muted text-[10.5px] font-medium tracking-[0.08em] uppercase">
+                    {t.context}
+                  </p>
+                  <p className="font-display text-[20px] leading-tight">
+                    {lang === "vi" ? site.name_vi : site.name_en}
+                  </p>
+                  <p className="text-fg-muted mt-1.5 text-[13px] leading-snug">{t.emptyBody}</p>
                 </div>
               </div>
             ) : (
               <div className="px-1 pt-2">
                 <p className="font-display text-[26px] leading-tight">{t.emptyTitle}</p>
-                <p className="mt-1.5 text-[14px] leading-snug text-fg-muted">{t.emptyBody}</p>
+                <p className="text-fg-muted mt-1.5 text-[14px] leading-snug">{t.emptyBody}</p>
               </div>
             )}
 
             <div>
-              <p className="mb-2 px-1 text-[11px] font-medium uppercase tracking-[0.08em] text-fg-muted">{t.tryAsking}</p>
+              <p className="text-fg-muted mb-2 px-1 text-[11px] font-medium tracking-[0.08em] uppercase">
+                {t.tryAsking}
+              </p>
               <ul className="flex flex-col gap-2">
                 {starterQuestions(lang, track, siteName).map((q) => (
                   <li key={q.text}>
                     <button
                       type="button"
                       onClick={() => void send(q.text)}
-                      className="flex w-full items-center gap-3 rounded-[12px] border border-border bg-paper-card px-3 py-2.5 text-left text-[14px] text-fg hover:border-border-strong"
+                      className="border-border bg-paper-card text-fg hover:border-border-strong flex w-full items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left text-[14px]"
                     >
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-paper-sunk text-primary">
+                      <span className="bg-paper-sunk text-primary grid size-8 shrink-0 place-items-center rounded-full">
                         <Icon name={q.icon} size={15} />
                       </span>
                       <span className="flex-1">{q.text}</span>
-                      <Icon name="arrowUp" size={14} className="rotate-45 text-fg-muted" />
+                      <Icon name="arrowUp" size={14} className="text-fg-muted rotate-45" />
                     </button>
                   </li>
                 ))}
               </ul>
             </div>
-            <p className="flex items-center justify-center gap-1.5 text-[12.5px] text-fg-muted">
+            <p className="text-fg-muted flex items-center justify-center gap-1.5 text-[12.5px]">
               <Icon name="mic" size={13} />
               {t.micHint}
             </p>
@@ -504,7 +553,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         )}
 
         <ul className="flex flex-col gap-3">
-          {messages.map((m) => (
+          {messages.map((m, i) => (
             <li key={m.id}>
               {m.role === "user" ? (
                 <UserBubble text={m.content} />
@@ -516,6 +565,8 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
                   t={t}
                   speaking={playerState.speaking && playerState.key === m.id}
                   onListen={status === "ready" || m.id !== last?.id ? () => listenTo(m) : undefined}
+                  question={messages[i - 1]?.role === "user" ? messages[i - 1].content : ""}
+                  siteSlug={site?.slug}
                 />
               )}
             </li>
@@ -529,27 +580,32 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
         )}
 
         {waitingForFirstToken && (
-          <p className="mt-3 flex items-center gap-2 text-[13px] text-fg-muted">
-            <span className="inline-block size-1.5 animate-pulse rounded-full bg-fg-muted" />
+          <p className="text-fg-muted mt-3 flex items-center gap-2 text-[13px]">
+            <span className="bg-fg-muted inline-block size-1.5 animate-pulse rounded-full" />
             {t.thinking}
           </p>
         )}
 
         {error && (
-          <div className="mt-3 rounded-[10px] border border-border bg-paper-card p-3 text-sm" role="alert">
-            <p className="text-fg">{error.message.includes("rate_limited") ? t.rateLimited : t.error}</p>
+          <div
+            className="border-border bg-paper-card mt-3 rounded-[10px] border p-3 text-sm"
+            role="alert"
+          >
+            <p className="text-fg">
+              {error.message.includes("rate_limited") ? t.rateLimited : t.error}
+            </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => void reload()}
-                className="rounded-full bg-primary px-3 py-1.5 text-[13px] font-medium text-paper"
+                className="bg-primary text-paper rounded-full px-3 py-1.5 text-[13px] font-medium"
               >
                 {t.retry}
               </button>
               {site && (
                 <Link
                   href={`/site/${site.slug}`}
-                  className="rounded-full border border-border px-3 py-1.5 text-[13px] font-medium text-fg"
+                  className="border-border text-fg rounded-full border px-3 py-1.5 text-[13px] font-medium"
                 >
                   {t.readInstead}
                 </Link>
@@ -564,7 +620,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
       </div>
 
       {/* composer */}
-      <div className="border-t border-border bg-paper px-3.5 pb-4 pt-2.5">
+      <div className="border-border bg-paper border-t px-3.5 pt-2.5 pb-[calc(1rem+var(--safe-bottom))]">
         {!busy && messages.length > 0 && (
           <div className="mb-2.5 flex flex-wrap gap-2">
             {quickReplies(lang, track, siteName).map((q) => (
@@ -572,7 +628,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
                 key={q}
                 type="button"
                 onClick={() => void send(q)}
-                className="rounded-full border border-border bg-paper-card px-3 py-1.5 text-[13px] text-fg"
+                className="border-border bg-paper-card text-fg rounded-full border px-3 py-1.5 text-[13px]"
               >
                 {q}
               </button>
@@ -580,19 +636,22 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
           </div>
         )}
         {(notice || recorder.recording || transcribing || playerState.speaking) && (
-          <div className="mb-2 flex items-center justify-between gap-2 text-[13px] text-fg-muted" aria-live="polite">
+          <div
+            className="text-fg-muted mb-2 flex items-center justify-between gap-2 text-[13px]"
+            aria-live="polite"
+          >
             <span>
               {recorder.recording
                 ? `${t.releaseToSend} · ${Math.ceil(recorder.elapsedMs / 1000)}s`
                 : transcribing
                   ? t.transcribing
-                  : notice ?? t.speaking}
+                  : (notice ?? t.speaking)}
             </span>
             {playerState.speaking && !recorder.recording && (
               <button
                 type="button"
                 onClick={() => getPlayer().stop()}
-                className="rounded-full border border-border px-2.5 py-1 text-[12px] font-medium text-fg"
+                className="border-border text-fg rounded-full border px-2.5 py-1 text-[12px] font-medium"
               >
                 {t.stopListening}
               </button>
@@ -609,14 +668,14 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
             maxLength={4000}
             aria-label={t.placeholder}
             disabled={recorder.recording || transcribing}
-            className="mb-1.5 max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-border bg-paper-card px-3.5 py-2.5 text-[15px] text-fg outline-none placeholder:text-fg-muted focus:border-border-strong"
+            className="border-border bg-paper-card text-fg placeholder:text-fg-muted focus:border-border-strong mb-1.5 max-h-32 min-h-11 flex-1 resize-none rounded-xl border px-3.5 py-2.5 text-[15px] outline-none"
           />
           {busy ? (
             <button
               type="button"
               onClick={stop}
               aria-label="Stop"
-              className="mb-1.5 grid size-11 shrink-0 place-items-center rounded-full border border-border bg-paper-card text-fg"
+              className="border-border bg-paper-card text-fg mb-1.5 grid size-11 shrink-0 place-items-center rounded-full border"
             >
               <Icon name="x" size={18} />
             </button>
@@ -624,7 +683,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
             <button
               type="submit"
               aria-label={t.send}
-              className="mb-1.5 grid size-11 shrink-0 place-items-center rounded-full bg-primary text-paper"
+              className="bg-primary text-paper mb-1.5 grid size-11 shrink-0 place-items-center rounded-full"
             >
               <Icon name="arrowUp" size={18} />
             </button>
@@ -648,7 +707,7 @@ export function ChatScreen({ initialTrack, trackFromUrl, initialLang, site, inte
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex justify-end">
-      <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-[15px] leading-[1.5] text-paper">
+      <p className="bg-primary text-paper max-w-[85%] rounded-2xl rounded-br-md px-3.5 py-2.5 text-[15px] leading-[1.5] whitespace-pre-wrap">
         {text}
       </p>
     </div>
@@ -657,8 +716,12 @@ function UserBubble({ text }: { text: string }) {
 
 function readAnnotations(m: Message) {
   const anns = (m.annotations ?? []) as AgentAnnotation[];
-  const citations = anns.filter((a): a is Extract<AgentAnnotation, { type: "citation" }> => a?.type === "citation");
-  const mode = anns.find((a): a is Extract<AgentAnnotation, { type: "mode" }> => a?.type === "mode");
+  const citations = anns.filter(
+    (a): a is Extract<AgentAnnotation, { type: "citation" }> => a?.type === "citation",
+  );
+  const mode = anns.find(
+    (a): a is Extract<AgentAnnotation, { type: "mode" }> => a?.type === "mode",
+  );
   return { citations, mode };
 }
 
@@ -669,6 +732,8 @@ function AssistantBubble({
   t,
   speaking,
   onListen,
+  question,
+  siteSlug,
 }: {
   message: Message;
   track: TrackKey;
@@ -677,6 +742,9 @@ function AssistantBubble({
   speaking: boolean;
   /** Absent while the message is still streaming. */
   onListen?: () => void;
+  /** The user turn this answers, sent along with a report. */
+  question: string;
+  siteSlug?: string | null;
 }) {
   const { citations, mode } = readAnnotations(message);
   const searching = message.parts?.some(
@@ -701,13 +769,13 @@ function AssistantBubble({
   return (
     <div className="flex flex-col items-start gap-1.5">
       {(mode?.offline || (mode?.grounded && !mode.refused)) && (
-        <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.06em] text-fg-muted">
+        <p className="text-fg-muted flex items-center gap-1.5 text-[11px] font-medium tracking-[0.06em] uppercase">
           <Icon name="book" size={12} />
           {mode.offline ? t.offline : t.grounded}
         </p>
       )}
       {message.content ? (
-        <div className="max-w-[92%] rounded-2xl rounded-bl-md border border-border bg-paper-card px-3.5 py-2.5 text-[15px] leading-[1.55] text-fg">
+        <div className="border-border bg-paper-card text-fg max-w-[92%] rounded-2xl rounded-bl-md border px-3.5 py-2.5 text-[15px] leading-[1.55]">
           {message.content
             .split(/\n{2,}/)
             .filter(Boolean)
@@ -718,7 +786,7 @@ function AssistantBubble({
             ))}
         </div>
       ) : null}
-      {searching && <p className="text-[13px] text-fg-muted">{t.searching}</p>}
+      {searching && <p className="text-fg-muted text-[13px]">{t.searching}</p>}
       <ToolCards message={message} lang={lang} track={track} />
       {chips.length > 0 && (
         <div className="flex max-w-[92%] flex-wrap gap-1.5">
@@ -732,15 +800,24 @@ function AssistantBubble({
         </div>
       )}
       {onListen && message.content && (
-        <button
-          type="button"
-          onClick={onListen}
-          aria-pressed={speaking}
-          className="inline-flex items-center gap-1.5 rounded-full px-1 py-0.5 text-[12px] font-medium text-fg-muted hover:text-fg"
-        >
-          <Icon name={speaking ? "x" : "play"} size={12} />
-          {speaking ? t.stopListening : t.listen}
-        </button>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <button
+            type="button"
+            onClick={onListen}
+            aria-pressed={speaking}
+            className="text-fg-muted hover:text-fg inline-flex items-center gap-1.5 rounded-full px-1 py-0.5 text-[12px] font-medium"
+          >
+            <Icon name={speaking ? "x" : "play"} size={12} />
+            {speaking ? t.stopListening : t.listen}
+          </button>
+          <ReportAnswer
+            question={question}
+            answer={message.content}
+            track={track}
+            lang={lang}
+            siteSlug={siteSlug}
+          />
+        </div>
       )}
     </div>
   );
@@ -755,7 +832,7 @@ function WithRefs({ text, known }: { text: string; known: Set<number> }) {
         const match = /^\[(\d+)\]$/.exec(piece);
         if (match && known.has(Number(match[1]))) {
           return (
-            <sup key={i} className="ml-0.5 font-mono text-[10px] text-fg-muted">
+            <sup key={i} className="text-fg-muted ml-0.5 font-mono text-[10px]">
               {match[1]}
             </sup>
           );
@@ -775,7 +852,8 @@ function ToolCards({ message, lang, track }: { message: Message; lang: Lang; tra
     <>
       {results.map((inv) => {
         if (inv.toolName === "recommend_next") {
-          const items = (inv.result as { recommendations?: Recommendation[] })?.recommendations ?? [];
+          const items =
+            (inv.result as { recommendations?: Recommendation[] })?.recommendations ?? [];
           return (
             <div key={inv.toolCallId} className="w-full">
               <NextPlaceCards items={items} lang={lang} track={track} />

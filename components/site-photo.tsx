@@ -73,7 +73,7 @@ export function SitePhoto({
           rel="noreferrer"
           className={
             "bg-ink/45 text-paper/90 hover:bg-ink/60 absolute right-2 z-10 rounded-full px-2 py-0.5 text-[10px] backdrop-blur-sm " +
-            (creditAt === "top-right" ? "top-2" : "bottom-1.5")
+            (creditAt === "top-right" ? "top-[calc(0.5rem+var(--safe-top))]" : "bottom-1.5")
           }
         >
           {lang === "vi" ? "Ảnh: Wikimedia Commons" : "Photo: Wikimedia Commons"}

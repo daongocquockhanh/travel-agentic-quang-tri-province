@@ -30,7 +30,8 @@ content/sites/<slug>/   Curated markdown per site (meta.yml + vi/, en/)
 scripts/ingest.ts       Markdown -> embeddings -> Supabase
 supabase/migrations/    SQL migrations
 messages/               i18n strings (vi.json, en.json)
-docs/                   System design + design brief
+docs/                   System design, design brief, store release guide
+ios/ android/           Capacitor app shells (capacitor.config.ts, mobile/www)
 ```
 
 ## Milestones
@@ -41,7 +42,7 @@ See `docs/SYSTEM_DESIGN.md` §10. All milestones M1–M7 are implemented. Before
 
 - `POST /api/agent/chat` streams answers for `useChat` (Vercel AI SDK data stream). Body: `{messages, track, lang, site_slug?, lat?, lng?, intent?}`.
 - `lib/agent/`: `system-prompts.ts` (per-track voice, VI/EN), `tools.ts` (`search_curated`, `get_site`, `find_nearby`), `guards.ts` (sensitive-topic detection, injection scrub, input caps), `retrieval.ts` (pgvector or local BM25), `run.ts` (agent loop).
-- **Grounding is enforced server-side.** War track, war/religious sites and war/religious/ethnic questions get curated chunks retrieved *before* the model runs. The model is limited to those chunks, and the question is refused (and logged to `content_gaps`) when there are none. Chunks never come from a different site than the one the question is about.
+- **Grounding is enforced server-side.** War track, war/religious sites and war/religious/ethnic questions get curated chunks retrieved _before_ the model runs. The model is limited to those chunks, and the question is refused (and logged to `content_gaps`) when there are none. Chunks never come from a different site than the one the question is about.
 - Works without keys: with no Supabase it searches `content/sites/**` locally; with no AI key (`GOOGLE_GENERATIVE_AI_API_KEY` or `OPENAI_API_KEY`) it answers with cited excerpts ("offline mode").
 - UI: `/chat` (also `?site=<slug>`, `?intent=arrival_story`, `?q=`). Reachable from the map ask bar, the site page "Ask about this place" button, and the geofence banner's Play button.
 - Tests: `bun run test` (guards, retrieval, agent grounding/refusal, voice).
@@ -79,7 +80,6 @@ See `docs/SYSTEM_DESIGN.md` §10. All milestones M1–M7 are implemented. Before
 3. Add `GOOGLE_GENERATIVE_AI_API_KEY` (or `OPENAI_API_KEY`) as a repo secret and run the live eval (Actions → Agent eval) until it passes.
 4. On-device check on a mid-range Android over 3G and on iOS Safari: load time, map frame rate, push-to-talk round-trip, install to home screen, offline.
 
-
 ### Deploy to Cloudflare Workers
 
 Built with [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare); config in `wrangler.jsonc`. Curated content is bundled at build time (`bun run content:bundle` → `lib/generated/content.json`) because Workers have no project filesystem.
@@ -88,3 +88,16 @@ Built with [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare); confi
 2. Secrets, once per Worker: `bunx wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY` (and `SUPABASE_SERVICE_ROLE_KEY`, `UPSTASH_REDIS_REST_TOKEN`, `OPENAI_API_KEY`, `MAPBOX_SECRET_TOKEN`, `TAVILY_API_KEY` if used). Non-secret settings go under `vars` in `wrangler.jsonc`.
 3. `NEXT_PUBLIC_*` values are inlined at build time: put them in `.env.local` (or the CI environment) before building.
 4. `bun run preview` runs the Worker locally (reads secrets from `.dev.vars`); `bun run deploy` builds and deploys.
+
+## Mobile apps (App Store / Google Play)
+
+`ios/` and `android/` are Capacitor shells that load the deployed site and add native location, microphone access, an icon, a splash screen and an offline screen. Web deploys update both apps without a store review.
+
+- `bun run mobile:sync`: copies `capacitor.config.ts` and plugins into the native projects (set `CAP_SERVER_URL` to target another deploy)
+- `bun run mobile:android` / `bun run mobile:ios`: opens Android Studio or Xcode
+- `bun run mobile:assets`: regenerates the icons and splash from `public/icon-maskable-512.png`
+- `bun run store:screenshots [url]`: store screenshots in both languages
+
+In-app pages the stores require: `/privacy`, `/terms` and `/about`. Every answer has a **Report** button, which writes to `answer_reports` (migration 0004).
+
+The full release checklist, listing text and privacy answers are in [docs/STORE_RELEASE.md](docs/STORE_RELEASE.md).

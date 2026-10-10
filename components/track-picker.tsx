@@ -33,6 +33,8 @@ const COPY = {
     chooseHint: "This sets the guide's tone and what it puts first. You can change it anytime.",
     browse: "Skip and browse the map",
     switchTo: "Tiếng Việt",
+    privacy: "Privacy",
+    terms: "Terms",
   },
   vi: {
     eyebrow: "Quảng Trị · Việt Nam",
@@ -44,15 +46,24 @@ const COPY = {
       { icon: "route", text: "Nhận lịch trình kèm thời gian di chuyển" },
     ],
     choose: "Bạn đến Quảng Trị vì điều gì?",
-    chooseHint: "Lựa chọn này quyết định giọng kể và nội dung ưu tiên. Bạn có thể đổi bất cứ lúc nào.",
+    chooseHint:
+      "Lựa chọn này quyết định giọng kể và nội dung ưu tiên. Bạn có thể đổi bất cứ lúc nào.",
     browse: "Bỏ qua, xem bản đồ",
     switchTo: "English",
+    privacy: "Quyền riêng tư",
+    terms: "Điều khoản",
   },
 } as const;
 
 const site = (slug: string) => SAMPLE_SITES.find((s) => s.slug === slug)!;
 
-export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang: Lang; redirectTo?: string }) {
+export function TrackPicker({
+  initialLang,
+  redirectTo = "/map",
+}: {
+  initialLang: Lang;
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { lang, toggle } = useLang(initialLang);
@@ -69,7 +80,7 @@ export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang:
   }
 
   return (
-    <div className="flex flex-col pb-8">
+    <div className="flex flex-col pb-[calc(2rem+var(--safe-bottom))]">
       {/* hero */}
       <header className="relative">
         <SitePhoto
@@ -84,28 +95,32 @@ export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang:
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(to top, rgba(31,36,40,.78), rgba(31,36,40,.1) 60%)" }}
+          style={{
+            background: "linear-gradient(to top, rgba(31,36,40,.78), rgba(31,36,40,.1) 60%)",
+          }}
         />
         <button
           type="button"
           onClick={toggle}
-          className="absolute right-3.5 top-3.5 z-10 inline-flex items-center gap-1.5 rounded-full border border-paper/40 bg-ink/35 px-3 py-1.5 text-[13px] font-medium text-paper backdrop-blur-md"
+          className="border-paper/40 bg-ink/35 text-paper absolute top-[calc(0.875rem+var(--safe-top))] right-3.5 z-10 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium backdrop-blur-md"
         >
           <Icon name="globe" size={14} />
           {t.switchTo}
         </button>
-        <div className="absolute inset-x-5 bottom-5 text-paper">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] opacity-85">{t.eyebrow}</p>
-          <h1 className="mt-1 font-display text-[30px] leading-[1.1] tracking-tight">{t.title}</h1>
+        <div className="text-paper absolute inset-x-5 bottom-5">
+          <p className="text-[11px] font-medium tracking-[0.1em] uppercase opacity-85">
+            {t.eyebrow}
+          </p>
+          <h1 className="font-display mt-1 text-[30px] leading-[1.1] tracking-tight">{t.title}</h1>
         </div>
       </header>
 
       <div className="px-5 pt-4">
-        <p className="text-[15px] leading-[1.55] text-fg">{t.lead}</p>
+        <p className="text-fg text-[15px] leading-[1.55]">{t.lead}</p>
         <ul className="mt-4 flex flex-col gap-2.5">
           {t.how.map((h) => (
-            <li key={h.text} className="flex items-center gap-3 text-[14px] text-fg">
-              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-paper-sunk text-primary">
+            <li key={h.text} className="text-fg flex items-center gap-3 text-[14px]">
+              <span className="bg-paper-sunk text-primary grid size-8 shrink-0 place-items-center rounded-full">
                 <Icon name={h.icon} size={16} />
               </span>
               {h.text}
@@ -113,8 +128,8 @@ export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang:
           ))}
         </ul>
 
-        <h2 className="mt-7 font-display text-[22px] leading-tight">{t.choose}</h2>
-        <p className="mt-1 text-[13px] text-fg-muted">{t.chooseHint}</p>
+        <h2 className="font-display mt-7 text-[22px] leading-tight">{t.choose}</h2>
+        <p className="text-fg-muted mt-1 text-[13px]">{t.chooseHint}</p>
 
         <ul className="mt-3.5 flex flex-col gap-3">
           {TRACKS.map((track) => {
@@ -125,7 +140,7 @@ export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang:
                   type="button"
                   onClick={() => pick(track)}
                   disabled={isPending}
-                  className="group flex w-full items-stretch overflow-hidden rounded-[14px] border border-border bg-paper-card text-left transition hover:border-border-strong disabled:opacity-60"
+                  className="group border-border bg-paper-card hover:border-border-strong flex w-full items-stretch overflow-hidden rounded-[14px] border text-left transition disabled:opacity-60"
                 >
                   <SitePhoto
                     photo={s.photo}
@@ -136,15 +151,20 @@ export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang:
                     className="w-24 shrink-0"
                   />
                   <div className="flex-1 p-3.5">
-                    <p className="flex items-center gap-1.5 font-display text-[18px] leading-tight text-fg">
+                    <p className="font-display text-fg flex items-center gap-1.5 text-[18px] leading-tight">
                       <span style={{ color: TRACK_COLOR[track] }} className="inline-flex">
                         <TrackIcon track={track} size={16} />
                       </span>
                       {lang === "vi" ? TRACK_LABEL_VI[track] : TRACK_LABEL_EN[track]}
                     </p>
-                    <p className="mt-1 text-[13px] leading-snug text-fg-muted">{TRACK_DESCRIPTION[track][lang]}</p>
+                    <p className="text-fg-muted mt-1 text-[13px] leading-snug">
+                      {TRACK_DESCRIPTION[track][lang]}
+                    </p>
                   </div>
-                  <span className="self-center pr-3 text-fg-muted transition group-hover:translate-x-0.5" aria-hidden>
+                  <span
+                    className="text-fg-muted self-center pr-3 transition group-hover:translate-x-0.5"
+                    aria-hidden
+                  >
                     <Icon name="arrow" size={18} />
                   </span>
                 </button>
@@ -153,9 +173,18 @@ export function TrackPicker({ initialLang, redirectTo = "/map" }: { initialLang:
           })}
         </ul>
 
-        <Link href="/map" className="mt-5 block text-center text-[14px] font-medium text-primary">
+        <Link href="/map" className="text-primary mt-5 block text-center text-[14px] font-medium">
           {t.browse}
         </Link>
+        <p className="text-fg-muted mt-6 text-center text-[12px]">
+          <Link href="/privacy" className="hover:text-fg">
+            {t.privacy}
+          </Link>
+          {" · "}
+          <Link href="/terms" className="hover:text-fg">
+            {t.terms}
+          </Link>
+        </p>
       </div>
     </div>
   );
