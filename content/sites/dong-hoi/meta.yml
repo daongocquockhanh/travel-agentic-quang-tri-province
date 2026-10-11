@@ -1,0 +1,10 @@
+slug: dong-hoi
+name_vi: Đồng Hới
+name_en: Dong Hoi
+type: city
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 17.4556
+  lng: 106.6119

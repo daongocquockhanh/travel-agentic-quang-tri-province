@@ -1,0 +1,99 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Checked by `bun run content:check`; drafts stay hidden in production.
+review_status: draft
+questions:
+- id: who
+  answer: 1
+  source: overview
+  vi:
+    q: Vũng Chùa – Đảo Yến là nơi an nghỉ của ai?
+    options:
+    - Chủ tịch Hồ Chí Minh
+    - Đại tướng Võ Nguyên Giáp
+    - Vua Gia Long
+    - Mưu sĩ Đào Duy Từ
+    explain: Mộ Đại tướng Võ Nguyên Giáp nằm trên núi Thọ, mũi Rồng, nhìn ra Đảo Yến.
+  en:
+    q: Who is buried at Vũng Chùa – Đảo Yến?
+    options:
+    - President Hồ Chí Minh
+    - General Võ Nguyên Giáp
+    - Emperor Gia Long
+    - The strategist Đào Duy Từ
+    explain: General Võ Nguyên Giáp's grave is on Thọ mountain at Rồng cape, looking out to Đảo Yến.
+- id: campaign
+  answer: 2
+  source: overview
+  vi:
+    q: Đại tướng Võ Nguyên Giáp là Tổng chỉ huy chiến dịch nào năm 1954?
+    options:
+    - Chiến dịch Biên giới
+    - Chiến dịch Hồ Chí Minh
+    - Chiến dịch Điện Biên Phủ
+    - Chiến dịch Đường 9 – Khe Sanh
+    explain: Ông là vị Đại tướng đầu tiên của Quân đội nhân dân Việt Nam và Tổng chỉ huy Chiến dịch Điện Biên Phủ năm 1954.
+  en:
+    q: Which 1954 campaign did General Giáp command?
+    options:
+    - The Border campaign
+    - The Hồ Chí Minh campaign
+    - The Điện Biên Phủ campaign
+    - The Route 9 – Khe Sanh campaign
+    explain: He was the first general of the Vietnam People's Army and commanded the Điện Biên Phủ campaign of 1954.
+- id: born
+  answer: 0
+  source: history
+  vi:
+    q: Đại tướng sinh năm nào, ở đâu?
+    options:
+    - 1911, Lộc Thủy (huyện Lệ Thủy cũ)
+    - 1890, Huế
+    - 1920, Hà Nội
+    - 1911, Đông Hà
+    explain: Đại tướng sinh ngày 25/8/1911 tại Lộc Thủy, thuộc huyện Lệ Thủy cũ của tỉnh Quảng Bình khi đó.
+  en:
+    q: When and where was the General born?
+    options:
+    - 1911, Lộc Thủy (former Lệ Thủy district)
+    - 1890, Huế
+    - 1920, Hà Nội
+    - 1911, Đông Hà
+    explain: He was born on 25 August 1911 in Lộc Thủy, in the former Lệ Thủy district.
+- id: burial
+  answer: 3
+  source: history
+  vi:
+    q: Đại tướng được an táng tại Vũng Chùa vào ngày nào?
+    options:
+    - 4/10/2013
+    - 25/8/2011
+    - 22/12/2013
+    - 13/10/2013
+    explain: Sau lễ quốc tang ngày 12–13/10/2013, ông được an táng tại Vũng Chùa – Đảo Yến chiều 13/10.
+  en:
+    q: On what date was the General buried at Vũng Chùa?
+    options:
+    - 4 October 2013
+    - 25 August 2011
+    - 22 December 2013
+    - 13 October 2013
+    explain: After the state funeral on 12–13 October 2013, he was buried on the afternoon of 13 October.
+- id: busiest
+  answer: 1
+  source: culture_notes
+  vi:
+    q: Ngoài các dịp lễ lớn, ngày nào khách đến viếng rất đông?
+    options:
+    - 1/1
+    - 22/12, Ngày thành lập Quân đội nhân dân Việt Nam
+    - 30/4
+    - 15/8
+    explain: Đông nhất là các dịp lễ lớn và ngày 22/12, Ngày thành lập Quân đội nhân dân Việt Nam.
+  en:
+    q: Besides national holidays, which day draws large crowds?
+    options:
+    - 1 January
+    - 22 December, the founding day of the Vietnam People's Army
+    - 30 April
+    - 15 August
+    explain: The busiest days are national holidays and 22 December, the army's founding day.

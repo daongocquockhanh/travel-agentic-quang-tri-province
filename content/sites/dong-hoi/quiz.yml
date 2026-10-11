@@ -1,0 +1,99 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Checked by `bun run content:check`; drafts stay hidden in production.
+review_status: draft
+questions:
+- id: centre
+  answer: 0
+  source: overview
+  vi:
+    q: Từ ngày 1/7/2025, Đồng Hới có vai trò gì?
+    options:
+    - Trung tâm tỉnh Quảng Trị sau hợp nhất
+    - Thủ đô của cả nước
+    - Một đặc khu
+    - Một khu công nghiệp
+    explain: Từ ngày 1/7/2025, Đồng Hới là trung tâm của tỉnh Quảng Trị sau hợp nhất.
+  en:
+    q: What has Đồng Hới been since 1 July 2025?
+    options:
+    - The centre of the merged Quảng Trị province
+    - Vietnam's capital
+    - A special zone
+    - An industrial park
+    explain: Since 1 July 2025 it is the centre of the merged Quảng Trị province.
+- id: river
+  answer: 2
+  source: overview
+  vi:
+    q: Đồng Hới nằm bên cửa sông nào?
+    options:
+    - Sông Bến Hải
+    - Sông Thạch Hãn
+    - Sông Nhật Lệ
+    - Sông Son
+    explain: Đồng Hới là thành phố ven biển bên cửa sông Nhật Lệ.
+  en:
+    q: Đồng Hới sits at the mouth of which river?
+    options:
+    - The Bến Hải
+    - The Thạch Hãn
+    - The Nhật Lệ
+    - The Son
+    explain: Đồng Hới is a coastal city at the mouth of the Nhật Lệ River.
+- id: luy-thay
+  answer: 1
+  source: history
+  vi:
+    q: Ai cho khởi đắp lũy Thầy năm 1630?
+    options:
+    - Vua Gia Long
+    - Mưu sĩ Đào Duy Từ
+    - Vua Minh Mạng
+    - Chúa Trịnh
+    explain: Năm 1630, mưu sĩ Đào Duy Từ cho khởi đắp hệ thống lũy Thầy; năm 1631 cổng Quảng Bình Quan được dựng trên lũy.
+  en:
+    q: Who began the Lũy Thầy defensive walls in 1630?
+    options:
+    - Emperor Gia Long
+    - The strategist Đào Duy Từ
+    - Emperor Minh Mạng
+    - The Trịnh lords
+    explain: The strategist Đào Duy Từ began the Lũy Thầy walls in 1630; Quảng Bình Quan was built on them in 1631.
+- id: citadel
+  answer: 3
+  source: history
+  vi:
+    q: Thành Đồng Hới được xây lại bằng gạch vào năm nào?
+    options:
+    - '1631'
+    - '1812'
+    - '1887'
+    - '1824'
+    explain: Thành khởi công năm 1812 thời Gia Long bằng đất, đến năm 1824 thời Minh Mạng được xây lại bằng gạch.
+  en:
+    q: When was the Đồng Hới Citadel rebuilt in brick?
+    options:
+    - '1631'
+    - '1812'
+    - '1887'
+    - '1824'
+    explain: Begun in earth in 1812 under Gia Long, it was rebuilt in brick in 1824 under Minh Mạng.
+- id: tam-toa
+  answer: 0
+  source: history
+  vi:
+    q: Phần nào của nhà thờ Tam Tòa còn lại sau trận ném bom năm 1965?
+    options:
+    - Tháp chuông
+    - Gian chính
+    - Cổng chính
+    - Mái vòm
+    explain: Ngày 11/2/1965 nhà thờ bị ném bom phá hủy, chỉ còn lại tháp chuông, được tỉnh xếp hạng di tích năm 1997.
+  en:
+    q: What was left of Tam Tòa Church after the 1965 bombing?
+    options:
+    - The bell tower
+    - The nave
+    - The main gate
+    - The dome
+    explain: Bombed on 11 February 1965, only the bell tower remained; the province listed it as a relic in 1997.

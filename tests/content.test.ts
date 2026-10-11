@@ -1,3 +1,4 @@
+import { SAMPLE_SITES } from "@/lib/sample-sites";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,9 +13,9 @@ describe("content/sites (the real content)", () => {
     expect(report.errors).toEqual([]);
   });
 
-  it("has VI and EN content for all ten sites", async () => {
+  it("has VI and EN content for every catalogue site", async () => {
     const report = await checkContent(REAL);
-    expect(Object.keys(report.status)).toHaveLength(10);
+    expect(Object.keys(report.status)).toHaveLength(SAMPLE_SITES.length);
     for (const [slug, langs] of Object.entries(report.status)) {
       expect(Object.keys(langs.vi).sort(), slug).toEqual(Object.keys(langs.en).sort());
       expect(Object.keys(langs.en), slug).toEqual(expect.arrayContaining(["overview", "history", "visit_tips"]));

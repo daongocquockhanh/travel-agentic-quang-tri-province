@@ -1,0 +1,11 @@
+slug: vung-chua
+name_vi: Vũng Chùa – Đảo Yến
+name_en: Vung Chua – Yen Island
+type: war
+tracks:
+  - war
+  - domestic
+  - foreign
+geom:
+  lat: 17.9333
+  lng: 106.5167

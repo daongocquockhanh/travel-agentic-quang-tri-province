@@ -1,0 +1,99 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Checked by `bun run content:check`; drafts stay hidden in production.
+review_status: draft
+questions:
+- id: unesco-first
+  answer: 1
+  source: overview
+  vi:
+    q: UNESCO lần đầu công nhận Phong Nha – Kẻ Bàng là Di sản Thế giới vào năm nào?
+    options:
+    - '1993'
+    - '2003'
+    - '2015'
+    - '2025'
+    explain: Năm 2003 UNESCO công nhận về địa chất, địa mạo; năm 2015 công nhận lần hai về đa dạng sinh học.
+  en:
+    q: When did UNESCO first list Phong Nha–Kẻ Bàng as a World Heritage site?
+    options:
+    - '1993'
+    - '2003'
+    - '2015'
+    - '2025'
+    explain: It was first listed in 2003 for its geology and landforms, and again in 2015 for its biodiversity.
+- id: transboundary
+  answer: 2
+  source: overview
+  vi:
+    q: Năm 2025, Phong Nha – Kẻ Bàng cùng vườn quốc gia nào trở thành di sản xuyên biên giới?
+    options:
+    - Bạch Mã (Huế)
+    - Cúc Phương (Ninh Bình)
+    - Hin Nam No (Lào)
+    - Khao Yai (Thái Lan)
+    explain: Tháng 7/2025, Phong Nha – Kẻ Bàng và Hin Nam No (Lào) trở thành di sản thiên nhiên xuyên biên giới đầu tiên ở Đông Nam Á.
+  en:
+    q: In 2025, Phong Nha–Kẻ Bàng and which park became a transboundary World Heritage site?
+    options:
+    - Bạch Mã (Huế)
+    - Cúc Phương (Ninh Bình)
+    - Hin Nam No (Laos)
+    - Khao Yai (Thailand)
+    explain: In July 2025 it joined Hin Nam No National Park in Laos as Southeast Asia's first transboundary natural World Heritage site.
+- id: boat
+  answer: 0
+  source: history
+  vi:
+    q: Du khách vào động Phong Nha bằng cách nào?
+    options:
+    - Đi thuyền từ sông Son vào sông ngầm
+    - Đi cáp treo
+    - Leo núi từ đỉnh xuống
+    - Đi tàu hỏa
+    explain: Động Phong Nha có sông ngầm; thuyền từ sông Son đưa khách vào đoạn đầu của động.
+  en:
+    q: How do visitors enter Phong Nha Cave?
+    options:
+    - By boat from the Son River into its underground river
+    - By cable car
+    - By climbing down from the summit
+    - By train
+    explain: The cave carries an underground river that boats enter from the Son River.
+- id: son-doong
+  answer: 3
+  source: history
+  vi:
+    q: Ai tìm thấy cửa hang Sơn Đoòng năm 1990?
+    options:
+    - Một đoàn thám hiểm Pháp
+    - Một nhà khoa học Mỹ
+    - Một đội kiểm lâm
+    - Ông Hồ Khanh, người dân địa phương
+    explain: Ông Hồ Khanh tìm thấy cửa hang năm 1990 và năm 2009 dẫn đoàn thám hiểm Anh vào khảo sát.
+  en:
+    q: Who found the entrance to Sơn Đoòng in 1990?
+    options:
+    - A French expedition
+    - An American scientist
+    - A team of rangers
+    - Hồ Khanh, a local man
+    explain: Hồ Khanh found the entrance in 1990 and in 2009 led the British expedition that explored it.
+- id: paradise
+  answer: 1
+  source: history
+  vi:
+    q: Động Thiên Đường dài khoảng bao nhiêu?
+    options:
+    - 7,7 km
+    - 31 km
+    - 2 km
+    - 104 km
+    explain: Động Thiên Đường được phát hiện năm 2005, là hang khô dài khoảng 31 km.
+  en:
+    q: About how long is Paradise Cave?
+    options:
+    - 7.7 km
+    - 31 km
+    - 2 km
+    - 104 km
+    explain: Found in 2005, Paradise Cave is a dry cave about 31 kilometres long.
