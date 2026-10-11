@@ -36,6 +36,8 @@ export interface AgentRequest {
   lng?: number;
   site_slug?: string;
   intent?: "arrival_story";
+  /** "full" when the traveller tapped "Tell me more". */
+  depth?: "full";
 }
 
 /** Annotation shape the chat UI reads off each assistant message. */

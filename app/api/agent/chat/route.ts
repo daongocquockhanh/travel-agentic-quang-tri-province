@@ -23,6 +23,7 @@ const BodySchema = z.object({
     .regex(/^[a-z0-9-]{1,64}$/)
     .optional(),
   intent: z.enum(["arrival_story"]).optional(),
+  depth: z.enum(["full"]).optional(),
 });
 
 export async function POST(request: Request) {

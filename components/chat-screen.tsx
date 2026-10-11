@@ -13,6 +13,7 @@ import { useChat, type Message } from "@ai-sdk/react";
 import { Citation } from "@/components/citation";
 import { ReportAnswer } from "@/components/report-answer";
 import { Icon } from "@/components/icon";
+import { followUps, type FollowUp } from "@/lib/agent/follow-ups";
 import { ModeMenu } from "@/components/mode-menu";
 import { SitePhoto } from "@/components/site-photo";
 import { NextPlaceCards, NextPlaces } from "@/components/next-places";
@@ -45,6 +46,8 @@ interface Props {
     name_en: string;
     hero_gradient: string;
     photo?: { file: string; alt_en: string; alt_vi: string };
+    hasQuiz?: boolean;
+    hasTour?: boolean;
   } | null;
   intent?: "arrival_story";
   initialQuestion?: string;
@@ -574,6 +577,32 @@ export function ChatScreen({
           ))}
         </ul>
 
+        {status === "ready" && !error && last?.role === "assistant" && last.content && (
+          <FollowUpChips
+            chips={followUps({
+              lang,
+              site: site && {
+                slug: site.slug,
+                hasQuiz: Boolean(site.hasQuiz),
+                hasTour: Boolean(site.hasTour),
+              },
+              refused: wasRefused(last),
+              lastQuestion: messages.at(-2)?.role === "user" ? messages.at(-2)!.content : "",
+            })}
+            onAsk={(chip) =>
+              void append(
+                { role: "user", content: chip.prompt },
+                {
+                  body: {
+                    ...(coords ?? {}),
+                    ...(chip.kind === "more" ? { depth: chip.depth } : {}),
+                  },
+                },
+              )
+            }
+          />
+        )}
+
         {intent === "arrival_story" && site && status === "ready" && messages.length >= 2 && (
           <div className="mt-4">
             <NextPlaces fromSlug={site.slug} lang={lang} fallbackTrack={track} />
@@ -869,5 +898,41 @@ function ToolCards({ message, lang, track }: { message: Message; lang: Lang; tra
         return null;
       })}
     </>
+  );
+}
+
+/** The agent marks a declined answer (no curated content) with a mode annotation. */
+function wasRefused(m: { annotations?: unknown[] }): boolean {
+  return (m.annotations ?? []).some((a) => {
+    const ann = a as { type?: string; refused?: boolean } | null;
+    return ann?.type === "mode" && ann.refused === true;
+  });
+}
+
+/** Next steps under the latest answer: ask for more, or go to the site's quiz or tour. */
+function FollowUpChips({
+  chips,
+  onAsk,
+}: {
+  chips: FollowUp[];
+  onAsk: (chip: Extract<FollowUp, { prompt: string }>) => void;
+}) {
+  if (!chips.length) return null;
+  const cls =
+    "border-border bg-paper-card text-fg inline-flex items-center rounded-full border px-3 py-1.5 text-[13px] font-medium";
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {chips.map((chip) =>
+        "href" in chip ? (
+          <Link key={chip.kind} href={chip.href} className={cls}>
+            {chip.label}
+          </Link>
+        ) : (
+          <button key={chip.kind} type="button" onClick={() => onAsk(chip)} className={cls}>
+            {chip.label}
+          </button>
+        ),
+      )}
+    </div>
   );
 }
