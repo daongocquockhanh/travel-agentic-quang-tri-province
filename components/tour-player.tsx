@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { SitePhoto } from "@/components/site-photo";
-import { commonsImageUrl } from "@/lib/photos";
+import { photoSource } from "@/lib/photos";
 import { formatMinutes, listenSeconds, speechPieces, type Tour } from "@/lib/tours";
 import type { TtsVoice } from "@/lib/voice/config";
 import { SpeechPlayer, type PlayerState } from "@/lib/voice/player";
@@ -227,7 +227,7 @@ export function TourPlayer({
       title: stops[current].title,
       artist: site.name,
       album: t.eyebrow,
-      artwork: site.photo ? [{ src: commonsImageUrl(site.photo.file, 512), sizes: "512x512" }] : [],
+      artwork: site.photo ? [{ src: photoSource(site.photo.file, 480).src }] : [],
     });
     ms.playbackState = playing ? "playing" : "paused";
     const handlers: [MediaSessionAction, () => void][] = [

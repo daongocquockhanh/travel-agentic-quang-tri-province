@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { commonsFilePage, commonsImageUrl } from "@/lib/photos";
+import { commonsFilePage, photoSource } from "@/lib/photos";
 
 type Photo = { file: string; alt_en: string; alt_vi: string };
 
@@ -10,10 +10,10 @@ interface Props {
   /** Fallback background when there is no photo or it fails to load. */
   gradient: string;
   lang: "vi" | "en";
-  /** Rendered width hint for the Commons thumbnail. */
+  /** Rendered width hint: picks the 480 or 1200 local rendition (or Commons size). */
   width?: number;
   className?: string;
-  /** Show the "Photo: Wikimedia Commons" credit link (hero images). */
+  /** Show the photo credit (author · licence, linked to the Commons file page) on hero images. */
   credit?: boolean;
   /** Decorative thumbnails get an empty alt so screen readers skip them. */
   decorative?: boolean;
@@ -23,8 +23,9 @@ interface Props {
 }
 
 /**
- * A site's photo, or an illustrated stand-in. The stand-in is also what shows
- * if Commons is unreachable, so a card never shows a broken image.
+ * A site's photo, served from our own assets once `bun run photos:fetch` has
+ * copied it (else from Commons), or an illustrated stand-in. The stand-in also
+ * shows if the image fails, so a card never shows a broken image.
  */
 export function SitePhoto({
   photo,
@@ -40,6 +41,7 @@ export function SitePhoto({
   const [failed, setFailed] = useState(false);
   const img = useRef<HTMLImageElement | null>(null);
   const show = photo && !failed;
+  const source = photo ? photoSource(photo.file, width) : null;
 
   // An image that failed before hydration never fires onError for React; catch it on mount.
   useEffect(() => {
@@ -50,11 +52,11 @@ export function SitePhoto({
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ background: gradient }}>
       {show ? (
-        // Plain <img>: the Worker deploy has no image optimizer, and Commons already resizes.
+        // Plain <img>: the Worker deploy has no image optimizer; renditions are pre-sized.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           ref={img}
-          src={commonsImageUrl(photo.file, width)}
+          src={source!.src}
           alt={decorative ? "" : lang === "vi" ? photo.alt_vi : photo.alt_en}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
@@ -68,7 +70,7 @@ export function SitePhoto({
       )}
       {show && credit && (
         <a
-          href={commonsFilePage(photo.file)}
+          href={source?.credit?.source_url ?? commonsFilePage(photo.file)}
           target="_blank"
           rel="noreferrer"
           className={
@@ -76,7 +78,11 @@ export function SitePhoto({
             (creditAt === "top-right" ? "top-[calc(0.5rem+var(--safe-top))]" : "bottom-1.5")
           }
         >
-          {lang === "vi" ? "Ảnh: Wikimedia Commons" : "Photo: Wikimedia Commons"}
+          {source?.credit
+            ? `${lang === "vi" ? "Ảnh" : "Photo"}: ${source.credit.author} · ${source.credit.license}`
+            : lang === "vi"
+              ? "Ảnh: Wikimedia Commons"
+              : "Photo: Wikimedia Commons"}
         </a>
       )}
     </div>

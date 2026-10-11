@@ -30,3 +30,5 @@ check /site/vinh-moc "Vĩnh Mốc"
 # Quiz bundle reached the Worker, and the passport renders.
 check /site/vinh-moc/quiz "Vinh Moc|Vĩnh Mốc"
 check /passport
+# Photos are served from our own Cloudflare assets (bun run photos:fetch).
+check /photos/vinh-moc-480.webp

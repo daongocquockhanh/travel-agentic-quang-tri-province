@@ -1,0 +1,83 @@
+{
+  "Con Co Island S2-2023.jpg": {
+    "id": "con-co",
+    "author": "ESA Copernicus Sentinel-2",
+    "license": "Copernicus attribution",
+    "license_url": null,
+    "source_url": "https://commons.wikimedia.org/wiki/File:Con_Co_Island_S2-2023.jpg",
+    "width": 618,
+    "height": 574
+  },
+  "Cua Viet Beach - Quang Tri.JPG": {
+    "id": "cua-viet",
+    "author": "LÊ TẤN LỘC",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Cua_Viet_Beach_-_Quang_Tri.JPG",
+    "width": 1200,
+    "height": 856
+  },
+  "Một góc Đông Hà, Quảng Trị.JPG": {
+    "id": "dong-ha",
+    "author": "Dongson.vmvn",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:M%E1%BB%99t_g%C3%B3c_%C4%90%C3%B4ng_H%C3%A0,_Qu%E1%BA%A3ng_Tr%E1%BB%8B.JPG",
+    "width": 1000,
+    "height": 677
+  },
+  "Tour of the DMZ, Vietnam (17100711821).jpg": {
+    "id": "hien-luong",
+    "author": "Ryan Milani",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Tour_of_the_DMZ,_Vietnam_(17100711821).jpg",
+    "width": 1200,
+    "height": 800
+  },
+  "Khe Sanh, Vietnam, CH-47 Chinook helicopter at the Khe Sanh base.jpg": {
+    "id": "khe-sanh",
+    "author": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Khe_Sanh,_Vietnam,_CH-47_Chinook_helicopter_at_the_Khe_Sanh_base.jpg",
+    "width": 1200,
+    "height": 800
+  },
+  "Tháp chuông nhà thờ La Vang.JPG": {
+    "id": "la-vang",
+    "author": "Hoangvantoanajc",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Th%C3%A1p_chu%C3%B4ng_nh%C3%A0_th%E1%BB%9D_La_Vang.JPG",
+    "width": 1200,
+    "height": 798
+  },
+  "Cầu Thạch Hãn (Quảng Trị).JPG": {
+    "id": "thach-han",
+    "author": "Bút Chiến",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:C%E1%BA%A7u_Th%E1%BA%A1ch_H%C3%A3n_(Qu%E1%BA%A3ng_Tr%E1%BB%8B).JPG",
+    "width": 900,
+    "height": 661
+  },
+  "Truong Son National Cemetery - panoramio.jpg": {
+    "id": "truong-son",
+    "author": "Gonzo Gooner",
+    "license": "CC BY 3.0",
+    "license_url": "https://creativecommons.org/licenses/by/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Truong_Son_National_Cemetery_-_panoramio.jpg",
+    "width": 1200,
+    "height": 900
+  },
+  "Vinh Moc tunnels, Vietnam, South China Sea exits.jpg": {
+    "id": "vinh-moc",
+    "author": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Vinh_Moc_tunnels,_Vietnam,_South_China_Sea_exits.jpg",
+    "width": 1200,
+    "height": 800
+  }
+}

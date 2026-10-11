@@ -55,9 +55,10 @@ export const SAMPLE_SITES: SampleSite[] = [
     distance_from_dong_ha_km: 22,
     visit_min: 45,
     photo: {
-      file: "Unification monument on the Ben Hai River, Vietnam.jpg",
-      alt_en: "The reunification monument on the bank of the Bến Hải River",
-      alt_vi: "Tượng đài khát vọng thống nhất bên bờ sông Bến Hải",
+      file: "Tour of the DMZ, Vietnam (17100711821).jpg",
+      alt_en:
+        "Hiền Lương Bridge over the Bến Hải, its northern half painted blue and its southern half yellow",
+      alt_vi: "Cầu Hiền Lương bắc qua sông Bến Hải, nửa bắc sơn xanh, nửa nam sơn vàng",
     },
   },
   {
@@ -74,9 +75,9 @@ export const SAMPLE_SITES: SampleSite[] = [
     distance_from_dong_ha_km: 64,
     visit_min: 75,
     photo: {
-      file: "Vietnam Khe Sanh Military Base.jpg",
-      alt_en: "The former Khe Sanh combat base",
-      alt_vi: "Cứ điểm Khe Sanh ngày nay",
+      file: "Khe Sanh, Vietnam, CH-47 Chinook helicopter at the Khe Sanh base.jpg",
+      alt_en: "A CH-47 Chinook helicopter on display at the former Khe Sanh base",
+      alt_vi: "Trực thăng CH-47 Chinook trưng bày tại cứ điểm Khe Sanh",
     },
   },
   {
