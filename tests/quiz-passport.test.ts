@@ -1,14 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { prepareAttempt, scoreAttempt } from "@/lib/quiz";
-import { EMPTY_PASSPORT, parsePassport, stampState, withQuizResult, withVisit } from "@/lib/passport";
+import {
+  EMPTY_PASSPORT,
+  parsePassport,
+  stampState,
+  withQuizResult,
+  withVisit,
+} from "@/lib/passport";
 import type { QuizQuestion } from "@/lib/quiz-types";
 
 const q = (id: string, answer: number): QuizQuestion => ({
   id,
   answer,
   source: "history",
-  vi: { q: `vi ${id}`, options: ["a", "b", "c", "d"].map((o) => `vi-${o}`), explain: `vi why ${id}` },
-  en: { q: `en ${id}`, options: ["a", "b", "c", "d"].map((o) => `en-${o}`), explain: `en why ${id}` },
+  vi: {
+    q: `vi ${id}`,
+    options: ["a", "b", "c", "d"].map((o) => `vi-${o}`),
+    explain: `vi why ${id}`,
+  },
+  en: {
+    q: `en ${id}`,
+    options: ["a", "b", "c", "d"].map((o) => `en-${o}`),
+    explain: `en why ${id}`,
+  },
 });
 const QUESTIONS = [q("one", 0), q("two", 1), q("three", 2), q("four", 3)];
 
@@ -34,7 +48,13 @@ describe("prepareAttempt", () => {
   });
 
   it("actually reorders something across seeds", () => {
-    const orders = new Set([1, 2, 3, 4, 5].map((s) => prepareAttempt(QUESTIONS, "en", seeded(s)).map((a) => a.id).join()));
+    const orders = new Set(
+      [1, 2, 3, 4, 5].map((s) =>
+        prepareAttempt(QUESTIONS, "en", seeded(s))
+          .map((a) => a.id)
+          .join(),
+      ),
+    );
     expect(orders.size).toBeGreaterThan(1);
   });
 
@@ -62,7 +82,9 @@ describe("passport", () => {
   it("starts empty and survives corrupt storage", () => {
     expect(parsePassport(null)).toEqual(EMPTY_PASSPORT);
     expect(parsePassport("{not json")).toEqual(EMPTY_PASSPORT);
-    expect(parsePassport(JSON.stringify({ visits: 5, quizzes: { x: { best: "lots" } } }))).toEqual(EMPTY_PASSPORT);
+    expect(parsePassport(JSON.stringify({ visits: 5, quizzes: { x: { best: "lots" } } }))).toEqual(
+      EMPTY_PASSPORT,
+    );
   });
 
   it("round-trips valid data and drops malformed entries", () => {

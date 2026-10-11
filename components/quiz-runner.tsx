@@ -125,7 +125,9 @@ export function QuizRunner({ questions, lang, isDraft, sources, site }: Props) {
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(to top, rgba(31,36,40,.85), rgba(31,36,40,.15) 70%)" }}
+          style={{
+            background: "linear-gradient(to top, rgba(31,36,40,.85), rgba(31,36,40,.15) 70%)",
+          }}
         />
         <Link
           href={`/site/${site.slug}`}
@@ -135,7 +137,9 @@ export function QuizRunner({ questions, lang, isDraft, sources, site }: Props) {
           <Icon name="back" size={18} />
         </Link>
         <div className="text-paper absolute inset-x-5 bottom-4">
-          <p className="text-[11px] font-semibold tracking-[0.1em] uppercase opacity-90">{t.kicker}</p>
+          <p className="text-[11px] font-semibold tracking-[0.1em] uppercase opacity-90">
+            {t.kicker}
+          </p>
           <h1 className="font-display text-[24px] leading-tight font-medium">{site.name}</h1>
         </div>
       </header>
@@ -206,10 +210,16 @@ export function QuizRunner({ questions, lang, isDraft, sources, site }: Props) {
               {answered && (
                 <div className="border-border bg-paper-card mt-4 rounded-2xl border p-3.5">
                   <p className="text-[14px] font-medium">
-                    {picked === current.correct ? t.correct : t.wrong(current.options[current.correct])}
+                    {picked === current.correct
+                      ? t.correct
+                      : t.wrong(current.options[current.correct])}
                   </p>
                   <p className="text-fg mt-1 text-[14px] leading-relaxed">{current.explain}</p>
-                  <SourceLine source={sources[current.source]} readMore={t.readMore} slug={site.slug} />
+                  <SourceLine
+                    source={sources[current.source]}
+                    readMore={t.readMore}
+                    slug={site.slug}
+                  />
                 </div>
               )}
             </div>
@@ -229,19 +239,29 @@ export function QuizRunner({ questions, lang, isDraft, sources, site }: Props) {
 
         {result && (
           <section aria-live="polite">
-            <p className="font-display text-center text-[22px] leading-snug">{t.score(result.score, result.total)}</p>
+            <p className="font-display text-center text-[22px] leading-snug">
+              {t.score(result.score, result.total)}
+            </p>
             {result.missed.length === 0 ? (
               <p className="text-fg-muted mt-2 text-center text-[14px]">{t.perfect}</p>
             ) : (
               <div className="mt-5">
-                <h2 className="text-fg-muted text-[12px] font-semibold tracking-[0.08em] uppercase">{t.review}</h2>
+                <h2 className="text-fg-muted text-[12px] font-semibold tracking-[0.08em] uppercase">
+                  {t.review}
+                </h2>
                 <ul className="mt-2 flex flex-col gap-2">
                   {result.missed.map((m) => (
                     <li key={m.id} className="border-border bg-paper-card rounded-2xl border p-3.5">
                       <p className="text-[14px] font-medium">{m.q}</p>
                       <p className="text-primary mt-1 text-[14px]">{m.options[m.correct]}</p>
-                      <p className="text-fg-muted mt-1 text-[13.5px] leading-relaxed">{m.explain}</p>
-                      <SourceLine source={sources[m.source]} readMore={t.readMore} slug={site.slug} />
+                      <p className="text-fg-muted mt-1 text-[13.5px] leading-relaxed">
+                        {m.explain}
+                      </p>
+                      <SourceLine
+                        source={sources[m.source]}
+                        readMore={t.readMore}
+                        slug={site.slug}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -273,7 +293,15 @@ export function QuizRunner({ questions, lang, isDraft, sources, site }: Props) {
   );
 }
 
-function SourceLine({ source, readMore, slug }: { source?: QuizSource; readMore: string; slug: string }) {
+function SourceLine({
+  source,
+  readMore,
+  slug,
+}: {
+  source?: QuizSource;
+  readMore: string;
+  slug: string;
+}) {
   if (!source) return null;
   return (
     <p className="text-fg-muted mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px]">
@@ -283,7 +311,12 @@ function SourceLine({ source, readMore, slug }: { source?: QuizSource; readMore:
       </Link>
       {source.citation &&
         (source.href ? (
-          <a href={source.href} target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">
+          <a
+            href={source.href}
+            target="_blank"
+            rel="noreferrer"
+            className="underline-offset-2 hover:underline"
+          >
             · {source.citation}
           </a>
         ) : (

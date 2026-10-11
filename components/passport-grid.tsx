@@ -104,7 +104,7 @@ export function PassportGrid({ sites, lang }: { sites: PassportSite[]; lang: "vi
                 />
                 {state === "stamped" && (
                   <span
-                    className="border-paper bg-primary text-paper absolute top-2 right-2 grid size-9 rotate-[-12deg] place-items-center rounded-full border-2 shadow-soft"
+                    className="border-paper bg-primary text-paper shadow-soft absolute top-2 right-2 grid size-9 rotate-[-12deg] place-items-center rounded-full border-2"
                     aria-hidden
                   >
                     <Icon name="check" size={18} />
@@ -117,7 +117,9 @@ export function PassportGrid({ sites, lang }: { sites: PassportSite[]; lang: "vi
                   {t.state[state]}
                   {visit?.method === "self" && ` · ${t.self}`}
                 </p>
-                {quiz && <p className="text-fg-muted text-[11.5px]">{t.best(quiz.best, quiz.total)}</p>}
+                {quiz && (
+                  <p className="text-fg-muted text-[11.5px]">{t.best(quiz.best, quiz.total)}</p>
+                )}
                 {site.hasQuiz ? (
                   state !== "stamped" &&
                   !quiz && (

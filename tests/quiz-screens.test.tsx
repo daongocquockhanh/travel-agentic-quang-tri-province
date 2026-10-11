@@ -47,19 +47,37 @@ const QUESTIONS: QuizQuestion[] = [
     answer: 2,
     source: "history",
     vi: { q: "Sâu bao nhiêu?", options: ["8 m", "12 m", "23 m", "40 m"], explain: "Ba giai đoạn." },
-    en: { q: "How deep?", options: ["8 m", "12 m", "23 m", "40 m"], explain: "Three phases, to 23 m." },
+    en: {
+      q: "How deep?",
+      options: ["8 m", "12 m", "23 m", "40 m"],
+      explain: "Three phases, to 23 m.",
+    },
   },
   {
     id: "children",
     answer: 3,
     source: "history",
     vi: { q: "Bao nhiêu em bé?", options: ["3", "7", "12", "17"], explain: "17 em bé." },
-    en: { q: "How many children?", options: ["3", "7", "12", "17"], explain: "Seventeen were born." },
+    en: {
+      q: "How many children?",
+      options: ["3", "7", "12", "17"],
+      explain: "Seventeen were born.",
+    },
   },
 ];
 /** Question text → a right and a wrong option, whatever order the shuffle picked. */
-const RIGHT: Record<string, string> = { "How deep?": "23 m", "How many children?": "17", "Sâu bao nhiêu?": "23 m", "Bao nhiêu em bé?": "17" };
-const WRONG: Record<string, string> = { "How deep?": "8 m", "How many children?": "3", "Sâu bao nhiêu?": "8 m", "Bao nhiêu em bé?": "3" };
+const RIGHT: Record<string, string> = {
+  "How deep?": "23 m",
+  "How many children?": "17",
+  "Sâu bao nhiêu?": "23 m",
+  "Bao nhiêu em bé?": "17",
+};
+const WRONG: Record<string, string> = {
+  "How deep?": "8 m",
+  "How many children?": "3",
+  "Sâu bao nhiêu?": "8 m",
+  "Bao nhiêu em bé?": "3",
+};
 
 const SITE = { slug: "vinh-moc", name: "Vinh Moc Tunnels", hero_gradient: "#333" };
 const SOURCES = { history: { label: "History", citation: "Provincial museum", href: null } };
@@ -103,7 +121,9 @@ describe("QuizRunner", () => {
 
   it("starts over on retake and keeps the best score", async () => {
     passport.recordQuiz("vinh-moc", 2, 2);
-    render(<QuizRunner questions={QUESTIONS} lang="vi" isDraft={false} sources={SOURCES} site={SITE} />);
+    render(
+      <QuizRunner questions={QUESTIONS} lang="vi" isDraft={false} sources={SOURCES} site={SITE} />,
+    );
     await screen.findByText(/Câu 1 \/ 2/);
     fireEvent.click(option(WRONG[heading()]));
     fireEvent.click(screen.getByRole("button", { name: /Câu tiếp theo/ }));
@@ -118,7 +138,15 @@ describe("QuizRunner", () => {
   });
 
   it("offers an honest 'I visited' when location can't confirm the visit", async () => {
-    render(<QuizRunner questions={QUESTIONS.slice(0, 1)} lang="en" isDraft={false} sources={SOURCES} site={SITE} />);
+    render(
+      <QuizRunner
+        questions={QUESTIONS.slice(0, 1)}
+        lang="en"
+        isDraft={false}
+        sources={SOURCES}
+        site={SITE}
+      />,
+    );
     await screen.findByText(/Question 1 of 1/);
     fireEvent.click(option("23 m"));
     fireEvent.click(screen.getByRole("button", { name: /See your result/ }));
@@ -142,7 +170,9 @@ describe("PassportGrid", () => {
 
     act(() => passport.recordVisit("vinh-moc", "gps"));
     await waitFor(() => expect(screen.getByText("Visited · quiz to do")).toBeTruthy());
-    expect(screen.getByRole("link", { name: "Take the quiz" }).getAttribute("href")).toBe("/site/vinh-moc/quiz");
+    expect(screen.getByRole("link", { name: "Take the quiz" }).getAttribute("href")).toBe(
+      "/site/vinh-moc/quiz",
+    );
 
     act(() => passport.recordQuiz("vinh-moc", 4, 6));
     await waitFor(() => expect(screen.getByText("1 of 2 places stamped")).toBeTruthy());

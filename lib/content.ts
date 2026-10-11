@@ -54,7 +54,11 @@ export async function getQuiz(slug: string): Promise<SiteQuiz | null> {
   } else {
     quiz = (bundledQuizzes as unknown as Record<string, SiteQuiz | null>)[slug] ?? null;
   }
-  if (quiz && process.env.CONTENT_REQUIRE_REVIEWED === "true" && quiz.review_status !== "reviewed") {
+  if (
+    quiz &&
+    process.env.CONTENT_REQUIRE_REVIEWED === "true" &&
+    quiz.review_status !== "reviewed"
+  ) {
     return null;
   }
   return quiz;

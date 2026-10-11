@@ -17,7 +17,8 @@ export type StampState = "none" | "visited" | "quizzed" | "stamped";
 
 export const EMPTY_PASSPORT: Passport = Object.freeze({ visits: {}, quizzes: {} }) as Passport;
 
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
 const isDate = (v: unknown): v is string => typeof v === "string" && !Number.isNaN(Date.parse(v));
 
 /** Reads stored JSON, keeping only well-formed entries; anything else becomes empty. */
@@ -53,7 +54,9 @@ export function parsePassport(raw: string | null): Passport {
       }
     }
   }
-  return Object.keys(visits).length || Object.keys(quizzes).length ? { visits, quizzes } : EMPTY_PASSPORT;
+  return Object.keys(visits).length || Object.keys(quizzes).length
+    ? { visits, quizzes }
+    : EMPTY_PASSPORT;
 }
 
 /** A GPS check-in upgrades a self-reported visit; nothing downgrades one. */
@@ -64,7 +67,13 @@ export function withVisit(p: Passport, slug: string, method: VisitMethod, at: st
 }
 
 /** Keeps the best score (and the date it was reached). */
-export function withQuizResult(p: Passport, slug: string, score: number, total: number, at: string): Passport {
+export function withQuizResult(
+  p: Passport,
+  slug: string,
+  score: number,
+  total: number,
+  at: string,
+): Passport {
   const prev = p.quizzes[slug];
   if (prev && prev.best >= score) return p;
   return { ...p, quizzes: { ...p.quizzes, [slug]: { best: score, total, at } } };
