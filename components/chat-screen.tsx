@@ -13,6 +13,7 @@ import { useChat, type Message } from "@ai-sdk/react";
 import { Citation } from "@/components/citation";
 import { ReportAnswer } from "@/components/report-answer";
 import { Icon } from "@/components/icon";
+import { HomeButton } from "@/components/home-button";
 import { ModeMenu } from "@/components/mode-menu";
 import { SitePhoto } from "@/components/site-photo";
 import { NextPlaceCards, NextPlaces } from "@/components/next-places";
@@ -442,6 +443,7 @@ export function ChatScreen({
         >
           <Icon name="back" size={18} />
         </Link>
+        <HomeButton lang={lang} />
         <ModeMenu track={track} lang={lang} onChange={setTrack} compact />
         <span className="flex-1" />
         {messages.length > 0 && !busy && (

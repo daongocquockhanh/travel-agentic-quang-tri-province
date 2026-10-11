@@ -24,7 +24,8 @@ type IconName =
   | "pause"
   | "skipBack"
   | "skipForward"
-  | "headphones";
+  | "headphones"
+  | "home";
 
 interface Props {
   name: IconName;
@@ -155,6 +156,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="12" cy="12" r="9" />
       <path d="M12 11v5" />
       <path d="M12 8h.01" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M3 11l9-7 9 7" />
+      <path d="M5 10v10h14V10" />
+      <path d="M10 20v-5h4v5" />
     </>
   ),
   pause: (

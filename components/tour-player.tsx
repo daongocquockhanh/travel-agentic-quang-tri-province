@@ -216,8 +216,16 @@ export function TourPlayer({
     if (done) doneCard.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [done]);
 
-  // Stop the voice when leaving the page.
-  useEffect(() => () => playerRef.current?.stop(), []);
+  // Stop the voice when leaving the page. Mark it as a deliberate stop first, or the
+  // player's "not speaking" reads as "stop finished" and the next stop starts on a
+  // page that is gone, with no button left to stop it.
+  useEffect(
+    () => () => {
+      run.current.userStopped = true;
+      playerRef.current?.stop();
+    },
+    [],
+  );
 
   // Lock-screen / headset controls (Media Session API), where supported.
   useEffect(() => {

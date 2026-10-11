@@ -9,6 +9,7 @@ import { ModeMenu } from "@/components/mode-menu";
 import { SiteCard, type SiteCardData } from "@/components/site-card";
 import { GeofenceBanner } from "@/components/geofence-banner";
 import { Icon } from "@/components/icon";
+import { HomeButton } from "@/components/home-button";
 import { haversineMeters } from "@/lib/geo";
 import { plan, usePlan } from "@/lib/plan-store";
 import { passport, usePassport } from "@/lib/passport-store";
@@ -118,7 +119,9 @@ export function MapHome({
 
       {/* top chrome */}
       <div className="absolute inset-x-3.5 top-[calc(0.875rem+var(--safe-top))] z-30 flex items-start justify-between gap-2">
-        <ModeMenu track={track} lang={lang} onChange={setTrack} glass />
+        <HomeButton lang={lang} glass />
+        {/* compact: with the home button, the full "Mode:" label pushes the About button off a 375 px screen */}
+        <ModeMenu track={track} lang={lang} onChange={setTrack} glass compact />
         <span className="flex-1" />
         <button
           type="button"
@@ -126,7 +129,7 @@ export function MapHome({
           aria-label={vi ? "Dùng vị trí của tôi" : "Use my location"}
           aria-pressed={locStatus === "watching"}
           className={
-            "border-border grid size-[34px] cursor-pointer place-items-center rounded-full border backdrop-blur-md " +
+            "border-border grid size-[34px] shrink-0 cursor-pointer place-items-center rounded-full border backdrop-blur-md " +
             (locStatus === "watching"
               ? "bg-primary text-paper"
               : "text-fg bg-[rgba(247,244,238,0.86)]")
@@ -150,7 +153,7 @@ export function MapHome({
         <Link
           href="/about"
           aria-label={vi ? "Giới thiệu và quyền riêng tư" : "About and privacy"}
-          className="border-border text-fg grid size-[34px] place-items-center rounded-full border bg-[rgba(247,244,238,0.86)] backdrop-blur-md"
+          className="border-border text-fg grid size-[34px] shrink-0 place-items-center rounded-full border bg-[rgba(247,244,238,0.86)] backdrop-blur-md"
         >
           <Icon name="info" size={16} />
         </Link>

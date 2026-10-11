@@ -62,7 +62,7 @@ export function ModeMenu({
   };
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative min-w-0">
       <button
         type="button"
         aria-haspopup="menu"
@@ -70,19 +70,20 @@ export function ModeMenu({
         aria-controls={menuId}
         onClick={() => setOpen((o) => !o)}
         className={
-          "text-fg inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap " +
+          "text-fg inline-flex max-w-full cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap " +
           (glass
             ? "border-border bg-[rgba(247,244,238,0.9)] backdrop-blur-md"
             : "border-border bg-paper-card")
         }
         style={{ borderColor: TRACK_COLOR[track] }}
       >
-        <span className="inline-flex" style={{ color: TRACK_COLOR[track] }}>
+        <span className="inline-flex shrink-0" style={{ color: TRACK_COLOR[track] }}>
           <TrackIcon track={track} size={14} />
         </span>
         {!compact && <span className="text-fg-muted">{lang === "vi" ? "Chế độ:" : "Mode:"}</span>}
-        {label(track)}
-        <Icon name="chevronDown" size={14} className="text-fg-muted" />
+        {/* Narrow phones: the mode name gives way first, so every header button stays on screen. */}
+        <span className="min-w-0 truncate">{label(track)}</span>
+        <Icon name="chevronDown" size={14} className="text-fg-muted shrink-0" />
       </button>
 
       {open && (
