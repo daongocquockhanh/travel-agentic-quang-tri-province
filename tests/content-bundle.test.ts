@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { join } from "node:path";
-import { listSlugsOnDisk, readSiteContentFromDisk } from "@/lib/content-source";
-import { listContentSlugs, readSiteContent } from "@/lib/content";
+import { listSlugsOnDisk, readQuizFromDisk, readSiteContentFromDisk } from "@/lib/content-source";
+import { getQuiz, listContentSlugs, readSiteContent } from "@/lib/content";
 
 const DIR = join(process.cwd(), "content/sites");
 
@@ -20,5 +20,23 @@ describe("content bundle", () => {
 
   it("returns empty content for an unknown site", async () => {
     expect(await readSiteContent("nowhere")).toEqual({ vi: [], en: [] });
+  });
+
+  it("serves the same quizzes as quiz.yml on disk", async () => {
+    for (const slug of await listSlugsOnDisk(DIR)) {
+      expect(await getQuiz(slug)).toEqual(await readQuizFromDisk(DIR, slug));
+    }
+    expect(await getQuiz("nowhere")).toBeNull();
+  });
+
+  it("hides a draft quiz when production requires reviewed content", async () => {
+    // Vĩnh Mốc's quiz starts as a draft (content/sites/vinh-moc/quiz.yml).
+    expect((await getQuiz("vinh-moc"))?.review_status).toBe("draft");
+    process.env.CONTENT_REQUIRE_REVIEWED = "true";
+    try {
+      expect(await getQuiz("vinh-moc")).toBeNull();
+    } finally {
+      delete process.env.CONTENT_REQUIRE_REVIEWED;
+    }
   });
 });

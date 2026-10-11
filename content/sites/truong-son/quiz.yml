@@ -1,0 +1,75 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# A place of mourning: questions are about the place and its customs.
+review_status: draft
+questions:
+  - id: largest
+    answer: 0
+    source: overview
+    vi:
+      q: "Nghĩa trang Liệt sĩ Quốc gia Trường Sơn có điểm gì đặc biệt?"
+      options: ["Là nghĩa trang liệt sĩ lớn nhất Việt Nam", "Là nghĩa trang cổ nhất Việt Nam", "Nằm trên một hòn đảo", "Chỉ dành cho một tỉnh"]
+      explain: "Đây là nghĩa trang liệt sĩ lớn nhất Việt Nam, nơi yên nghỉ của hơn 10.000 liệt sĩ."
+    en:
+      q: "What sets Trường Sơn National Martyrs' Cemetery apart?"
+      options: ["It is the largest martyrs' cemetery in Vietnam", "It is the oldest cemetery in Vietnam", "It stands on an island", "It is for one province only"]
+      explain: "It is the largest martyrs' cemetery in Vietnam, the resting place of more than 10,000 soldiers and volunteers."
+
+  - id: route
+    answer: 2
+    source: overview
+    vi:
+      q: "Ở phương Tây, tuyến đường Trường Sơn thường được gọi là gì?"
+      options: ["Đường 9", "Quốc lộ 1", "Đường mòn Hồ Chí Minh", "Hành lang kinh tế Đông – Tây"]
+      explain: "Tuyến đường Trường Sơn được phương Tây gọi là Đường mòn Hồ Chí Minh."
+    en:
+      q: "What is the Trường Sơn route known as in the West?"
+      options: ["Route 9", "National Route 1", "The Ho Chi Minh Trail", "The East–West Economic Corridor"]
+      explain: "The Trường Sơn route is known in the West as the Ho Chi Minh Trail."
+
+  - id: built
+    answer: 1
+    source: history
+    vi:
+      q: "Nghĩa trang được xây dựng trong khoảng thời gian nào?"
+      options: ["1954–1956", "1975–1977", "1968–1970", "1986–1988"]
+      explain: "Công trình khởi công ngày 24/10/1975, vài tháng sau khi chiến tranh kết thúc, và hoàn thành ngày 10/4/1977."
+    en:
+      q: "When was the cemetery built?"
+      options: ["1954–1956", "1975–1977", "1968–1970", "1986–1988"]
+      explain: "Construction began on 24 October 1975, a few months after the war ended, and was completed on 10 April 1977."
+
+  - id: zones
+    answer: 3
+    source: history
+    vi:
+      q: "Các phần mộ trong nghĩa trang được sắp xếp theo cách nào?"
+      options: ["Theo năm hy sinh", "Theo thứ tự chữ cái", "Theo cấp bậc", "Theo quê quán của các liệt sĩ"]
+      explain: "Các phần mộ được chia thành khu theo tỉnh quê hương của liệt sĩ, và có một khu dành cho liệt sĩ chưa xác định danh tính."
+    en:
+      q: "How are the graves arranged?"
+      options: ["By year of death", "Alphabetically", "By rank", "By the home provinces of the fallen"]
+      explain: "Graves are grouped into zones named after the soldiers' home provinces, with a section for those who could not be identified."
+
+  - id: day
+    answer: 1
+    source: culture_notes
+    vi:
+      q: "Ngày nào trong năm có đông gia đình và đoàn viếng nhất?"
+      options: ["30 tháng 4", "27 tháng 7, Ngày Thương binh – Liệt sĩ", "2 tháng 9", "Rằm tháng Giêng"]
+      explain: "Đông nhất là dịp 27 tháng 7, Ngày Thương binh – Liệt sĩ của Việt Nam."
+    en:
+      q: "Around which day do the most families and delegations visit?"
+      options: ["30 April", "27 July, War Invalids and Martyrs' Day", "2 September", "The first full moon of the lunar year"]
+      explain: "The busiest time is around 27 July, Vietnam's War Invalids and Martyrs' Day."
+
+  - id: respect
+    answer: 0
+    source: culture_notes
+    vi:
+      q: "Khi đến viếng, khách thường làm gì đầu tiên?"
+      options: ["Thắp hương ở đài tưởng niệm trung tâm", "Chụp ảnh các phần mộ", "Mua vé tham quan bảo tàng", "Đi thẳng đến khu mộ chưa rõ tên"]
+      explain: "Khách thường thắp hương ở đài tưởng niệm trung tâm trước khi đi giữa các hàng mộ."
+    en:
+      q: "What do visitors usually do first?"
+      options: ["Light incense at the central memorial", "Photograph the graves", "Buy a museum ticket", "Go straight to the unidentified graves"]
+      explain: "Visitors usually light incense at the central memorial before walking among the graves."
