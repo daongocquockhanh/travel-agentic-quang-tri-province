@@ -27,3 +27,5 @@ check /map
 check /api/sites
 # Proves the build-time content bundle is in the Worker.
 check /site/vinh-moc "Vĩnh Mốc"
+# Photos are served from our own Cloudflare assets (bun run photos:fetch).
+check /photos/vinh-moc-480.webp
