@@ -1,7 +1,7 @@
 /**
- * Golden prompts for the agent eval (SYSTEM_DESIGN §9): 36 prompts (30
+ * Golden prompts for the agent eval (SYSTEM_DESIGN §9): 39 prompts (33
  * single-turn, 6 follow-ups that depend on the conversation so far), each run
- * on 3 tracks × 2 languages = 216 cases.
+ * on 3 tracks × 2 languages = 234 cases.
  *
  * `expect`:
  * - grounded: answered from curated content, with citations (and, if `sites`
@@ -98,6 +98,17 @@ export const GOLDEN: GoldenCase[] = [
   { id: "cc-getthere", site: "con-co", expect: "answer",
     en: "How do I get to Con Co island?",
     vi: "Làm sao để ra đảo Cồn Cỏ?" },
+
+  // ── former Quảng Bình (merged July 2025) ─────────────────────────
+  { id: "vc-burial", site: "vung-chua", expect: "grounded", sites: ["vung-chua"],
+    en: "When was General Giap buried here?",
+    vi: "Đại tướng được an táng ở đây khi nào?" },
+  { id: "vc-named", expect: "grounded", sites: ["vung-chua"],
+    en: "Where is General Vo Nguyen Giap buried?",
+    vi: "Đại tướng Võ Nguyên Giáp an nghỉ ở đâu?" },
+  { id: "pn-caves", site: "phong-nha", expect: "answer",
+    en: "How do I get into Phong Nha Cave?",
+    vi: "Vào động Phong Nha bằng cách nào?" },
   { id: "dh-food", site: "dong-ha", expect: "answer",
     en: "What should I eat in Dong Ha?",
     vi: "Ở Đông Hà nên ăn món gì?" },

@@ -1,0 +1,10 @@
+slug: phong-nha
+name_vi: Vườn quốc gia Phong Nha – Kẻ Bàng
+name_en: Phong Nha–Ke Bang National Park
+type: nature
+tracks:
+  - foreign
+  - domestic
+geom:
+  lat: 17.5813
+  lng: 106.2831

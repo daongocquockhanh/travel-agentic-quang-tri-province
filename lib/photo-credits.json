@@ -26,6 +26,15 @@
     "width": 1000,
     "height": 677
   },
+  "Tam Toa Church, Dong Hoi.jpg": {
+    "id": "dong-hoi",
+    "author": "Michael Anranter",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Tam_Toa_Church,_Dong_Hoi.jpg",
+    "width": 1200,
+    "height": 800
+  },
   "Tour of the DMZ, Vietnam (17100711821).jpg": {
     "id": "hien-luong",
     "author": "Ryan Milani",
@@ -53,6 +62,15 @@
     "width": 1200,
     "height": 798
   },
+  "Dong Hoi Phong Nha grotten.jpg": {
+    "id": "phong-nha",
+    "author": "Andre Hospers",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Dong_Hoi_Phong_Nha_grotten.jpg",
+    "width": 1200,
+    "height": 675
+  },
   "Cầu Thạch Hãn (Quảng Trị).JPG": {
     "id": "thach-han",
     "author": "Bút Chiến",
@@ -79,5 +97,14 @@
     "source_url": "https://commons.wikimedia.org/wiki/File:Vinh_Moc_tunnels,_Vietnam,_South_China_Sea_exits.jpg",
     "width": 1200,
     "height": 800
+  },
+  "Đảo Yến, Quảng Đông, Quảng Trạch, Quảng Bình.jpeg": {
+    "id": "vung-chua",
+    "author": "Linhcandng",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source_url": "https://commons.wikimedia.org/wiki/File:%C4%90%E1%BA%A3o_Y%E1%BA%BFn,_Qu%E1%BA%A3ng_%C4%90%C3%B4ng,_Qu%E1%BA%A3ng_Tr%E1%BA%A1ch,_Qu%E1%BA%A3ng_B%C3%ACnh.jpeg",
+    "width": 1200,
+    "height": 673
   }
 }

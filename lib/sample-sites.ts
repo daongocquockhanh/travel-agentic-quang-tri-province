@@ -20,7 +20,7 @@ export interface SampleSite {
   photo?: { file: string; alt_en: string; alt_vi: string };
 }
 
-/** Ten anchor sites for MVP. Coordinates are approximate and live in `sites.geom` once Supabase is provisioned. */
+/** Anchor sites: the ten original Quảng Trị sites plus three from the former Quảng Bình (merged July 2025). Coordinates are approximate and live in `sites.geom` once Supabase is provisioned. */
 export const SAMPLE_SITES: SampleSite[] = [
   {
     slug: "vinh-moc",
@@ -208,6 +208,66 @@ export const SAMPLE_SITES: SampleSite[] = [
       file: "Một góc Đông Hà, Quảng Trị.JPG",
       alt_en: "A street corner in Đông Hà",
       alt_vi: "Một góc phố Đông Hà",
+    },
+  },
+  // Former Quảng Bình, part of Quảng Trị since 1 July 2025.
+  {
+    slug: "phong-nha",
+    name_vi: "Vườn quốc gia Phong Nha – Kẻ Bàng",
+    name_en: "Phong Nha–Ke Bang National Park",
+    type: "nature",
+    tracks: ["foreign", "domestic"],
+    lat: 17.5813,
+    lng: 106.2831,
+    hero_gradient: "linear-gradient(135deg,#3F6B5A,#16302A)",
+    // Phong Nha Cave; unofficial, to confirm (see content review).
+    hours: "7:30–17:00",
+    ticket_price_vnd: 150000,
+    distance_from_dong_ha_km: 140,
+    visit_min: 240,
+    photo: {
+      file: "Dong Hoi Phong Nha grotten.jpg",
+      alt_en: "The mouth of Phong Nha Cave, with a boat on the Son River",
+      alt_vi: "Cửa động Phong Nha, thuyền trên sông Son",
+    },
+  },
+  {
+    slug: "dong-hoi",
+    // Provincial centre of the merged Quảng Trị since 1 July 2025.
+    name_vi: "Đồng Hới",
+    name_en: "Dong Hoi",
+    type: "city",
+    tracks: ["foreign", "domestic"],
+    lat: 17.4556,
+    lng: 106.6119,
+    hero_gradient: "linear-gradient(135deg,#7E8C96,#2A343B)",
+    hours: "Always open",
+    ticket_price_vnd: null,
+    distance_from_dong_ha_km: 95,
+    visit_min: 150,
+    photo: {
+      file: "Tam Toa Church, Dong Hoi.jpg",
+      alt_en: "The ruined bell tower of Tam Tòa Church in Đồng Hới",
+      alt_vi: "Tháp chuông nhà thờ Tam Tòa ở Đồng Hới",
+    },
+  },
+  {
+    slug: "vung-chua",
+    name_vi: "Vũng Chùa – Đảo Yến",
+    name_en: "Vung Chua – Yen Island",
+    type: "war",
+    tracks: ["war", "domestic", "foreign"],
+    lat: 17.9333,
+    lng: 106.5167,
+    hero_gradient: "linear-gradient(135deg,#5E7480,#1F2A30)",
+    hours: "Daily, daytime",
+    ticket_price_vnd: null,
+    distance_from_dong_ha_km: 155,
+    visit_min: 60,
+    photo: {
+      file: "Đảo Yến, Quảng Đông, Quảng Trạch, Quảng Bình.jpeg",
+      alt_en: "Đảo Yến island seen from the shore at Vũng Chùa",
+      alt_vi: "Đảo Yến nhìn từ bờ biển Vũng Chùa",
     },
   },
 ];

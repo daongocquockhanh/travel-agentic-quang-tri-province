@@ -76,3 +76,27 @@ describe("siteMentionedIn", () => {
     expect(siteMentionedIn(q)).toBe(slug);
   });
 });
+
+describe("searchLocal without a site in scope", () => {
+  // Production runs on this lexical index (no Supabase yet), so a partial name match
+  // must not ground a sensitive answer on the wrong place.
+  it("does not let 'Cồn Tiên' match Cồn Cỏ on the shared word 'Cồn'", async () => {
+    const hits = await searchLocal({
+      query: "Những đơn vị quân đội nào đã chiến đấu ở Cồn Tiên?",
+      lang: "vi",
+      k: 3,
+      minCoverage: 0.5,
+    });
+    expect(hits.map((h) => h.site_slug)).not.toContain("con-co");
+  });
+
+  it("still finds a place named in full", async () => {
+    const hits = await searchLocal({
+      query: "Năm 1962 cột cờ bờ bắc Hiền Lương cao bao nhiêu?",
+      lang: "vi",
+      k: 3,
+      minCoverage: 0.5,
+    });
+    expect(hits[0]?.site_slug).toBe("hien-luong");
+  });
+});

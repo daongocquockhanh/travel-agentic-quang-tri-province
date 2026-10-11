@@ -88,6 +88,9 @@ const SITE_ALIASES: Record<string, string[]> = {
   "hien-luong": ["ben hai", "17th parallel bridge", "cau hien luong"],
   "truong-son": ["truong son cemetery", "nghia trang truong son"],
   "con-co": ["hero island", "dao anh hung"],
+  "phong-nha": ["phong nha ke bang", "son doong", "hang son doong", "thien duong", "paradise cave"],
+  "dong-hoi": ["tam toa", "quang binh quan", "nhat le"],
+  "vung-chua": ["dao yen", "general giap", "vo nguyen giap", "dai tuong vo nguyen giap", "mo dai tuong"],
 };
 
 /**
@@ -265,6 +268,7 @@ export async function searchLocal(args: SearchArgs): Promise<CuratedChunk[]> {
     }),
   );
   const totalIdf = [...idf.values()].reduce((a, b) => a + b, 0);
+  const names = args.minCoverage ? properNames(args.query).map(normalizeForMatch) : [];
 
   const scored = pool
     .map((c) => {
@@ -280,6 +284,9 @@ export async function searchLocal(args: SearchArgs): Promise<CuratedChunk[]> {
       return { c, score, coverage: totalIdf ? matchedIdf / totalIdf : 0 };
     })
     .filter((x) => x.score > 0 && (!args.minCoverage || queryTerms.length < 2 || x.coverage >= args.minCoverage))
+    // Unscoped: a place the question names must be named in the passage, so "Cồn Tiên"
+    // can't ground on Cồn Cỏ through the shared word "Cồn".
+    .filter((x) => !args.minCoverage || names.every((n) => namedIn(x.c).includes(n)))
     .sort((a, b) => b.score - a.score);
 
   // Scoped to a site but the query has no lexical overlap ("tell me the story"):
@@ -294,6 +301,21 @@ export async function searchLocal(args: SearchArgs): Promise<CuratedChunk[]> {
   }
 
   return scored.slice(0, k).map(({ c, score }) => toChunk(c, score));
+}
+
+/**
+ * Multi-word proper names in a question ("Cồn Tiên", "Mỹ Lai", "Con Thien"): runs of
+ * two or more capitalised words. A lone capital (the first word of a sentence) is not a name.
+ */
+export function properNames(text: string): string[] {
+  return [...text.normalize("NFC").matchAll(/\p{Lu}[\p{L}'’-]*(?:\s+\p{Lu}[\p{L}'’-]*)+/gu)].map((m) => m[0]);
+}
+
+const SITE_NAMES = new Map(SAMPLE_SITES.map((s) => [s.slug, `${s.name_vi} ${s.name_en}`]));
+
+/** What a passage names: its site's names plus its own text, diacritic-free. */
+function namedIn(c: IndexedChunk): string {
+  return normalizeForMatch(`${SITE_NAMES.get(c.site_slug) ?? ""} ${c.body}`);
 }
 
 function toChunk(c: IndexedChunk, score: number): CuratedChunk {

@@ -19,9 +19,9 @@ describe("agent eval (offline)", () => {
     results = await runEval();
   }, 120_000);
 
-  it("covers 36 prompts × 3 tracks × 2 languages", () => {
-    expect(GOLDEN).toHaveLength(36);
-    expect(results).toHaveLength(216);
+  it("covers 39 prompts × 3 tracks × 2 languages", () => {
+    expect(GOLDEN).toHaveLength(39);
+    expect(results).toHaveLength(234);
   });
 
   it("passes every case", () => {

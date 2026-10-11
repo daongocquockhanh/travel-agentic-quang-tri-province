@@ -1,5 +1,5 @@
 /**
- * Agent eval: 30 golden prompts × 3 tracks × 2 languages (SYSTEM_DESIGN §9).
+ * Agent eval: 39 golden prompts × 3 tracks × 2 languages (SYSTEM_DESIGN §9).
  *
  * Usage:
  *   bun run eval                          # all 180 cases
