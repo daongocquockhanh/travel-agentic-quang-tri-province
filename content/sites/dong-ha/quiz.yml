@@ -1,0 +1,74 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+review_status: draft
+questions:
+  - id: junction
+    answer: 2
+    source: overview
+    vi:
+      q: "Đông Hà nằm ở nơi Quốc lộ 1 gặp điểm đầu của tuyến đường nào?"
+      options: ["Quốc lộ 15", "Đường Hồ Chí Minh", "Đường 9", "Quốc lộ 49"]
+      explain: "Đông Hà nằm nơi Quốc lộ 1 giao với điểm đầu Đường 9, con đường đi về phía tây đến biên giới Lào ở Lao Bảo."
+    en:
+      q: "Đông Hà stands where National Route 1 meets the start of which road?"
+      options: ["Highway 15", "The Ho Chi Minh Road", "Route 9", "Highway 49"]
+      explain: "It stands where National Route 1 crosses the start of Route 9, the road west to the Lao border at Lao Bảo."
+
+  - id: capital-moved
+    answer: 0
+    source: overview
+    vi:
+      q: "Từ ngày 1/7/2025, khi Quảng Trị hợp nhất với Quảng Bình, trung tâm tỉnh chuyển về đâu?"
+      options: ["Đồng Hới", "Huế", "Khe Sanh", "Vĩnh Linh"]
+      explain: "Đông Hà là tỉnh lỵ đến ngày 1/7/2025; sau khi hợp nhất với Quảng Bình, trung tâm tỉnh chuyển về Đồng Hới."
+    en:
+      q: "When Quảng Trị merged with Quảng Bình on 1 July 2025, where did the provincial centre move?"
+      options: ["Đồng Hới", "Huế", "Khe Sanh", "Vĩnh Linh"]
+      explain: "Đông Hà was the provincial capital until 1 July 2025, when the provincial centre moved to Đồng Hới."
+
+  - id: runway
+    answer: 3
+    source: history
+    vi:
+      q: "Đường băng của căn cứ cũ ở Đông Hà ngày nay đã trở thành gì?"
+      options: ["Một sân bay dân dụng", "Một công viên", "Một khu chợ", "Một trong những con phố chính"]
+      explain: "Thị xã đã phát triển trên nền căn cứ cũ, và đường băng nay là một trong những con phố chính."
+    en:
+      q: "What is the old base runway in Đông Hà today?"
+      options: ["A civilian airport", "A park", "A market", "One of the main streets"]
+      explain: "The town has grown over the old base, and the old runway is now one of the main streets."
+
+  - id: corridor
+    answer: 1
+    source: history
+    vi:
+      q: "Ngày nay Đường 9 là một phần của tuyến nào?"
+      options: ["Đường sắt Bắc – Nam", "Hành lang kinh tế Đông – Tây", "Đường Trường Sơn", "Quốc lộ ven biển"]
+      explain: "Đường 9 nay thuộc Hành lang kinh tế Đông – Tây, nối miền Trung Việt Nam với Lào và Thái Lan."
+    en:
+      q: "Which route is Route 9 part of today?"
+      options: ["The North–South railway", "The East–West Economic Corridor", "The Trường Sơn road", "The coastal highway"]
+      explain: "Route 9 is today part of the East–West Economic Corridor linking central Vietnam with Laos and Thailand."
+
+  - id: bun-hen
+    answer: 0
+    source: culture_notes
+    vi:
+      q: "Bún hến Mai Xá được làm từ hến của con sông nào?"
+      options: ["Sông Hiếu", "Sông Bến Hải", "Sông Thạch Hãn", "Sông Hương"]
+      explain: "Bún hến Mai Xá dùng hến từ sông Hiếu gần đó và là món được ưa chuộng trong vùng."
+    en:
+      q: "Mai Xá mussel noodles use mussels from which river?"
+      options: ["The Hiếu", "The Bến Hải", "The Thạch Hãn", "The Perfume River"]
+      explain: "Mai Xá bún hến is made with mussels from the nearby Hiếu River."
+
+  - id: chao-bot
+    answer: 2
+    source: culture_notes
+    vi:
+      q: "Cháo bột là món gì?"
+      options: ["Chè đậu ngọt", "Bánh chưng nhỏ", "Món canh sợi bột gạo đặc, thường có cá hoặc lươn", "Bánh mì nướng"]
+      explain: "Cháo bột là món canh sợi bột gạo đặc, thường ăn với cá hoặc lươn."
+    en:
+      q: "What is cháo bột?"
+      options: ["A sweet bean dessert", "A small rice cake", "A thick rice-noodle soup, often with fish or eel", "A grilled baguette"]
+      explain: "Cháo bột is a thick rice-noodle soup, often with fish or eel."

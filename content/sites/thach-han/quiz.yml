@@ -1,0 +1,75 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Battle figures are disputed between sources, so no question asks for them.
+review_status: draft
+questions:
+  - id: sea
+    answer: 2
+    source: overview
+    vi:
+      q: "Sông Thạch Hãn đổ ra biển ở đâu?"
+      options: ["Cửa Tùng", "Cửa Gianh", "Cửa Việt", "Cửa Nhật Lệ"]
+      explain: "Sông chảy qua thị xã Quảng Trị và đổ ra biển ở Cửa Việt; đoạn hạ lưu còn gọi là sông Cửa Việt."
+    en:
+      q: "Where does the Thạch Hãn reach the sea?"
+      options: ["Cửa Tùng", "Cửa Gianh", "Cửa Việt", "Nhật Lệ"]
+      explain: "It flows past Quảng Trị town and reaches the sea at Cửa Việt; its lower course is also called the Cửa Việt river."
+
+  - id: citadel-moved
+    answer: 0
+    source: history
+    vi:
+      q: "Triều Nguyễn dời thành Quảng Trị về vị trí hiện nay bên sông Thạch Hãn vào năm nào?"
+      options: ["1809", "1858", "1885", "1945"]
+      explain: "Năm 1809, triều Nguyễn dời tỉnh thành Quảng Trị về bên sông Thạch Hãn, vị trí thuận lợi cho hành chính, giao thương và phòng thủ."
+    en:
+      q: "In which year did the Nguyễn court move the Quảng Trị citadel to its site on the Thạch Hãn?"
+      options: ["1809", "1858", "1885", "1945"]
+      explain: "In 1809 the Nguyễn court moved the provincial citadel to the Thạch Hãn, valuing the site for administration, trade and defence."
+
+  - id: material
+    answer: 3
+    source: history
+    vi:
+      q: "Ban đầu thành Quảng Trị được xây bằng vật liệu gì?"
+      options: ["Đá ong", "Gỗ lim", "Bê tông", "Đất nện"]
+      explain: "Thành ban đầu được đắp bằng đất nện, sau đó được xây lại bằng gạch."
+    en:
+      q: "What was the citadel first built of?"
+      options: ["Laterite stone", "Ironwood", "Concrete", "Rammed earth"]
+      explain: "The citadel was first built of rammed earth and later rebuilt in brick."
+
+  - id: days
+    answer: 1
+    source: overview
+    vi:
+      q: "Trận chiến bảo vệ Thành cổ Quảng Trị năm 1972 thường được nhắc đến là bao nhiêu ngày đêm?"
+      options: ["30 ngày đêm", "81 ngày đêm", "100 ngày đêm", "55 ngày đêm"]
+      explain: "Các nguồn Việt Nam gọi cuộc chiến từ 28/6 đến 16/9/1972 là “81 ngày đêm”."
+    en:
+      q: "The 1972 defence of the Quảng Trị Citadel is remembered as how many days and nights?"
+      options: ["30", "81", "100", "55"]
+      explain: "Vietnamese sources describe the defence from 28 June to 16 September 1972 as “81 days and nights”."
+
+  - id: custom
+    answer: 2
+    source: culture_notes
+    vi:
+      q: "Người ta tưởng niệm những người đã ngã xuống trên sông Thạch Hãn bằng cách nào?"
+      options: ["Đua thuyền", "Bắn pháo hoa", "Thả hoa và hoa đăng", "Treo đèn lồng trên cầu"]
+      explain: "Thả hoa và hoa đăng trên sông là một phong tục tưởng niệm vẫn được duy trì."
+    en:
+      q: "How do people remember the fallen on the Thạch Hãn?"
+      options: ["Boat races", "Fireworks", "Releasing flowers and floating candles", "Lanterns hung on the bridge"]
+      explain: "Releasing flowers and floating candles on the river is a living memorial custom."
+
+  - id: custom-origin
+    answer: 0
+    source: culture_notes
+    vi:
+      q: "Phong tục thả hoa trên sông thường được kể là bắt đầu từ đâu?"
+      options: ["Một cựu chiến binh mua hết hoa ở chợ năm 1987 thả xuống sông", "Một lễ hội của triều Nguyễn", "Một chương trình du lịch năm 2010", "Một bài hát nổi tiếng"]
+      explain: "Tháng 4 năm 1987, một cựu chiến binh của trận đánh 1972 đã mua hết hoa ở chợ thị xã và thả xuống sông tưởng nhớ đồng đội."
+    en:
+      q: "Where is the flower-releasing custom often traced to?"
+      options: ["A veteran who bought all the market's flowers in 1987 and set them on the river", "A Nguyễn court festival", "A 2010 tourism campaign", "A famous song"]
+      explain: "In April 1987 a veteran of the 1972 battle bought all the flowers at the town market and let them float down the river for his fallen comrades."

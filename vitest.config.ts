@@ -2,6 +2,8 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Same JSX transform as Next, so components render without importing React.
+  esbuild: { jsx: "automatic" },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./", import.meta.url)),
@@ -11,7 +13,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    // .tsx tests render components; they opt into happy-dom per file.
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     // Route tests call handlers repeatedly from one "IP"; rate-limit tests opt back in.
     env: { RATE_LIMIT: "off" },
   },

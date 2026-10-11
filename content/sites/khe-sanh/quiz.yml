@@ -1,0 +1,75 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Casualty figures are disputed between sources, so no question asks for them.
+review_status: draft
+questions:
+  - id: siege-dates
+    answer: 1
+    source: history
+    vi:
+      q: "Cuộc vây hãm Khe Sanh kéo dài trong khoảng thời gian nào?"
+      options: ["Tháng 3 – tháng 5 năm 1965", "21/1 – 9/7/1968", "28/6 – 16/9/1972", "Tháng 1 – tháng 4 năm 1975"]
+      explain: "Cuộc vây hãm diễn ra từ ngày 21 tháng 1 đến ngày 9 tháng 7 năm 1968."
+    en:
+      q: "When did the siege of Khe Sanh take place?"
+      options: ["March – May 1965", "21 January – 9 July 1968", "28 June – 16 September 1972", "January – April 1975"]
+      explain: "The siege ran from 21 January to 9 July 1968."
+
+  - id: supply
+    answer: 3
+    source: history
+    vi:
+      q: "Trong thời gian bị bao vây, căn cứ chủ yếu được tiếp tế bằng cách nào?"
+      options: ["Đường sông", "Đường sắt", "Đường biển", "Đường hàng không"]
+      explain: "Căn cứ bị bao vây và được tiếp tế chủ yếu bằng đường hàng không."
+    en:
+      q: "How was the base mainly supplied while it was surrounded?"
+      options: ["By river", "By rail", "By sea", "By air"]
+      explain: "The surrounded base was supplied largely by air."
+
+  - id: pegasus
+    answer: 0
+    source: history
+    vi:
+      q: "Chiến dịch giải tỏa trên bộ đến được căn cứ vào tháng 4 năm 1968 có tên là gì?"
+      options: ["Chiến dịch Pegasus", "Chiến dịch Đường 9", "Chiến dịch Hồ Chí Minh", "Chiến dịch Mậu Thân"]
+      explain: "Chiến dịch giải tỏa trên bộ mang tên Pegasus; cuộc hội quân diễn ra ngày 8 tháng 4."
+    en:
+      q: "What was the overland relief operation that reached the base in April 1968 called?"
+      options: ["Operation Pegasus", "Operation Route 9", "The Ho Chi Minh Campaign", "The Tet Offensive"]
+      explain: "The overland relief was Operation Pegasus; the link-up took place on 8 April."
+
+  - id: first-camp
+    answer: 2
+    source: history
+    vi:
+      q: "Năm 1962, Lực lượng Đặc biệt Mỹ dựng trại ở đâu gần làng Khe Sanh?"
+      options: ["Trên một hòn đảo", "Trong một nhà thờ cũ", "Tại một đồn cũ của Pháp", "Bên bờ sông Bến Hải"]
+      explain: "Tháng 8 năm 1962, lực lượng này dựng trại tại một đồn cũ của Pháp gần làng Khe Sanh, dưới Đường 9."
+    en:
+      q: "In 1962, where did US Special Forces build their camp near Khe Sanh village?"
+      options: ["On an island", "In an old church", "At an old French fort", "On the bank of the Bến Hải"]
+      explain: "In August 1962 they built a camp at an old French fort near Khe Sanh village, below Route 9."
+
+  - id: road
+    answer: 1
+    source: overview
+    vi:
+      q: "Khe Sanh nằm gần tuyến đường nào dẫn ra biên giới Lào?"
+      options: ["Quốc lộ 1", "Đường 9", "Quốc lộ 15", "Đường Trường Sơn Đông"]
+      explain: "Khe Sanh nằm ngay phía nam Đường 9, trên đường ra biên giới Lào."
+    en:
+      q: "Khe Sanh lies just off which road to the Lao border?"
+      options: ["National Route 1", "Route 9", "Highway 15", "The East Trường Sơn road"]
+      explain: "Khe Sanh lies just south of Route 9, on the road to the Lao border."
+
+  - id: closed
+    answer: 2
+    source: history
+    vi:
+      q: "Căn cứ Khe Sanh bị đóng cửa vào thời điểm nào?"
+      options: ["Tháng 1 năm 1968", "Tháng 4 năm 1968", "Tháng 7 năm 1968", "Tháng 12 năm 1969"]
+      explain: "Căn cứ được đóng cửa vào tháng 7 năm 1968, ngay sau khi cuộc vây hãm kết thúc."
+    en:
+      q: "When was the Khe Sanh base closed?"
+      options: ["January 1968", "April 1968", "July 1968", "December 1969"]
+      explain: "The base was closed in July 1968, as the siege ended."

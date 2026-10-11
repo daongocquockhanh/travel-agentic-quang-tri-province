@@ -11,6 +11,8 @@ import { GeofenceBanner } from "@/components/geofence-banner";
 import { Icon } from "@/components/icon";
 import { haversineMeters } from "@/lib/geo";
 import { plan, usePlan } from "@/lib/plan-store";
+import { passport, usePassport } from "@/lib/passport-store";
+import { stampState } from "@/lib/passport";
 import { useLocation } from "@/lib/use-location";
 import { type TrackKey } from "@/lib/tracks";
 import { useLang } from "@/lib/use-lang";
@@ -80,6 +82,14 @@ export function MapHome({
       : null;
   }, [distanceTo, sites]);
   const banner = here ?? demoBanner ?? null;
+
+  // Standing inside a real geofence (not the ?demo= banner) counts as a visit for the passport.
+  const hereSlug = here?.slug;
+  useEffect(() => {
+    if (hereSlug) passport.recordVisit(hereSlug, "gps");
+  }, [hereSlug]);
+  const passportData = usePassport();
+  const stamped = sites.filter((s) => stampState(passportData, s.slug) === "stamped").length;
 
   // Each mode lists the places that belong to it.
   const trackCards = cards.filter((c) => c.tracks.includes(track));
@@ -189,6 +199,20 @@ export function MapHome({
               </span>
             </span>
             <Icon name="arrow" size={18} />
+          </Link>
+          <Link
+            href="/passport"
+            className="border-border bg-paper-card mt-2 flex items-center gap-3 rounded-2xl border px-3.5 py-2.5"
+          >
+            <span className="bg-paper-sunk text-fg grid size-8 shrink-0 place-items-center rounded-full">
+              <Icon name="flag" size={16} />
+            </span>
+            <span className="min-w-0 flex-1 text-[14px] font-medium">
+              {vi ? "Hộ chiếu du lịch" : "Travel passport"}
+            </span>
+            <span className="text-fg-muted text-[12.5px]">
+              {vi ? `${stamped}/${sites.length} dấu` : `${stamped}/${sites.length} stamped`}
+            </span>
           </Link>
         </div>
 

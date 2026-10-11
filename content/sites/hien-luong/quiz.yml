@@ -1,0 +1,75 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+# Checked by `bun run content:check`; drafts stay hidden in production.
+review_status: draft
+questions:
+  - id: river
+    answer: 1
+    source: overview
+    vi:
+      q: "Cầu Hiền Lương bắc qua con sông nào?"
+      options: ["Sông Thạch Hãn", "Sông Bến Hải", "Sông Hiếu", "Sông Gianh"]
+      explain: "Cầu bắc qua sông Bến Hải, gần vĩ tuyến 17."
+    en:
+      q: "Which river does Hiền Lương Bridge cross?"
+      options: ["The Thạch Hãn", "The Bến Hải", "The Hiếu", "The Gianh"]
+      explain: "The bridge crosses the Bến Hải River, close to the 17th parallel."
+
+  - id: geneva
+    answer: 2
+    source: overview
+    vi:
+      q: "Văn kiện nào biến sông Bến Hải thành giới tuyến quân sự tạm thời?"
+      options: ["Hiệp định Paris 1973", "Hiệp ước Patenôtre 1884", "Hiệp định Genève 1954", "Hiệp định sơ bộ 1946"]
+      explain: "Theo Hiệp định Genève 1954, sông Bến Hải trở thành giới tuyến quân sự tạm thời giữa hai miền."
+    en:
+      q: "Which agreement made the Bến Hải the temporary military demarcation line?"
+      options: ["The 1973 Paris Accords", "The 1884 Treaty of Huế", "The 1954 Geneva Accords", "The 1946 Preliminary Agreement"]
+      explain: "Under the 1954 Geneva Accords the river became the temporary demarcation line between North and South."
+
+  - id: colours
+    answer: 0
+    source: history
+    vi:
+      q: "Sau năm 1954, hai nửa cây cầu được sơn màu gì?"
+      options: ["Nửa bắc xanh, nửa nam vàng", "Nửa bắc đỏ, nửa nam trắng", "Cả cầu màu xám", "Nửa bắc vàng, nửa nam xanh"]
+      explain: "Mỗi bên tự quản lý và sơn nửa cầu của mình: nửa bắc màu xanh, nửa nam màu vàng, ngăn bởi một vạch trắng."
+    en:
+      q: "After 1954, how were the two halves of the bridge painted?"
+      options: ["North half blue, south half yellow", "North half red, south half white", "The whole bridge grey", "North half yellow, south half blue"]
+      explain: "Each side painted its own half: the northern half blue and the southern half yellow, divided by a thin white line."
+
+  - id: flagpole
+    answer: 3
+    source: history
+    vi:
+      q: "Năm 1962, cột cờ ở bờ bắc cao bao nhiêu?"
+      options: ["12 mét", "20 mét", "25,5 mét", "38,6 mét"]
+      explain: "Trong cuộc “đấu cờ”, mỗi bên kéo cờ ngày càng cao; năm 1962 cột cờ bờ bắc đạt 38,6 mét."
+    en:
+      q: "How tall was the north bank flagpole in 1962?"
+      options: ["12 metres", "20 metres", "25.5 metres", "38.6 metres"]
+      explain: "In the “flag battle” each side raised its flag ever higher; in 1962 the north bank pole reached 38.6 metres."
+
+  - id: rebuilt
+    answer: 1
+    source: history
+    vi:
+      q: "Cây cầu bị bom phá năm 1967 được phục dựng theo thiết kế ban đầu vào năm nào?"
+      options: ["1975", "2001", "1986", "2013"]
+      explain: "Cầu bị phá hủy năm 1967 và được phục dựng theo thiết kế gốc vào năm 2001."
+    en:
+      q: "The bridge was destroyed in 1967. When was it restored to its original design?"
+      options: ["1975", "2001", "1986", "2013"]
+      explain: "It was destroyed by bombing in 1967 and restored to its original design in 2001."
+
+  - id: special-relic
+    answer: 2
+    source: overview
+    vi:
+      q: "Khu di tích được xếp hạng Di tích quốc gia đặc biệt vào năm nào?"
+      options: ["1976", "1986", "2013", "2025"]
+      explain: "Di tích được xếp hạng quốc gia năm 1986 và Di tích quốc gia đặc biệt năm 2013."
+    en:
+      q: "When was the site listed as a Special National Relic?"
+      options: ["1976", "1986", "2013", "2025"]
+      explain: "It was listed as a national relic in 1986 and as a Special National Relic in 2013."

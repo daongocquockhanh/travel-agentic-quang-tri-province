@@ -1,0 +1,62 @@
+# Post-visit quiz. Every answer must be stated in the `source` section.
+review_status: draft
+questions:
+  - id: size
+    answer: 0
+    source: overview
+    vi:
+      q: "Đảo Cồn Cỏ rộng khoảng bao nhiêu?"
+      options: ["Khoảng 2,3 km²", "Khoảng 23 km²", "Khoảng 230 km²", "Khoảng 0,5 km²"]
+      explain: "Cồn Cỏ là hòn đảo nhỏ rộng khoảng 2,3 km², cách Cửa Việt chừng 28–30 km."
+    en:
+      q: "About how big is Cồn Cỏ island?"
+      options: ["About 2.3 km²", "About 23 km²", "About 230 km²", "About 0.5 km²"]
+      explain: "Cồn Cỏ is a small island of about 2.3 km², roughly 28–30 km offshore from Cửa Việt."
+
+  - id: title
+    answer: 2
+    source: history
+    vi:
+      q: "Những người bảo vệ Cồn Cỏ được tặng danh hiệu gì?"
+      options: ["Đảo Ngọc", "Đảo Bình yên", "Đảo Anh hùng", "Đảo Thép"]
+      explain: "Những người bảo vệ đảo được tặng danh hiệu “Đảo Anh hùng”; Cồn Cỏ được nhớ đến như biểu tượng của sự kiên cường."
+    en:
+      q: "What title were Cồn Cỏ's defenders given?"
+      options: ["Pearl Island", "Peace Island", "Hero Island", "Steel Island"]
+      explain: "Its defenders were given the title “Hero Island”, and it is remembered as a symbol of steadfastness."
+
+  - id: rocks
+    answer: 1
+    source: overview
+    vi:
+      q: "Đảo được bao quanh bởi loại đá nào?"
+      options: ["Đá vôi trắng", "Đá bazan đen", "Đá granite hồng", "San hô vàng"]
+      explain: "Phần lớn đảo vẫn phủ rừng nhiệt đới nguyên sinh, bao quanh là đá bazan đen, nước trong và những bãi tắm nhỏ."
+    en:
+      q: "What kind of rock rings the island?"
+      options: ["White limestone", "Black basalt", "Pink granite", "Yellow coral"]
+      explain: "Much of it is covered by native tropical forest, ringed by black basalt rocks, clear water and small beaches."
+
+  - id: tunnels
+    answer: 3
+    source: history
+    vi:
+      q: "Di tích thời chiến nào có trên đảo?"
+      options: ["Một sân bay quân sự", "Một nhà tù", "Một cây cầu", "Hầm quân sự, trong đó có hầm quân y"]
+      explain: "Di tích thời chiến trên đảo gồm các hầm quân sự, trong đó có một hầm quân y, và một nhà trưng bày truyền thống."
+    en:
+      q: "Which wartime sites are on the island?"
+      options: ["A military airfield", "A prison", "A bridge", "Military tunnels, including a medical tunnel"]
+      explain: "Wartime sites include military tunnels, among them a medical tunnel, and a traditional exhibition room."
+
+  - id: zone
+    answer: 0
+    source: history
+    vi:
+      q: "Năm 2025, trong đợt sắp xếp hành chính, Cồn Cỏ trở thành gì?"
+      options: ["Đặc khu của tỉnh Quảng Trị", "Một tỉnh mới", "Một khu bảo tồn quốc tế", "Một phần của tỉnh Quảng Bình"]
+      explain: "Năm 2025, Cồn Cỏ trở thành đặc khu của tỉnh Quảng Trị sau hợp nhất."
+    en:
+      q: "In 2025, under the administrative reform, what did Cồn Cỏ become?"
+      options: ["A special administrative zone of Quảng Trị", "A new province", "An international reserve", "Part of Quảng Bình province"]
+      explain: "In 2025 Cồn Cỏ became a special administrative zone of the merged Quảng Trị province."
