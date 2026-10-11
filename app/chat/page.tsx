@@ -1,6 +1,7 @@
 import { getLocale } from "next-intl/server";
 import { ChatScreen } from "@/components/chat-screen";
-import { getSite } from "@/lib/sites";
+import { getQuiz } from "@/lib/content";
+import { getSite, getTour } from "@/lib/sites";
 import { isTrackKey, type TrackKey } from "@/lib/tracks";
 
 interface Props {
@@ -12,6 +13,10 @@ export default async function ChatPage({ searchParams }: Props) {
   const site = siteParam ? await getSite(siteParam) : null;
   const track: TrackKey | null = trackParam && isTrackKey(trackParam) ? trackParam : null;
   const lang = (await getLocale()) === "vi" ? "vi" : "en";
+  // What the site offers beyond chat, for the next-step chips under each answer.
+  const [quiz, tour] = site
+    ? await Promise.all([getQuiz(site.slug), getTour(site.slug, lang)])
+    : [null, null];
 
   return (
     <ChatScreen
@@ -27,6 +32,8 @@ export default async function ChatPage({ searchParams }: Props) {
           name_en: site.name_en,
           hero_gradient: site.hero_gradient,
           photo: site.photo,
+          hasQuiz: Boolean(quiz?.questions.length),
+          hasTour: Boolean(tour),
         }
       }
       intent={intent === "arrival_story" ? "arrival_story" : undefined}

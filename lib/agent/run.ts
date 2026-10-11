@@ -8,6 +8,7 @@ import {
   isPlanningIntent,
   refusalText,
   requiresCuratedGrounding,
+  answerTokens,
 } from "@/lib/agent/guards";
 import { logContentGap, searchCurated, siteMentionedIn } from "@/lib/agent/retrieval";
 import { buildSystemPrompt, type NumberedChunk } from "@/lib/agent/system-prompts";
@@ -87,6 +88,7 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
       },
       location: req.lat != null && req.lng != null ? { lat: req.lat, lng: req.lng } : null,
       groundingChunks: grounding,
+      depth: req.depth,
     }),
     messages: history,
     tools: buildTools({
@@ -97,7 +99,7 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
       location: req.lat != null && req.lng != null ? { lat: req.lat, lng: req.lng } : null,
     }),
     maxSteps: 4,
-    maxTokens: 700,
+    maxTokens: answerTokens(req.depth),
     temperature: strict ? 0.2 : 0.5,
     // SYSTEM_DESIGN §8.1: one retry with backoff on LLM failure.
     maxRetries: 1,
