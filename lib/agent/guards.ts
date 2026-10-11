@@ -57,6 +57,14 @@ export function isSensitiveQuery(text: string): boolean {
 const PLANNING_RE =
   /\b(where (should|can|do|could) (i|we) go|where next|what next|what else|next (place|stop|site)s?|plan( my| our| a| the)? (day|tomorrow|trip|route|visit)|plan tomorrow|itinerary|day plan|route between|di dau tiep|di dau|tiep theo|lo trinh|ke hoach|lich trinh)\b/i;
 
+/**
+ * Output budget for one answer. "Tell me more" asks for a fuller retelling, so it
+ * gets more room; everything else stays short enough to read on a phone.
+ */
+export function answerTokens(depth: "full" | undefined): number {
+  return depth === "full" ? 1200 : 700;
+}
+
 /** "Where next?", "plan tomorrow", "lộ trình"… questions answered by the planner tools. */
 export function isPlanningIntent(text: string): boolean {
   return PLANNING_RE.test(normalizeForMatch(text));

@@ -82,6 +82,8 @@ See `docs/SYSTEM_DESIGN.md` §10. All milestones M1–M7 are implemented. Before
 
 ### Deploy to Cloudflare Workers
 
+Day-to-day operations (rollback, secrets, key rotation, troubleshooting): [docs/OPERATIONS.md](docs/OPERATIONS.md).
+
 Built with [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare); config in `wrangler.jsonc`. Curated content is bundled at build time (`bun run content:bundle` → `lib/generated/content.json`) because Workers have no project filesystem.
 
 1. `bunx wrangler login`
