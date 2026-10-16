@@ -7,6 +7,8 @@
  * since each isolate that hits the limit learns it on its own first failure.
  */
 const DEFAULT_PAUSE_MS = 10 * 60_000;
+const MIN_PAUSE_MS = 5_000;
+const MAX_PAUSE_MS = 15 * 60_000;
 
 let pausedUntil = 0;
 
@@ -35,7 +37,10 @@ export function noteQuotaExhausted(error: unknown, now = Date.now()): void {
             "",
         );
   const seconds = Number(/retry in ([\d.]+)\s*s/i.exec(text)?.[1]);
-  pausedUntil = now + (seconds > 0 ? Math.ceil(seconds * 1000) : DEFAULT_PAUSE_MS);
+  const asked = seconds > 0 ? Math.ceil(seconds * 1000) : DEFAULT_PAUSE_MS;
+  // Bounded either way: an odd retry hint must not switch the model off for hours,
+  // nor leave a pause so short every question still hits the exhausted quota.
+  pausedUntil = now + Math.min(MAX_PAUSE_MS, Math.max(MIN_PAUSE_MS, asked));
 }
 
 export const quotaExhausted = (now = Date.now()) => now < pausedUntil;

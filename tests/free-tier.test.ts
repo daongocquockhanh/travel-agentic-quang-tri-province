@@ -119,6 +119,16 @@ describe("Gemini free quota", () => {
     expect(quotaExhausted(now + 11 * 60_000)).toBe(false);
   });
 
+  it("keeps the pause between 5 seconds and 15 minutes, whatever the error says", () => {
+    const now = 1_000_000;
+    noteQuotaExhausted(new Error("Quota exceeded. Please retry in 999999s."), now);
+    expect(quotaExhausted(now + 15 * 60_000 - 1)).toBe(true);
+    expect(quotaExhausted(now + 15 * 60_000 + 1)).toBe(false);
+    noteQuotaExhausted(new Error("Quota exceeded. Please retry in 0.01s."), now);
+    expect(quotaExhausted(now + 4_000)).toBe(true);
+    expect(quotaExhausted(now + 6_000)).toBe(false);
+  });
+
   it("answers from curated excerpts instead of failing while the quota is out", async () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = "g-test";
     try {
