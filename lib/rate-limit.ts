@@ -1,11 +1,13 @@
 import "server-only";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { cloudflareEnv, type CloudflareBindings, type RateLimitBinding } from "@/lib/cloudflare-env";
 
 /**
- * Per-IP rate limits (SYSTEM_DESIGN §8.2). Upstash Redis when configured,
- * so limits hold across serverless instances; otherwise an in-process
- * sliding window, which is enough for local dev and a single server.
+ * Per-IP rate limits (SYSTEM_DESIGN §8.2). Upstash Redis when configured;
+ * otherwise Cloudflare's free rate-limit bindings (wrangler.jsonc), which hold
+ * across Worker isolates; otherwise an in-process sliding window, which is
+ * enough for local dev and tests.
  */
 export const LIMITS = {
   chat: { requests: 30, windowSec: 60 },
@@ -50,6 +52,31 @@ function upstashLimiter(name: LimitName): Ratelimit | null {
     }
   }
   return upstash?.[name] ?? null;
+}
+
+// ── Cloudflare rate-limit bindings ───────────────────────────────
+
+/** One binding per limit, each configured with the same requests per 60 s in wrangler.jsonc. */
+const BINDING: Record<LimitName, keyof CloudflareBindings> = {
+  chat: "RL_CHAT",
+  voice: "RL_VOICE",
+  tts: "RL_TTS",
+  route: "RL_ROUTE",
+  recommend: "RL_RECOMMEND",
+  report: "RL_REPORT",
+};
+
+async function bindingLimit(name: LimitName, id: string, now: number): Promise<LimitResult | null> {
+  const binding = (await cloudflareEnv())?.[BINDING[name]] as RateLimitBinding | undefined;
+  if (!binding || typeof binding.limit !== "function") return null;
+  try {
+    const { success } = await binding.limit({ key: id });
+    const { requests, windowSec } = LIMITS[name];
+    return { success, limit: requests, remaining: success ? requests - 1 : 0, reset: now + windowSec * 1000 };
+  } catch (err) {
+    console.warn("[rate-limit] cloudflare binding failed, using memory:", err);
+    return null;
+  }
 }
 
 // ── in-memory fallback ───────────────────────────────────────────
@@ -113,7 +140,7 @@ export async function checkLimit(
       console.warn("[rate-limit] upstash failed, using memory:", err);
     }
   }
-  return memoryLimit(name, id, now);
+  return (await bindingLimit(name, id, now)) ?? memoryLimit(name, id, now);
 }
 
 /**

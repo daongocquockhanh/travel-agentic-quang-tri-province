@@ -1,5 +1,6 @@
 import { createDataStreamResponse } from "ai";
 import { z } from "zod";
+import { isQuotaError, noteQuotaExhausted } from "@/lib/ai/quota";
 import { runAgent } from "@/lib/agent/run";
 import { TRACKS } from "@/lib/tracks";
 import { rateLimited } from "@/lib/rate-limit";
@@ -52,6 +53,12 @@ export async function POST(request: Request) {
     execute: (stream) => runAgent({ ...rest, messages: chatMessages }, stream),
     onError: (error) => {
       console.error("[agent/chat]", error);
+      if (isQuotaError(error)) {
+        noteQuotaExhausted(error);
+        return rest.lang === "vi"
+          ? "Hướng dẫn viên AI đã dùng hết lượt miễn phí. Hãy hỏi lại để nhận trích đoạn từ nội dung đã biên soạn; câu trả lời đầy đủ sẽ trở lại khi hạn mức được làm mới."
+          : "The AI guide has used up its free allowance. Ask again to get excerpts from the curated content; full answers return when the allowance resets.";
+      }
       return rest.lang === "vi"
         ? "Hướng dẫn viên đang gặp sự cố. Vui lòng thử lại sau giây lát."
         : "The guide is having trouble right now. Please try again in a moment.";
