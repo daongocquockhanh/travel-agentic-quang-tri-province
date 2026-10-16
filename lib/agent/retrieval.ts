@@ -2,6 +2,7 @@ import "server-only";
 import { embed } from "ai";
 import { embeddingModel, hasAiKey, minVectorSimilarity } from "@/lib/ai/provider";
 import { createClient } from "@supabase/supabase-js";
+import { cloudflareEnv } from "@/lib/cloudflare-env";
 import { contextualize, passages } from "@/lib/chunk";
 import { listContentSlugs, readSiteContent } from "@/lib/content";
 import { SAMPLE_SITES } from "@/lib/sample-sites";
@@ -342,6 +343,19 @@ export async function logContentGap(gap: {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
+    // Free path: Cloudflare D1 (migrations/d1), else the Worker log.
+    const db = (await cloudflareEnv())?.DB;
+    if (db) {
+      try {
+        await db
+          .prepare("INSERT INTO content_gaps (query, track, lang, site_slug) VALUES (?, ?, ?, ?)")
+          .bind(gap.query.slice(0, 1000), gap.track, gap.lang, gap.site_slug ?? null)
+          .run();
+        return;
+      } catch (err) {
+        console.warn("[content_gap] D1 insert failed:", err);
+      }
+    }
     console.info("[content_gap]", JSON.stringify(gap));
     return;
   }
