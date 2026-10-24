@@ -45,8 +45,9 @@ bun run deploy          # build and deploy to production
 | CI secrets | GitHub Actions **Secrets** | `CLOUDFLARE_API_TOKEN` (deploy, preview); `GOOGLE_GENERATIVE_AI_API_KEY` (nightly eval, ingest); `SUPABASE_SERVICE_ROLE_KEY` (ingest). |
 | Local development | `.env.local` (Next) and `.dev.vars` (Worker preview) | Both are gitignored. Never commit keys, and never paste them into chat or issues. |
 
-Worker secrets in use: `GOOGLE_GENERATIVE_AI_API_KEY`. Optional: `OPENAI_API_KEY` (enables server TTS),
-`UPSTASH_REDIS_REST_TOKEN` (with `UPSTASH_REDIS_REST_URL` in `vars`), `SUPABASE_SERVICE_ROLE_KEY`, `MAPBOX_SECRET_TOKEN`, `TAVILY_API_KEY`.
+Worker secrets in use: `GOOGLE_GENERATIVE_AI_API_KEY`. Bindings: `DB` (D1) and `RL_*` (rate limits), both in
+`wrangler.jsonc`. Optional, not needed to stay free: `OPENAI_API_KEY` (server TTS; paid), `UPSTASH_REDIS_REST_TOKEN`,
+`SUPABASE_SERVICE_ROLE_KEY`, `MAPBOX_SECRET_TOKEN`, `TAVILY_API_KEY`.
 
 ## Rotate a key
 
@@ -64,21 +65,50 @@ https://dash.cloudflare.com/profile/api-tokens, run `gh secret set CLOUDFLARE_AP
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | Chat says "The guide is having trouble right now" | Gemini error. Check `bunx wrangler tail --format json` for the message. | See the rows below. |
-| `quota exceeded` / 429 in the logs | Gemini free-tier limit (per minute or per day) | Wait for the window to reset. For lasting relief, enable billing on the Gemini key, or switch model with `GOOGLE_CHAT_MODEL` in `wrangler.jsonc`. |
+| `quota exceeded` / 429 in the logs | Gemini free-tier limit | Nothing breaks: the visitor is told the free allowance is used up, and later questions get curated excerpts ("The AI guide has reached its free limit for now") until Google's retry time passes (10 minutes if it gives none). Full answers resume by themselves. Enabling billing on the Gemini key removes the limit, but then it costs money. |
 | `User location is not supported for the API use` | The Worker ran somewhere Gemini rejects | Check `placement` in `wrangler.jsonc` is still `{ "mode": "targeted", "region": "gcp:us-central1" }`. |
 | Answers are "offline mode" excerpts | No AI key reached the Worker | `bunx wrangler secret list` should show `GOOGLE_GENERATIVE_AI_API_KEY`. |
 | Map shows no tiles | `NEXT_PUBLIC_MAPBOX_TOKEN` was missing at build | Set the GitHub variable, then redeploy (merge, or re-run the deploy job). |
-| Someone is draining the quota | No shared rate limit | Set up Upstash (below). Without it, limits only count per Worker isolate. |
+| Someone is draining the quota | Too many requests from one place | Per-IP limits run on Cloudflare's free rate-limit bindings (below); tighten them in `wrangler.jsonc`. |
 | A deploy broke production | | Roll back (above), then fix forward. |
 
 Live logs: `bunx wrangler tail` (add `--format json` for full error details).
 
-## Rate limiting (Upstash)
+## Everything runs on free tiers
 
-Without Upstash, `lib/rate-limit.ts` counts in memory per Worker isolate, which is not a real limit on Cloudflare.
-To enable it: create a free Redis database at https://upstash.com, add `UPSTASH_REDIS_REST_URL` to `vars` in
-`wrangler.jsonc`, run `bunx wrangler secret put UPSTASH_REDIS_REST_TOKEN`, and deploy. Limits key on Cloudflare's
-`cf-connecting-ip`, which callers can't spoof.
+| Piece | Free service | What happens at the limit |
+|---|---|---|
+| Hosting | Cloudflare Workers (100,000 requests/day, 10 ms CPU each) | Requests fail; no bill on the free plan |
+| AI answers | Gemini API free tier, no billing account | Curated excerpts instead of model answers (see above) |
+| Rate limiting | Cloudflare rate-limit bindings (`RL_*` in `wrangler.jsonc`) | Visitors over a limit get 429 for up to a minute |
+| Feedback storage | Cloudflare D1 `quang-tri-feedback` (5 GB, 100,000 writes/day) | Inserts fail and are logged instead |
+| Photos, scripts, styles | Cloudflare static assets | Not counted against request limits |
+| CI and previews | GitHub Actions (public repo) | — |
+
+Nothing here has a payment method attached, so none of it can produce a bill. Upstash, Supabase, Mapbox, OpenAI
+and PostHog are supported by the code but **not** needed; leave their keys unset to stay free.
+
+## Rate limiting
+
+Per-IP limits (`lib/rate-limit.ts`) use Cloudflare's free rate-limit bindings: one binding per endpoint in
+`wrangler.jsonc` (`RL_CHAT`, `RL_VOICE`, …), counted per minute and keyed on Cloudflare's `cf-connecting-ip`,
+which callers can't spoof. Keep the numbers in `wrangler.jsonc` and `LIMITS` in step. Upstash is used instead
+only if `UPSTASH_REDIS_REST_URL` is set.
+
+## Editor feedback (D1)
+
+The Report button and unanswerable questions are stored in the free D1 database `quang-tri-feedback`
+(schema in `migrations/d1`). Read them with:
+
+```sh
+bunx wrangler d1 execute quang-tri-feedback --remote --command \
+  "SELECT created_at, reason, site_slug, question, note FROM answer_reports ORDER BY created_at DESC LIMIT 20"
+bunx wrangler d1 execute quang-tri-feedback --remote --command \
+  "SELECT occurred_at, site_slug, lang, query FROM content_gaps ORDER BY occurred_at DESC LIMIT 20"
+```
+
+A schema change is a new file in `migrations/d1`, applied with
+`bunx wrangler d1 migrations apply quang-tri-feedback --remote` (add `--local` for `bun run preview`).
 
 ## Content, quizzes and photos
 

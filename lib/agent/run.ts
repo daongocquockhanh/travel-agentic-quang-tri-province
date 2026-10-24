@@ -1,6 +1,7 @@
 import "server-only";
 import { formatDataStreamPart, streamText, type DataStreamWriter } from "ai";
 import { CHAT_PROVIDER_OPTIONS, chatModel, hasAiKey } from "@/lib/ai/provider";
+import { isQuotaError, noteQuotaExhausted, quotaExhausted } from "@/lib/ai/quota";
 import { getSite, type Site } from "@/lib/sites";
 import {
   MAX_HISTORY_MESSAGES,
@@ -68,8 +69,19 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
     grounding = chunks.map((chunk) => ({ ref: registry.register(chunk), chunk }));
   }
 
-  if (!hasAiKey()) {
-    await answerOffline({ req, question, query, site: target, grounding, registry, stream });
+  // No key, or the Gemini free quota is out: answer from the curated excerpts instead of failing.
+  const quotaOut = hasAiKey() && quotaExhausted();
+  if (!hasAiKey() || quotaOut) {
+    await answerOffline({
+      req,
+      question,
+      query,
+      site: target,
+      grounding,
+      registry,
+      stream,
+      reason: quotaOut ? "quota" : "nokey",
+    });
     return;
   }
 
@@ -104,6 +116,10 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
     // SYSTEM_DESIGN §8.1: one retry with backoff on LLM failure.
     maxRetries: 1,
     providerOptions: CHAT_PROVIDER_OPTIONS,
+    // Out of free quota: the route tells this traveller; later questions go offline until it resets.
+    onError: ({ error }) => {
+      if (isQuotaError(error)) noteQuotaExhausted(error);
+    },
   });
   result.mergeIntoDataStream(stream);
 }
@@ -113,6 +129,8 @@ export async function runAgent(req: AgentRequest, stream: DataStreamWriter): Pro
  * local dev and demos still show grounded, cited content.
  */
 async function answerOffline(args: {
+  /** Why there is no model answer: no key configured, or the free quota is out. */
+  reason: "nokey" | "quota";
   req: AgentRequest;
   question: string;
   /** The question as searched (with its antecedent, for follow-ups). */
@@ -142,8 +160,8 @@ async function answerOffline(args: {
     writeText(
       stream,
       req.lang === "vi"
-        ? "Chế độ ngoại tuyến — đây là những điểm nên đến tiếp theo cho hành trình của bạn:"
-        : "Offline mode — here are good next stops for your track:",
+        ? `${offlineLabel("vi", args.reason)} — đây là những điểm nên đến tiếp theo cho hành trình của bạn:`
+        : `${offlineLabel("en", args.reason)} — here are good next stops for your track:`,
     );
     return;
   }
@@ -166,16 +184,20 @@ async function answerOffline(args: {
     writeText(
       stream,
       req.lang === "vi"
-        ? "Chế độ ngoại tuyến (chưa cấu hình khoá AI): mình chưa tìm thấy nội dung biên soạn nào khớp với câu hỏi này."
-        : "Offline mode (no AI key set): I couldn't find curated content matching that question.",
+        ? args.reason === "quota"
+          ? `${offlineLabel("vi", "quota")}: mình chưa tìm thấy nội dung biên soạn nào khớp với câu hỏi này.`
+          : "Chế độ ngoại tuyến (chưa cấu hình khoá AI): mình chưa tìm thấy nội dung biên soạn nào khớp với câu hỏi này."
+        : args.reason === "quota"
+          ? `${offlineLabel("en", "quota")}: I couldn't find curated content matching that question.`
+          : "Offline mode (no AI key set): I couldn't find curated content matching that question.",
     );
     return;
   }
 
   const intro =
     req.lang === "vi"
-      ? "Chế độ ngoại tuyến — trích từ nội dung đã biên soạn:"
-      : "Offline mode — excerpts from curated content:";
+      ? `${offlineLabel("vi", args.reason)} — trích từ nội dung đã biên soạn:`
+      : `${offlineLabel("en", args.reason)} — excerpts from curated content:`;
   const body = numbered
     .slice(0, 2)
     .map(({ ref, chunk }) => `${chunk.body} [${ref}]`)
@@ -231,4 +253,14 @@ function writeText(stream: DataStreamWriter, text: string) {
       usage: { promptTokens: 0, completionTokens: 0 },
     }),
   );
+}
+
+/** How an offline answer introduces itself; honest about a spent free quota. */
+function offlineLabel(lang: Lang, reason: "nokey" | "quota"): string {
+  if (reason === "quota") {
+    return lang === "vi"
+      ? "Hướng dẫn viên AI tạm hết lượt miễn phí"
+      : "The AI guide has reached its free limit for now";
+  }
+  return lang === "vi" ? "Chế độ ngoại tuyến" : "Offline mode";
 }
